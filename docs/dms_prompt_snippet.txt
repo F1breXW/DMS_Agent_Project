@@ -1,0 +1,7 @@
+DMS 代码核心摘要（用于 Prompt 压缩输入）
+
+- 流程：视频/摄像头帧 -> RetinaFace 人脸检测与裁剪 -> dlib 眼口状态(闭眼/打哈欠) -> ShuffleNetV2 注视区域 -> State 规则判定疲劳与分心 -> 输出疲劳/分心分数与告警。
+- 疲劳判定（State）：eye_open_thres=0.18，yawn_thres=0.45，fat_len=2s；fat_rate_l1=0.20, fat_rate_l2=0.35；yawn_len=1.0s, yawn_rate=0.30。
+- 分心判定（State）：focusfront_len=2s，longdis_len=2s，shortdis_len=8s；focusfront_rates=0.75，longdis_rates=0.90，shortdis_rates=0.33；基于 gaze zone 计数窗口判断长/短分心。
+- 实时增强（best2.py）：YOLO 多线程检测打电话/吸烟，触发语音警告；疲劳分数连续超阈触发“疲劳”状态。
+- 主要入口：process_video.py（离线视频）与 best2.py（实时摄像头）。

@@ -18,6 +18,10 @@ load_dotenv(dotenv_path=ENV_PATH, override=False)
 DEEPSEEK_API_BASE: Final[str] = os.getenv("DEEPSEEK_API_BASE", "https://api.deepseek.com")
 DEEPSEEK_API_KEY: Final[str] = os.getenv("DEEPSEEK_API_KEY", "")
 
+# Hugging Face 与向量模型配置
+HF_TOKEN: Final[str] = os.getenv("HF_TOKEN", "")
+DMS_EMBEDDING_MODEL: Final[str] = os.getenv("DMS_EMBEDDING_MODEL", "")
+
 
 def get_logger(name: str = "dms") -> logging.Logger:
     """创建并返回一个可复用的日志记录器。"""
