@@ -1,0 +1,9 @@
+langchain
+langchain-openai
+gradio
+pandas
+pydantic
+faiss-cpu
+pypdf
+sentence-transformers
+python-dotenv
