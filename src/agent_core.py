@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import sys
+from datetime import datetime
 from pathlib import Path
 from typing import Optional
 
@@ -12,7 +13,15 @@ ROOT_DIR = Path(__file__).resolve().parents[1]
 if str(ROOT_DIR) not in sys.path:
     sys.path.insert(0, str(ROOT_DIR))
 
-from src.config import DEEPSEEK_API_BASE, DEEPSEEK_API_KEY, LOGGER
+from src.config import (
+    DEEPSEEK_API_BASE,
+    DEEPSEEK_API_KEY,
+    DMS_LLM_MODEL,
+    DMS_MAX_TOKENS,
+    DMS_TEMPERATURE,
+    DMS_TOP_P,
+    LOGGER,
+)
 from src.parsers import CodeParser, LogParseResult, LogParser
 from src.rag_engine import StandardKnowledgeBase
 
@@ -22,21 +31,33 @@ class DMSDigitalEngineer:
 
     def __init__(
         self,
-        model_name: str = "deepseek-chat",
-        temperature: float = 0.2,
+        model_name: str | None = None,
+        temperature: float | None = None,
+        top_p: float | None = None,
+        max_tokens: int | None = None,
     ) -> None:
         self.log_parser = LogParser()
         self.code_parser = CodeParser()
         self.knowledge_base = StandardKnowledgeBase()
+        self.code_summary = self._load_code_summary(
+            ROOT_DIR / "docs" / "dms_prompt_snippet.txt"
+        )
 
         if not DEEPSEEK_API_KEY:
             LOGGER.warning("DEEPSEEK_API_KEY is empty; LLM call may fail.")
+
+        model_name = model_name or DMS_LLM_MODEL
+        temperature = DMS_TEMPERATURE if temperature is None else temperature
+        top_p = DMS_TOP_P if top_p is None else top_p
+        max_tokens = DMS_MAX_TOKENS if max_tokens is None else max_tokens
 
         self.llm = ChatOpenAI(
             base_url=DEEPSEEK_API_BASE,
             api_key=DEEPSEEK_API_KEY,
             model=model_name,
             temperature=temperature,
+            top_p=top_p,
+            max_tokens=max_tokens,
         )
 
     def analyze_and_optimize(self, log_file: str | Path, code_file: str | Path) -> str:
@@ -50,6 +71,10 @@ class DMSDigitalEngineer:
 
         # 再解析源码
         code_text = self._read_code_content(code_path)
+        code_is_summary = False
+        if self.code_summary:
+            code_text = self.code_summary
+            code_is_summary = True
 
         # 再根据指标检索国标要求
         standard_query = self._build_standard_query(log_result.avg_latency_ms)
@@ -60,6 +85,7 @@ class DMSDigitalEngineer:
             log_result=log_result,
             code_text=code_text,
             standard_text=standard_text,
+            code_is_summary=code_is_summary,
         )
 
         response = self.llm.invoke(prompt)
@@ -130,6 +156,7 @@ class DMSDigitalEngineer:
         log_result: LogParseResult,
         code_text: str,
         standard_text: str,
+        code_is_summary: bool,
     ) -> str:
         """组合评估提示词。"""
 
@@ -142,6 +169,8 @@ class DMSDigitalEngineer:
             else "未知"
         )
 
+        code_label = "【源码摘要】" if code_is_summary else "【源码】"
+
         return (
             "你是一个DMS数字工程师。请基于实测数据、国标条款与源码，输出一份Markdown评估报告。\n\n"
             "【实测数据摘要】\n"
@@ -149,7 +178,7 @@ class DMSDigitalEngineer:
             f"- 平均延迟: {avg_latency_text}\n\n"
             "【国标条款参考】\n"
             f"{standard_text}\n\n"
-            "【源码】\n"
+            f"{code_label}\n"
             f"{code_text}\n\n"
             "请输出以下内容：\n"
             "1) 合规性评估（对比国标条款）\n"
@@ -158,6 +187,17 @@ class DMSDigitalEngineer:
             "4) 关键代码修改建议（可给出伪代码或片段）\n"
         )
 
+    def _load_code_summary(self, summary_path: Path) -> str:
+        """读取压缩后的源码摘要文本。"""
+
+        if not summary_path.is_file():
+            return ""
+        try:
+            return summary_path.read_text(encoding="utf-8").strip()
+        except Exception as exc:  # noqa: BLE001
+            LOGGER.error("Failed to read summary file %s: %s", summary_path, exc)
+            return ""
+
 
 if __name__ == "__main__":
     agent = DMSDigitalEngineer()
@@ -165,4 +205,9 @@ if __name__ == "__main__":
         log_file="data/logs/sample_dms_log.csv",
         code_file="data/source_code",
     )
-    print(report)
+    reports_dir = ROOT_DIR / "reports"
+    reports_dir.mkdir(parents=True, exist_ok=True)
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    report_path = reports_dir / f"dms_report_{timestamp}.md"
+    report_path.write_text(report, encoding="utf-8")
+    print(f"Report saved to: {report_path}")

@@ -23,6 +23,34 @@ HF_TOKEN: Final[str] = os.getenv("HF_TOKEN", "")
 DMS_EMBEDDING_MODEL: Final[str] = os.getenv("DMS_EMBEDDING_MODEL", "")
 
 
+def _read_float(name: str, default: float) -> float:
+    value = os.getenv(name, "").strip()
+    if not value:
+        return default
+    try:
+        return float(value)
+    except ValueError:
+        return default
+
+
+def _read_int(name: str, default: int) -> int:
+    value = os.getenv(name, "").strip()
+    if not value:
+        return default
+    try:
+        return int(value)
+    except ValueError:
+        return default
+
+
+# 大模型配置
+DMS_LLM_MODEL: Final[str] = os.getenv("DMS_LLM_MODEL", "DeepSeek-R1")
+DMS_TEMPERATURE: Final[float] = _read_float("DMS_TEMPERATURE", 0.2)
+DMS_TOP_P: Final[float] = _read_float("DMS_TOP_P", 0.8)
+DMS_REPETITION_PENALTY: Final[float] = _read_float("DMS_REPETITION_PENALTY", 1.05)
+DMS_MAX_TOKENS: Final[int] = _read_int("DMS_MAX_TOKENS", 2048)
+
+
 def get_logger(name: str = "dms") -> logging.Logger:
     """创建并返回一个可复用的日志记录器。"""
 
