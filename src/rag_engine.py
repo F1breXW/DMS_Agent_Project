@@ -1,19 +1,30 @@
 from __future__ import annotations
 
+import os
 import sys
 from pathlib import Path
 from typing import Optional
 
-from langchain_text_splitters import RecursiveCharacterTextSplitter
-from langchain_community.document_loaders import PyPDFLoader
-from langchain_community.vectorstores import FAISS
+from dotenv import load_dotenv
 
 # 运行脚本时把项目根目录加入 sys.path，确保可以导入 src.*
 ROOT_DIR = Path(__file__).resolve().parents[1]
 if str(ROOT_DIR) not in sys.path:
     sys.path.insert(0, str(ROOT_DIR))
 
+# 提前加载 .env，确保 HF_HUB_OFFLINE 等变量在导入时生效
+load_dotenv(dotenv_path=ROOT_DIR / ".env", override=False)
+
+# 强制同步离线环境变量，避免库在导入时联网
+if os.getenv("HF_HUB_OFFLINE") == "1":
+    os.environ["HF_HUB_OFFLINE"] = "1"
+    os.environ["TRANSFORMERS_OFFLINE"] = "1"
+
 from src.config import LOGGER
+
+from langchain_text_splitters import RecursiveCharacterTextSplitter
+from langchain_community.document_loaders import PyPDFLoader
+from langchain_community.vectorstores import FAISS
 
 try:
     from langchain_huggingface import HuggingFaceEmbeddings
@@ -57,7 +68,7 @@ class StandardKnowledgeBase:
         """从本地加载 FAISS 索引。"""
 
         try:
-            embeddings = HuggingFaceEmbeddings(model_name=self.embedding_model)
+            embeddings = self._build_embeddings()
             return FAISS.load_local(
                 str(self.index_dir),
                 embeddings,
@@ -96,7 +107,7 @@ class StandardKnowledgeBase:
         chunks = splitter.split_documents(documents)
 
         try:
-            embeddings = HuggingFaceEmbeddings(model_name=self.embedding_model)
+            embeddings = self._build_embeddings()
             vectorstore = FAISS.from_documents(chunks, embeddings)
             self.index_dir.mkdir(parents=True, exist_ok=True)
             vectorstore.save_local(str(self.index_dir))
@@ -106,8 +117,44 @@ class StandardKnowledgeBase:
             LOGGER.error("Failed to build FAISS index: %s", exc)
             return None
 
-    def search_standard(self, query: str, k: int = 1) -> str:
-        """根据查询语句返回最相关的国标条款文本。"""
+    def _build_embeddings(self) -> HuggingFaceEmbeddings:
+        """根据环境变量初始化本地 Embeddings，避免联网请求。"""
+
+        model_kwargs = {}
+        model_name = self.embedding_model
+        if os.getenv("HF_HUB_OFFLINE") == "1":
+            model_kwargs["local_files_only"] = True
+            local_path = self._resolve_local_model_path()
+            if local_path:
+                model_name = local_path
+            else:
+                LOGGER.warning("HF_HUB_OFFLINE is set but local model not found.")
+        return HuggingFaceEmbeddings(
+            model_name=model_name,
+            model_kwargs=model_kwargs or None,
+        )
+
+    def _resolve_local_model_path(self) -> Optional[str]:
+        """尝试从本地 Hugging Face 缓存中解析模型快照路径。"""
+
+        cache_root = Path.home() / ".cache" / "huggingface" / "hub"
+        model_dir_name = "models--" + self.embedding_model.replace("/", "--")
+        snapshots_dir = cache_root / model_dir_name / "snapshots"
+        if not snapshots_dir.exists():
+            return None
+
+        snapshots = sorted([p for p in snapshots_dir.iterdir() if p.is_dir()])
+        if not snapshots:
+            return None
+
+        # 取最新的快照目录
+        latest = snapshots[-1]
+        if (latest / "config.json").exists():
+            return str(latest)
+        return str(latest)
+
+    def search_standard(self, query: str, k: int = 3) -> str:
+        """根据查询语句返回最相关的国标条款文本（Top-K）。"""
 
         if not self.vectorstore:
             LOGGER.error("Vectorstore is not available.")
@@ -122,7 +169,10 @@ class StandardKnowledgeBase:
         if not results:
             return ""
 
-        return results[0].page_content
+        parts = []
+        for idx, doc in enumerate(results, start=1):
+            parts.append(f"【条款 {idx}】\n{doc.page_content}")
+        return "\n\n".join(parts)
 
 
 if __name__ == "__main__":
