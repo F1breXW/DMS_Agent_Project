@@ -15,7 +15,7 @@ if str(ROOT_DIR) not in sys.path:
 # 提前加载 .env，确保 HF_HUB_OFFLINE 等变量在导入时生效
 load_dotenv(dotenv_path=ROOT_DIR / ".env", override=False)
 
-# 强制同步离线环境变量，避免库在导入时联网
+# 若已设置离线开关，先同步到当前进程
 if os.getenv("HF_HUB_OFFLINE") == "1":
     os.environ["HF_HUB_OFFLINE"] = "1"
     os.environ["TRANSFORMERS_OFFLINE"] = "1"
@@ -122,13 +122,22 @@ class StandardKnowledgeBase:
 
         model_kwargs = {}
         model_name = self.embedding_model
-        if os.getenv("HF_HUB_OFFLINE") == "1":
+        local_path = self._resolve_local_model_path()
+
+        if local_path:
+            # 已有本地模型，强制离线使用本地快照
+            os.environ["HF_HUB_OFFLINE"] = "1"
+            os.environ["TRANSFORMERS_OFFLINE"] = "1"
             model_kwargs["local_files_only"] = True
-            local_path = self._resolve_local_model_path()
-            if local_path:
-                model_name = local_path
-            else:
-                LOGGER.warning("HF_HUB_OFFLINE is set but local model not found.")
+            model_name = local_path
+        else:
+            # 本地模型不存在，允许联网下载一次
+            if os.getenv("HF_HUB_OFFLINE") == "1":
+                LOGGER.warning(
+                    "Local model not found; temporarily enabling online download."
+                )
+            os.environ.pop("HF_HUB_OFFLINE", None)
+            os.environ.pop("TRANSFORMERS_OFFLINE", None)
         return HuggingFaceEmbeddings(
             model_name=model_name,
             model_kwargs=model_kwargs or None,
