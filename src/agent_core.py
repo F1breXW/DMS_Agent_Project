@@ -88,16 +88,13 @@ class DMSDigitalEngineer:
         standard_text = self.knowledge_base.search_standard(standard_query, k=3)
 
         self._update_status(status_callback, "调用大模型生成报告中...")
-        # 最后组合 Prompt 调用大模型
-        prompt = self._build_prompt(
+        context_block = self._build_context(
             log_result=log_result,
             code_text=code_text,
             standard_text=standard_text,
             code_is_summary=code_is_summary,
         )
-
-        response = self.llm.invoke(prompt)
-        report = getattr(response, "content", "")
+        report = self._generate_report_by_sections(context_block, status_callback)
 
         if save_report:
             self._save_report(report)
@@ -193,14 +190,14 @@ class DMSDigitalEngineer:
             return "报警延迟 超时 要求"
         return "报警响应 时间 要求"
 
-    def _build_prompt(
+    def _build_context(
         self,
         log_result: LogParseResult,
         code_text: str,
         standard_text: str,
         code_is_summary: bool,
     ) -> str:
-        """组合评估提示词。"""
+        """组合评估所需的上下文信息。"""
 
         avg_fps_text = (
             f"{log_result.avg_fps:.2f}" if log_result.avg_fps is not None else "未知"
@@ -214,20 +211,60 @@ class DMSDigitalEngineer:
         code_label = "【源码摘要】" if code_is_summary else "【源码】"
 
         return (
-            "你是一个DMS数字工程师。请基于实测数据、国标条款与源码，输出一份Markdown评估报告。\n\n"
             "【实测数据摘要】\n"
             f"- 平均FPS: {avg_fps_text}\n"
             f"- 平均延迟: {avg_latency_text}\n\n"
             "【国标条款参考】\n"
             f"{standard_text}\n\n"
             f"{code_label}\n"
-            f"{code_text}\n\n"
-            "请输出以下内容：\n"
-            "1) 合规性评估（对比国标条款）\n"
-            "2) 发现的问题清单（含证据）\n"
-            "3) 优化建议（优先级排序）\n"
-            "4) 关键代码修改建议（可给出伪代码或片段）\n"
+            f"{code_text}\n"
         )
+
+    def _generate_report_by_sections(
+        self,
+        context_block: str,
+        status_callback: Callable[[str], None] | None,
+    ) -> str:
+        """分段生成报告并合并，降低单次输出被截断的风险。"""
+
+        sections = [
+            (
+                "合规性评估（对比国标条款）",
+                "基于国标条款与实测数据进行评估，输出结论与证据。",
+            ),
+            (
+                "发现的问题清单（含证据）",
+                "列出问题点并注明证据来源（指标或源码摘要）。",
+            ),
+            (
+                "优化建议（优先级排序）",
+                "给出可落地的优化建议，按优先级排序。",
+            ),
+            (
+                "关键代码修改建议（可给出伪代码或片段）",
+                "给出关键修改方向，并提供伪代码或短片段。",
+            ),
+        ]
+
+        outputs: list[str] = ["# DMS系统评估报告\n"]
+        for title, guidance in sections:
+            self._update_status(status_callback, f"生成报告：{title}...")
+            section_text = self._generate_section(context_block, title, guidance)
+            outputs.append(f"## {title}\n\n{section_text}\n")
+
+        return "\n".join(outputs).strip()
+
+    def _generate_section(self, context_block: str, title: str, guidance: str) -> str:
+        """生成单个报告章节。"""
+
+        prompt = (
+            "你是一个DMS数字工程师。请严格只输出指定章节的内容，不要输出其他章节标题。\n\n"
+            f"【章节标题】\n{title}\n\n"
+            f"【写作要求】\n{guidance}\n\n"
+            f"{context_block}\n"
+        )
+        response = self.llm.invoke(prompt)
+        return getattr(response, "content", "").strip()
 
     def _load_code_summary(self, summary_path: Path) -> str:
         """读取压缩后的源码摘要文本。"""
