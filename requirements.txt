@@ -1,7 +1,9 @@
 langchain
 langchain-openai
 langchain-community
-chainlit
+fastapi
+uvicorn
+python-multipart
 duckduckgo-search
 pandas
 pydantic

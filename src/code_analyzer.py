@@ -1,3 +1,5 @@
+"""AST-based Python code structure analyzer for DMS source code exploration."""
+
 from __future__ import annotations
 
 import ast
@@ -99,12 +101,7 @@ def read_file_content(path: str | Path, start: int = 1, end: int | None = None) 
     """读取指定文件的指定行范围。"""
     path = Path(path)
     if not path.exists():
-        # 尝试在源码目录下查找
-        alt = Path("data/source_code") / path
-        if alt.exists():
-            path = alt
-        else:
-            return f"文件不存在: {path}"
+        return f"文件不存在: {path}"
 
     try:
         lines_list = path.read_text(encoding="utf-8").splitlines()

@@ -1,3 +1,5 @@
+"""Configuration loader — reads .env, exposes LLM / embedding settings, provides logging."""
+
 from __future__ import annotations
 
 import logging
@@ -10,6 +12,7 @@ from dotenv import load_dotenv
 # 计算项目根目录位置，方便读取根目录下的 .env
 ROOT_DIR: Final[Path] = Path(__file__).resolve().parents[1]
 ENV_PATH: Final[Path] = ROOT_DIR / ".env"
+UPLOAD_DIR: Final[Path] = ROOT_DIR / "uploads"
 
 # 读取 .env 配置（默认不覆盖已存在的系统环境变量）
 load_dotenv(dotenv_path=ENV_PATH, override=False)

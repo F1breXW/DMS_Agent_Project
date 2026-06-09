@@ -1,3 +1,5 @@
+"""CSV log parser and Python source code reader for DMS data ingestion."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass

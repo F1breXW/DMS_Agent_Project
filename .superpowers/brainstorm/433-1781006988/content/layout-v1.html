@@ -1,0 +1,172 @@
+<h2>DMS Agent 改版设计方案</h2>
+<p class="subtitle">NotebookLM 风格 · 三栏布局 · 浅色主题 · 完整 diff 展示 · 右侧操作面板</p>
+
+<div class="section">
+  <h3>整体布局对比</h3>
+</div>
+
+<div class="split">
+  <div class="mockup">
+    <div class="mockup-header">当前：双栏 · 暗色工业风</div>
+    <div class="mockup-body" style="background:#1a1d23; padding:12px; display:flex; gap:8px; min-height:260px; font-size:10px;">
+      <div style="width:80px; background:#1f2229; border-radius:4px; padding:6px; border:1px solid #2e333d;">
+        <div style="color:#d4994a; font-family:monospace; font-size:9px; margin-bottom:6px;">DMS EVAL</div>
+        <div style="background:#262a33; border:1px dashed #3d424f; border-radius:2px; padding:5px; color:#5b6270; font-size:8px; text-align:center; margin-bottom:5px;">+ 上传文件</div>
+        <div style="color:#9098a6; font-size:8px;">sample.csv</div>
+        <div style="color:#5b6270; font-size:8px;">source/ (27)</div>
+      </div>
+      <div style="flex:1; display:flex; flex-direction:column; gap:5px;">
+        <div style="flex:1; background:#1f2229; border-radius:4px; padding:6px;">
+          <div style="background:#262a33; border-left:2px solid #d4994a; border-radius:0 2px 2px 0; padding:5px; margin-bottom:3px;">
+            <div style="color:#9098a6; font-size:7px;">Agent</div>
+            <div style="color:#e3e5ea; font-size:8px;">FPS 8.96 远低于合格线...</div>
+          </div>
+        </div>
+        <div style="background:#262a33; border-radius:4px; padding:6px; color:#5b6270; font-size:8px;">输入消息...</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="mockup">
+    <div class="mockup-header">新版：三栏 · NotebookLM 浅色</div>
+    <div class="mockup-body" style="background:#faf8f5; padding:12px; display:flex; gap:8px; min-height:260px; font-size:10px; font-family:-apple-system,sans-serif;">
+      <!-- Left sidebar: slim -->
+      <div style="width:70px; background:#f5f1eb; border-radius:6px; padding:8px 5px; border:1px solid #e8e3db; display:flex;flex-direction:column;align-items:center;gap:8px;">
+        <div style="background:#e8e3db; width:28px;height:28px;border-radius:50%;"></div>
+        <div style="background:#e8e3db; width:28px;height:28px;border-radius:6px;"></div>
+        <div style="background:#e8e3db; width:28px;height:28px;border-radius:6px;"></div>
+      </div>
+      <!-- Center chat -->
+      <div style="flex:1; display:flex; flex-direction:column; gap:6px;">
+        <div style="border-bottom:1px solid #e8e3db; padding-bottom:5px; font-size:9px; color:#9c8b74;">DMS Evaluator</div>
+        <div style="display:flex; justify-content:flex-end;"><div style="background:#f0ede8; border-radius:8px 8px 0 8px; padding:6px 8px; color:#3d392f; font-size:8px; max-width:70%;">分析系统性能</div></div>
+        <div style="background:#fff; border:1px solid #e8e3db; border-radius:0 8px 8px 8px; padding:8px;">
+          <div style="color:#3d392f; font-size:8px; margin-bottom:4px;">FPS 8.96 低于合格线 15，严重缺陷。查看 retinaface.py...</div>
+          <!-- Inline diff card -->
+          <div style="background:#faf8f5; border:1px solid #e0d8cc; border-radius:4px; margin-top:5px; overflow:hidden;">
+            <div style="display:flex; background:#f5f1eb; border-bottom:1px solid #e0d8cc; padding:4px 6px; font-size:7px; justify-content:space-between;">
+              <span style="color:#6b5f4f;">retinaface.py</span>
+              <span style="color:#4a7c59; font-weight:500;">+3 -2</span>
+            </div>
+            <div style="display:flex; font-family:monospace; font-size:7px;">
+              <div style="flex:1; padding:4px; border-right:1px solid #e0d8cc;">
+                <div style="color:#b34a4a;">- ResNet50(pretrained=True)</div>
+                <div style="color:#b34a4a;">- backbone = 'resnet'</div>
+              </div>
+              <div style="flex:1; padding:4px;">
+                <div style="color:#4a7c59;">+ MobileNetV2(pretrained=True)</div>
+                <div style="color:#4a7c59;">+ backbone = 'mobilenet'</div>
+              </div>
+            </div>
+            <div style="padding:3px 6px; border-top:1px solid #e0d8cc; text-align:right;">
+              <span style="background:#4a7c59; color:#fff; border-radius:3px; padding:2px 6px; font-size:7px;">Download modified file</span>
+            </div>
+          </div>
+          <!-- Thinking indicator -->
+          <div style="display:flex;align-items:center;gap:4px;margin-top:6px;color:#9c8b74;font-size:7px;">
+            <span style="width:4px;height:4px;background:#9c8b74;border-radius:50%;animation:pulse 1s infinite;"></span>
+            Thinking...
+          </div>
+        </div>
+        <div style="background:#fff; border:1px solid #e0d8cc; border-radius:8px; padding:6px; color:#9c8b74; font-size:8px;">Ask a follow-up...</div>
+      </div>
+      <!-- Right panel -->
+      <div style="width:100px; background:#fff; border-radius:6px; padding:8px 6px; border:1px solid #e8e3db; display:flex;flex-direction:column;gap:4px;">
+        <div style="font-size:7px;color:#6b5f4f;font-weight:600;margin-bottom:2px;">Actions</div>
+        <div style="background:#f5f1eb; border-radius:4px; padding:4px 5px; font-size:7px; color:#3d392f; cursor:pointer;">Generate Report</div>
+        <div style="background:#f5f1eb; border-radius:4px; padding:4px 5px; font-size:7px; color:#3d392f;">Export Chat</div>
+        <div style="background:#f5f1eb; border-radius:4px; padding:4px 5px; font-size:7px; color:#3d392f;">Download Files</div>
+        <div style="background:#f5f1eb; border-radius:4px; padding:4px 5px; font-size:7px; color:#3d392f;">Compare Metrics</div>
+        <div style="margin-top:4px; border-top:1px solid #e8e3db; padding-top:4px;">
+          <div style="font-size:7px;color:#6b5f4f;font-weight:600;margin-bottom:2px;">Session Files</div>
+          <div style="font-size:6px;color:#9c8b74;font-family:monospace;">sample_log.csv</div>
+          <div style="font-size:6px;color:#9c8b74;font-family:monospace;">source/ (27)</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section" style="margin-top: 24px;">
+  <h3>关键设计变更</h3>
+</div>
+
+<div class="cards">
+  <div class="card" style="grid-column: span 2;">
+    <div class="card-body">
+      <h3>1. 对话状态指示器</h3>
+      <p>Agent 回答中显示 "Thinking..." 带动画 + 文字提示（例如"正在分析 retinaface.py..."），回答完成后显示绿色对勾标记。用户一眼就知道对话是否结束。</p>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-body">
+      <h3>2. 内嵌 Diff 卡片</h3>
+      <p>代码修改直接展示在对话气泡中，左右对照（旧/新），带行号高亮。底部有「Download」按钮。同时支持切换 unified diff 视图。</p>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-body">
+      <h3>3. 右侧操作面板</h3>
+      <p>包含：生成报告、导出对话、下载修改文件、对比指标、代码修改摘要、保存 PDF、分享链接、清空会话。同时显示当前会话文件列表。</p>
+    </div>
+  </div>
+</div>
+
+<div class="section" style="margin-top: 16px;">
+  <h3>配色方案 · NotebookLM 暖调</h3>
+</div>
+
+<div style="display:flex; gap:12px; flex-wrap:wrap;">
+  <div style="background:#faf8f5; padding:16px; border-radius:8px; border:1px solid #e8e3db; flex:1; min-width:140px;">
+    <div style="width:100%;height:30px;background:#faf8f5; border-radius:4px; border:1px solid #e8e3db; margin-bottom:4px;"></div>
+    <div style="font-size:11px; color:#6b5f4f;">Page bg #faf8f5</div>
+  </div>
+  <div style="background:#fff; padding:16px; border-radius:8px; border:1px solid #e8e3db; flex:1; min-width:140px;">
+    <div style="width:100%;height:30px;background:#fff; border-radius:4px; border:1px solid #e8e3db; margin-bottom:4px;"></div>
+    <div style="font-size:11px; color:#6b5f4f;">Card bg #ffffff</div>
+  </div>
+  <div style="background:#f5f1eb; padding:16px; border-radius:8px; border:1px solid #e8e3db; flex:1; min-width:140px;">
+    <div style="width:100%;height:30px;background:#f5f1eb; border-radius:4px; border:1px solid #e0d8cc; margin-bottom:4px;"></div>
+    <div style="font-size:11px; color:#6b5f4f;">Surface #f5f1eb</div>
+  </div>
+  <div style="background:#3d392f; padding:16px; border-radius:8px; flex:1; min-width:140px;">
+    <div style="width:100%;height:30px;background:#3d392f; border-radius:4px; margin-bottom:4px;"></div>
+    <div style="font-size:11px; color:#d4cdc0;">Text #3d392f</div>
+  </div>
+  <div style="background:#4a7c59; padding:16px; border-radius:8px; flex:1; min-width:140px;">
+    <div style="width:100%;height:30px;background:#4a7c59; border-radius:4px; margin-bottom:4px;"></div>
+    <div style="font-size:11px; color:#d4e8d5;">Accent #4a7c59</div>
+  </div>
+</div>
+
+<div style="margin-top:12px; padding:12px; background:#f5f1eb; border-radius:6px; border:1px solid #e0d8cc;">
+  <span style="font-size:11px; color:#6b5f4f;">Typography: <strong>Source Serif 4</strong> (headings) + <strong>Inter</strong> (body) + <strong>JetBrains Mono</strong> (code)</span>
+</div>
+
+<div class="section" style="margin-top: 24px;">
+  <h3>选择下一步</h3>
+</div>
+
+<div class="options">
+  <div class="option" data-choice="approve" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>方向没问题，继续细化</h3>
+      <p>三栏布局、浅色NotebookLM风格、内嵌diff、右侧面板的方向我认可，可以进入详细设计了。</p>
+    </div>
+  </div>
+  <div class="option" data-choice="adjust" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>方向对但需要调整</h3>
+      <p>大方向可以，但某些细节我想改（请在终端告诉我具体想改什么）。</p>
+    </div>
+  </div>
+</div>
+
+<style>
+@keyframes pulse {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 1; }
+}
+</style>

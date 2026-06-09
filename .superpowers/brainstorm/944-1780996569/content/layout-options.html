@@ -1,0 +1,99 @@
+<h2>DMS 数字工程师 — 界面布局方案</h2>
+<p class="subtitle">选择你觉得更合适的整体布局方向。两个方案都用自定义 HTML + FastAPI，不用 Chainlit。</p>
+
+<div class="cards">
+  <div class="card" data-choice="a" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#1a1d23; padding:24px; border-radius:8px;">
+      <div style="display:flex; gap:16px; min-height:320px;">
+        <!-- Left sidebar -->
+        <div style="width:260px; background:#1f2229; border-radius:6px; padding:16px; border:1px solid #2e333d;">
+          <div style="font-family:monospace; color:#d4994a; font-size:12px; margin-bottom:16px;">DMS EVALUATOR</div>
+          <div style="background:#262a33; border:1px dashed #3d424f; border-radius:4px; padding:12px; margin-bottom:12px; text-align:center; color:#5b6270; font-size:11px;">
+            📁 拖拽或点击上传<br>源码 · CSV日志
+          </div>
+          <div style="background:#262a33; border-radius:4px; padding:10px; margin-bottom:8px;">
+            <div style="color:#9098a6; font-size:10px; margin-bottom:4px;">会话文件</div>
+            <div style="color:#d4994a; font-size:11px; font-family:monospace;">▸ sample_log.csv</div>
+            <div style="color:#5b6270; font-size:11px; font-family:monospace;">▸ source_code/ (27 files)</div>
+          </div>
+          <div style="margin-top:16px; padding:8px; border-radius:3px; background:rgba(212,153,74,0.08);">
+            <div style="color:#d4994a; font-size:10px; letter-spacing:1px;">状态</div>
+            <div style="color:#9098a6; font-size:11px;">就绪，等待输入</div>
+          </div>
+        </div>
+        <!-- Main area: chat + report stacked -->
+        <div style="flex:1; display:flex; flex-direction:column; gap:12px;">
+          <!-- Chat area -->
+          <div style="flex:1; background:#1f2229; border-radius:6px; border:1px solid #2e333d; padding:16px; overflow-y:auto;">
+            <div style="color:#5b6270; font-size:11px; font-family:monospace; margin-bottom:8px;">15:03:01 · 对话</div>
+            <div style="background:#262a33; border-radius:4px; padding:10px; margin-bottom:8px; border-left:2px solid #5b6270;">
+              <div style="color:#9098a6; font-size:11px;">👤 用户</div>
+              <div style="color:#e3e5ea; font-size:12px;">帮我分析这个DMS系统的性能</div>
+            </div>
+            <div style="background:#262a33; border-radius:4px; padding:10px; margin-bottom:8px; border-left:2px solid #d4994a;">
+              <div style="color:#9098a6; font-size:11px;">🤖 Agent</div>
+              <div style="color:#e3e5ea; font-size:12px;">好的，我先看一下日志数据。</div>
+              <div style="margin-top:6px; padding:6px 8px; background:#1c1f26; border-radius:3px; font-family:monospace; font-size:10px; color:#5b6270;">
+                > parse_performance_logs<br/>
+                ✓ FPS=8.96, delay=963ms
+              </div>
+            </div>
+          </div>
+          <!-- Input bar -->
+          <div style="background:#1f2229; border:1px solid #2e333d; border-radius:6px; padding:12px; display:flex; gap:8px;">
+            <div style="flex:1; background:#262a33; border-radius:4px; padding:10px; color:#5b6270; font-size:12px;">输入消息...</div>
+            <div style="background:#d4994a; color:#1a1d23; padding:10px 20px; border-radius:4px; font-size:12px; font-family:monospace;">发送</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>方案 A · 侧栏式</h3>
+      <p>左侧固定面板（文件上传+会话管理），右侧上下分区（对话+工具日志）。适合长时间深度分析，一眼看清上下文。</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="b" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#1a1d23; padding:24px; border-radius:8px;">
+      <div style="min-height:320px; background:#1f2229; border-radius:6px; border:1px solid #2e333d; display:flex; flex-direction:column;">
+        <!-- Top bar -->
+        <div style="padding:12px 16px; border-bottom:1px solid #2e333d; display:flex; align-items:center; justify-content:space-between;">
+          <div style="font-family:monospace; color:#d4994a; font-size:13px;">DMS EVALUATOR</div>
+          <div style="display:flex; gap:8px;">
+            <div style="background:#262a33; border:1px solid #3d424f; border-radius:4px; padding:6px 14px; font-size:11px; color:#9098a6;">📁 上传源码</div>
+            <div style="background:#262a33; border:1px solid #3d424f; border-radius:4px; padding:6px 14px; font-size:11px; color:#9098a6;">📊 上传日志</div>
+          </div>
+        </div>
+        <!-- Main content: chat with inline steps -->
+        <div style="flex:1; padding:20px; overflow-y:auto;">
+          <div style="color:#5b6270; font-size:10px; font-family:monospace; text-align:center; margin-bottom:16px;">— 会话开始 —</div>
+          <div style="margin-bottom:12px; text-align:right;">
+            <div style="display:inline-block; background:#262a33; border-radius:8px 8px 0 8px; padding:10px 14px; max-width:70%; color:#e3e5ea; font-size:12px; text-align:left;">
+              帮我分析这个DMS系统的性能
+            </div>
+          </div>
+          <div style="margin-bottom:8px;">
+            <div style="font-size:10px; color:#5b6270; font-family:monospace; margin-bottom:4px;">🔧 parse_performance_logs → ✓</div>
+            <div style="display:inline-block; background:rgba(212,153,74,0.08); border-left:2px solid #d4994a; padding:10px 14px; border-radius:0 8px 8px 8px; max-width:80%; color:#e3e5ea; font-size:12px;">
+              FPS 8.96 远低于 DMS 要求的 15fps，延迟 963ms 严重超标。需要看一下 retinaface 检测模型的代码。
+            </div>
+          </div>
+          <div style="margin-bottom:8px;">
+            <div style="font-size:10px; color:#5b6270; font-family:monospace; margin-bottom:4px;">🔧 read_code_file(retinaface.py) → ✓</div>
+            <div style="display:inline-block; background:rgba(212,153,74,0.08); border-left:2px solid #d4994a; padding:10px 14px; border-radius:0 8px 8px 8px; max-width:80%; color:#e3e5ea; font-size:12px;">
+              发现使用 ResNet50 backbone，每帧推理约 900ms。建议换成 MobileNetV2，预计延迟可降到 ~200ms。要我帮你改吗？
+            </div>
+          </div>
+        </div>
+        <!-- Input -->
+        <div style="padding:12px 16px; border-top:1px solid #2e333d;">
+          <div style="background:#262a33; border:1px solid #3d424f; border-radius:8px; padding:12px 16px; color:#5b6270; font-size:12px;">输入消息...</div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>方案 B · 全屏对话式</h3>
+      <p>顶部工具栏，主体是对话流，工具调用内嵌在消息中。更简洁、更像与工程师对话而非操作一个工具面板。</p>
+    </div>
+  </div>
+</div>

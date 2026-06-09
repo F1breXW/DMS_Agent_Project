@@ -1,3 +1,5 @@
+"""Pydantic data models for DMS log entries and evaluation reports."""
+
 from __future__ import annotations
 
 from datetime import datetime

@@ -1,3 +1,5 @@
+"""FAISS-based RAG engine for querying Chinese national standards (GB/T) on DMS."""
+
 from __future__ import annotations
 
 import os

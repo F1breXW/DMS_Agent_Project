@@ -1,0 +1,1953 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DMS Evaluator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Source+Serif+4:wght@500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ==================================================================
+   DMS Evaluator — NotebookLM Style · 3-Column Light Theme
+   ================================================================== */
+
+:root {
+  --bg-root: #faf8f5;
+  --bg-surface: #f5f1eb;
+  --bg-raised: #ffffff;
+  --bg-hover: #efe9e0;
+  --text-primary: #3d392f;
+  --text-secondary: #6b5f4f;
+  --text-muted: #9c8b74;
+  --accent: #4a7c59;
+  --accent-soft: rgba(74, 124, 89, 0.08);
+  --accent-glow: rgba(74, 124, 89, 0.15);
+  --border-subtle: #e8e3db;
+  --border-visible: #e0d8cc;
+  --success: #4a7c59;
+  --danger: #b34a4a;
+  --warning: #c9954a;
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --font-mono: 'JetBrains Mono', 'Cascadia Code', 'Consolas', monospace;
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-serif: 'Source Serif 4', Georgia, 'Times New Roman', serif;
+  --transition: 180ms ease;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg-root);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  height: 100vh;
+  overflow: hidden;
+}
+
+#app {
+  display: flex;
+  height: 100vh;
+}
+
+/* ── Left Nav ── */
+#left-nav {
+  width: 56px; min-width: 56px;
+  background: var(--bg-surface);
+  border-right: 1px solid var(--border-subtle);
+  display: flex; flex-direction: column; align-items: center;
+  padding: 12px 0; gap: 4px;
+}
+#nav-brand {
+  font-family: var(--font-serif); font-size: 11px; font-weight: 600;
+  color: var(--text-primary); writing-mode: vertical-rl;
+  letter-spacing: 0.08em; padding: 12px 0;
+}
+.nav-btn {
+  width: 36px; height: 36px; border: none; background: transparent;
+  border-radius: var(--radius-sm); color: var(--text-muted); cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all var(--transition);
+}
+.nav-btn:hover { background: var(--bg-hover); color: var(--text-primary); }
+.nav-btn.active { background: var(--accent-soft); color: var(--accent); }
+
+/* ── Session List (in right panel) ── */
+#session-list { list-style: none; display: flex; flex-direction: column; gap: 2px; }
+.session-item {
+  display: flex; align-items: center; gap: 6px;
+  padding: 5px 8px; border-radius: var(--radius-sm);
+  cursor: pointer; font-size: 11px; color: var(--text-secondary);
+  transition: all var(--transition);
+}
+.session-item:hover { background: var(--bg-hover); }
+.session-item.active { background: var(--accent-soft); color: var(--accent); font-weight: 500; }
+.session-item .sess-name {
+  flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  font-family: var(--font-sans);
+}
+.session-item .sess-count {
+  font-family: var(--font-mono); font-size: 10px; color: var(--text-muted); flex-shrink: 0;
+}
+.session-item .sess-delete {
+  flex-shrink: 0; width: 16px; height: 16px; border: none; background: transparent;
+  color: var(--text-muted); cursor: pointer; font-size: 12px; line-height: 1;
+  border-radius: 2px; display: flex; align-items: center; justify-content: center;
+  opacity: 0; transition: all var(--transition);
+}
+.session-item:hover .sess-delete { opacity: 1; }
+.session-item .sess-delete:hover { color: var(--danger); background: rgba(179,74,74,0.10); }
+#session-new-btn {
+  width: 100%; padding: 4px 8px; margin-top: 2px;
+  font-size: 11px; font-family: var(--font-sans);
+  background: transparent; border: 1px dashed var(--border-visible);
+  border-radius: var(--radius-sm); color: var(--text-muted); cursor: pointer;
+  transition: all var(--transition);
+}
+#session-new-btn:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
+
+/* ── Right Panel ── */
+#right-panel {
+  width: 240px; min-width: 240px;
+  background: var(--bg-surface); border-left: 1px solid var(--border-subtle);
+  padding: 16px 12px; overflow-y: auto;
+  display: flex; flex-direction: column; gap: 16px;
+}
+.panel-section h3 {
+  font-family: var(--font-sans); font-size: 11px; font-weight: 600;
+  text-transform: uppercase; letter-spacing: 0.05em;
+  color: var(--text-muted); margin-bottom: 8px;
+}
+.action-btn {
+  display: block; width: 100%; padding: 8px 12px; margin-bottom: 4px;
+  background: var(--bg-raised); border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm); font-family: var(--font-sans);
+  font-size: 12px; color: var(--text-primary); cursor: pointer; text-align: left;
+  transition: all var(--transition);
+}
+.action-btn:hover { background: var(--bg-hover); border-color: var(--border-visible); }
+.action-btn.danger { color: var(--danger); }
+.action-btn.danger:hover { background: rgba(179,74,74,0.06); border-color: var(--danger); }
+
+#panel-file-list, #panel-modified-list { list-style: none; display: flex; flex-direction: column; gap: 2px; }
+#panel-file-list li, #panel-modified-list li {
+  font-size: 11px; color: var(--text-secondary); padding: 3px 0;
+  font-family: var(--font-mono); cursor: pointer;
+}
+#panel-file-list li:hover, #panel-modified-list li:hover { color: var(--accent); }
+.no-files { color: var(--text-muted) !important; font-family: var(--font-sans) !important; font-style: italic; cursor: default !important; }
+
+/* ── Top Bar ── */
+#top-bar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 24px; border-bottom: 1px solid var(--border-subtle);
+  background: var(--bg-raised);
+}
+#top-title { font-family: var(--font-serif); font-size: 16px; font-weight: 600; color: var(--text-primary); }
+#lang-switcher { display: flex; gap: 2px; background: var(--bg-surface); border-radius: var(--radius-sm); padding: 2px; }
+.lang-btn {
+  border: none; background: transparent; padding: 4px 10px;
+  font-size: 11px; font-family: var(--font-sans); color: var(--text-muted);
+  border-radius: 3px; cursor: pointer; transition: all var(--transition);
+}
+.lang-btn.active { background: var(--bg-raised); color: var(--text-primary); box-shadow: 0 1px 2px rgba(0,0,0,0.04); }
+.lang-btn:hover:not(.active) { color: var(--text-secondary); }
+
+/* ── Chat Area ── */
+#chat-area { flex: 1; display: flex; flex-direction: column; min-width: 0; background: var(--bg-root); }
+
+#messages-container {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* ── Messages ── */
+.msg-bubble {
+  max-width: 80%;
+  padding: 12px 16px;
+  border-radius: var(--radius-md);
+  font-size: 14px;
+  line-height: 1.7;
+  animation: fadeIn 200ms ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.msg-user {
+  align-self: flex-end;
+  background: var(--bg-raised);
+  color: var(--text-primary);
+  border-radius: var(--radius-md) var(--radius-md) 0 var(--radius-md);
+}
+
+.msg-agent {
+  align-self: flex-start;
+  background: var(--accent-soft);
+  border-left: 2px solid var(--accent);
+  border-radius: 0 var(--radius-md) var(--radius-md) var(--radius-md);
+  max-width: 85%;
+  color: var(--text-primary);
+}
+
+/* Agent message markdown elements */
+.msg-agent h1 {
+  font-family: var(--font-serif);
+  font-size: 1.15em;
+  font-weight: 500;
+  letter-spacing: 0.03em;
+  margin: 0 0 0.4em 0;
+  padding-bottom: 0.3em;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.msg-agent h2 {
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 0.95em;
+  color: var(--text-primary);
+  margin: 1em 0 0.3em 0;
+  letter-spacing: 0.02em;
+}
+
+.msg-agent h3 {
+  font-family: var(--font-mono);
+  font-size: 0.85em;
+  font-weight: 500;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin: 0.8em 0 0.2em 0;
+}
+
+.msg-agent p { margin: 0.3em 0; }
+
+.msg-agent code {
+  font-family: var(--font-mono);
+  font-size: 0.88em;
+  background: var(--bg-surface);
+  color: var(--accent);
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+}
+
+.msg-agent pre {
+  font-family: var(--font-mono);
+  font-size: 0.8em;
+  line-height: 1.5;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 14px;
+  overflow-x: auto;
+  margin: 8px 0;
+}
+
+.msg-agent table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 10px 0;
+  font-size: 0.85em;
+}
+
+.msg-agent th {
+  font-family: var(--font-mono);
+  font-size: 0.76em;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--accent);
+  border-bottom: 1px solid var(--border-visible);
+  padding: 6px 10px;
+  text-align: left;
+}
+
+.msg-agent td {
+  padding: 5px 10px;
+  border-bottom: 1px solid var(--border-subtle);
+  color: var(--text-secondary);
+}
+
+.msg-agent strong { color: var(--text-primary); font-weight: 600; }
+
+.msg-agent blockquote {
+  border-left: 2px solid var(--accent);
+  margin: 8px 0;
+  padding: 6px 14px;
+  color: var(--text-secondary);
+  background: var(--accent-soft);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  font-style: italic;
+}
+
+.msg-agent ul, .msg-agent ol {
+  padding-left: 20px;
+  color: var(--text-secondary);
+}
+
+.msg-agent li { margin: 0.2em 0; }
+.msg-agent li::marker { color: var(--text-muted); }
+
+/* ── Tool Call Blocks (inline inside agent bubble) ── */
+.tool-call {
+  margin: 8px 0;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-left: 2px solid var(--accent);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  font-family: var(--font-mono);
+  font-size: 0.78em;
+  overflow: hidden;
+}
+
+.tool-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 10px;
+  cursor: pointer;
+  user-select: none;
+  transition: background var(--transition);
+}
+
+.tool-header:hover { background: rgba(0,0,0,0.03); }
+
+.tool-chevron {
+  font-size: 8px;
+  color: var(--text-muted);
+  transition: transform var(--transition);
+}
+
+.tool-call.expanded .tool-chevron {
+  transform: rotate(90deg);
+}
+
+.tool-prompt {
+  color: var(--accent);
+  font-weight: 500;
+}
+
+.tool-name {
+  color: var(--text-secondary);
+}
+
+.tool-status {
+  margin-left: auto;
+  font-size: 0.9em;
+}
+
+.tool-status.running {
+  color: var(--accent);
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+.tool-status.done { color: var(--success); }
+.tool-status.error { color: var(--danger); }
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
+}
+
+.tool-body {
+  display: none;
+  border-top: 1px solid var(--border-subtle);
+  padding: 8px 10px;
+}
+
+.tool-call.expanded .tool-body { display: block; }
+
+.tool-args {
+  color: var(--text-muted);
+  font-size: 0.92em;
+  margin-bottom: 6px;
+  word-break: break-all;
+}
+
+.tool-result {
+  color: var(--text-secondary);
+  white-space: pre-wrap;
+  word-break: break-word;
+  line-height: 1.5;
+  font-size: 0.92em;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+/* ── Status Indicator ── */
+.status-indicator {
+  display: flex; align-items: center; gap: 6px;
+  padding: 6px 0 0 0; font-size: 12px; color: var(--text-muted);
+  border-top: 1px solid var(--border-subtle); margin-top: 8px;
+}
+.status-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--text-muted); flex-shrink: 0; }
+.status-indicator.thinking .status-dot { background: var(--text-muted); animation: statusPulse 1.2s ease-in-out infinite; }
+.status-indicator.done .status-dot { background: var(--success); }
+.status-indicator.done .status-text { color: var(--success); }
+.status-indicator.error .status-dot { background: var(--danger); }
+.status-indicator.error .status-text { color: var(--danger); }
+@keyframes statusPulse { 0%,100%{opacity:0.3;} 50%{opacity:1;} }
+
+/* ── Diff Cards ── */
+.diff-card {
+  background: var(--bg-raised);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  margin: 12px 0;
+  overflow: hidden;
+  font-family: var(--font-mono);
+  font-size: 0.78em;
+}
+.diff-header {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 8px 12px;
+  background: var(--bg-surface); border-bottom: 1px solid var(--border-subtle);
+}
+.diff-filename { font-weight: 500; color: var(--text-primary); }
+.diff-stats { font-size: 0.9em; color: var(--text-muted); }
+.diff-body { overflow: hidden; }
+.diff-side-by-side {
+  display: grid; grid-template-columns: 1fr 1fr;
+}
+.show-unified .diff-side-by-side { display: none; }
+.diff-old, .diff-new {
+  padding: 8px 12px; white-space: pre-wrap; word-break: break-all;
+  font-size: 0.92em; line-height: 1.5; max-height: 300px; overflow-y: auto;
+}
+.diff-old { background: rgba(179,74,74,0.06); color: var(--danger); }
+.diff-new { background: rgba(74,124,89,0.06); color: var(--success); }
+.diff-unified {
+  display: none; padding: 8px 12px; white-space: pre-wrap; word-break: break-all;
+  font-size: 0.92em; line-height: 1.5; max-height: 300px; overflow-y: auto;
+  background: var(--bg-surface); color: var(--text-secondary);
+}
+.show-unified .diff-unified { display: block; }
+.diff-actions {
+  display: flex; gap: 8px; padding: 8px 12px;
+  border-top: 1px solid var(--border-subtle); background: var(--bg-surface);
+}
+.diff-actions button {
+  padding: 4px 12px; font-size: 0.9em;
+  background: var(--bg-raised); border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm); color: var(--text-secondary); cursor: pointer;
+  font-family: var(--font-sans); transition: all var(--transition);
+}
+.diff-actions button:hover { background: var(--bg-hover); }
+.diff-actions button.primary {
+  background: var(--accent); color: #fff; border-color: var(--accent);
+}
+.diff-actions button.primary:hover { opacity: 0.9; }
+
+/* ── Upload Overlay ── */
+#upload-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.3);
+  z-index: 50; display: flex; align-items: center; justify-content: center;
+}
+#upload-overlay-content {
+  background: var(--bg-raised); border-radius: var(--radius-md);
+  padding: 32px; max-width: 420px; width: 90%;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+}
+#upload-overlay-content h2 { font-family: var(--font-serif); font-size: 18px; margin-bottom: 16px; color: var(--text-primary); }
+#upload-drop-zone {
+  border: 2px dashed var(--border-visible); border-radius: var(--radius-md);
+  padding: 24px; text-align: center; color: var(--text-muted); cursor: pointer;
+  transition: all var(--transition);
+}
+#upload-drop-zone:hover, #upload-drop-zone.dragover {
+  border-color: var(--accent); background: var(--accent-soft);
+}
+#upload-drop-zone input[type="file"] { display: none; }
+#upload-close-btn {
+  margin-top: 16px; width: 100%; padding: 8px;
+  background: var(--bg-surface); border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm); cursor: pointer;
+  font-family: var(--font-sans); font-size: 13px; color: var(--text-primary);
+  transition: all var(--transition);
+}
+#upload-close-btn:hover { background: var(--bg-hover); }
+
+/* File list (inside overlay) */
+#file-list {
+  list-style: none; display: flex; flex-direction: column; gap: 4px;
+  margin-top: 12px;
+}
+#file-list li {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 8px 10px;
+  font-family: var(--font-mono); font-size: 11px;
+  background: var(--bg-surface); border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+}
+#file-list li .remove-file {
+  cursor: pointer; color: var(--text-muted); font-size: 14px; line-height: 1;
+  padding: 2px 6px; border-radius: 2px;
+  transition: color var(--transition), background var(--transition);
+}
+#file-list li .remove-file:hover {
+  color: var(--danger); background: rgba(179,74,74,0.10);
+}
+#no-files {
+  font-size: 11px; color: var(--text-muted); text-align: center; padding: 8px;
+}
+
+/* ── Input Area ── */
+#input-area {
+  display: flex;
+  gap: 10px;
+  padding: 16px 24px 20px 24px;
+  border-top: 1px solid var(--border-subtle);
+  background: var(--bg-surface);
+}
+
+#user-input {
+  flex: 1;
+  background: var(--bg-raised);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  padding: 12px 16px;
+  border-radius: var(--radius-md);
+  resize: none;
+  rows: 1;
+  transition: border-color var(--transition), box-shadow var(--transition);
+  outline: none;
+}
+
+#user-input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+#user-input::placeholder { color: var(--text-muted); }
+
+#send-btn {
+  background: var(--bg-raised);
+  border: 1px solid var(--border-visible);
+  color: var(--accent);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 500;
+  padding: 12px 20px;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all var(--transition);
+  white-space: nowrap;
+}
+
+#send-btn:hover {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+
+#send-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* ── Loading dots ── */
+.loading-dots {
+  display: inline-flex;
+  gap: 3px;
+  padding: 4px 0;
+}
+
+.loading-dots span {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--text-muted);
+  animation: dotPulse 1.2s ease-in-out infinite;
+}
+
+.loading-dots span:nth-child(2) { animation-delay: 0.2s; }
+.loading-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes dotPulse {
+  0%, 80%, 100% { opacity: 0.2; }
+  40% { opacity: 0.7; }
+}
+
+/* ── Error toast ── */
+#toast {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background: var(--bg-raised);
+  border: 1px solid var(--danger);
+  border-left: 3px solid var(--danger);
+  color: var(--text-primary);
+  padding: 12px 20px;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  max-width: 400px;
+  z-index: 100;
+  opacity: 0;
+  transform: translateX(20px);
+  transition: all 250ms ease;
+  pointer-events: none;
+}
+
+#toast.show {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border-visible); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+
+::selection { background: var(--accent-soft); color: var(--accent); }
+
+/* ── Welcome state ── */
+#welcome-msg {
+  color: var(--text-muted);
+  text-align: center;
+  padding: 60px 40px;
+  font-size: 13px;
+  line-height: 2;
+}
+
+#welcome-msg .brand-name {
+  font-family: var(--font-serif);
+  font-size: 18px;
+  color: var(--text-primary);
+  letter-spacing: 0.05em;
+  margin-bottom: 16px;
+}
+
+#welcome-msg .hint { color: var(--text-muted); font-size: 0.9em; }
+
+/* Session info (hidden) */
+#session-info-hidden { display: none; }
+</style>
+</head>
+<body>
+<div id="app">
+  <!-- Left Nav (56px) -->
+  <nav id="left-nav">
+    <div id="nav-brand">DMS</div>
+    <button id="nav-upload-btn" class="nav-btn" title="Upload files">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+    </button>
+    <button id="nav-chat-btn" class="nav-btn active" title="Chat">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+    </button>
+    <div style="flex:1;"></div>
+  </nav>
+
+  <!-- Upload Overlay -->
+  <div id="upload-overlay" style="display:none;">
+    <div id="upload-overlay-content">
+      <h2 data-i18n="upload_title">Upload Files</h2>
+      <div id="upload-drop-zone">
+        <div style="font-size:28px;color:var(--text-muted);margin-bottom:8px;">+</div>
+        <span id="upload-label">Drag files here or click to browse</span>
+        <input type="file" id="file-input" multiple accept=".py,.csv,.txt,.log,.md" disabled>
+      </div>
+      <ul id="file-list"><li id="no-files">No files</li></ul>
+      <button id="upload-close-btn" data-i18n="close">Close</button>
+    </div>
+  </div>
+
+  <!-- Chat Area -->
+  <main id="chat-area">
+    <div id="top-bar">
+      <h1 id="top-title" data-i18n="app_title">DMS Evaluator</h1>
+      <div id="lang-switcher">
+        <button class="lang-btn active" data-lang="zh-CN">中文</button>
+        <button class="lang-btn" data-lang="en">EN</button>
+      </div>
+    </div>
+    <div id="messages-container">
+      <div id="welcome-msg">
+        <div class="brand-name">DMS Evaluator</div>
+        <p data-i18n="welcome_text">Driver Monitoring System performance evaluation and optimization agent</p>
+        <p class="hint" data-i18n="welcome_hint">Upload log CSV or source code files, then tell me what you need</p>
+      </div>
+    </div>
+    <div id="input-area">
+      <textarea id="user-input" rows="1" data-i18n-placeholder="input_placeholder" placeholder="Ask a question about your DMS system..." onkeydown="handleKeyDown(event)"></textarea>
+      <button id="send-btn" onclick="sendMessage()"><span data-i18n="send">Send</span></button>
+    </div>
+  </main>
+
+  <!-- Right Panel (240px) -->
+  <aside id="right-panel">
+    <div class="panel-section">
+      <h3 data-i18n="sessions">Sessions</h3>
+      <ul id="session-list"></ul>
+      <button id="session-new-btn" onclick="createNewSession()">+ New Session</button>
+    </div>
+    <div class="panel-section">
+      <h3 data-i18n="actions">Actions</h3>
+      <button class="action-btn" onclick="actionGenerateReport()" data-i18n="gen_report">Generate Report</button>
+      <button class="action-btn" onclick="actionExportChat()" data-i18n="export_chat">Export Chat</button>
+      <button class="action-btn" onclick="actionSavePDF()" data-i18n="save_pdf">Save as PDF</button>
+      <button class="action-btn" onclick="actionDownloadAll()" data-i18n="download_all">Download All Files</button>
+      <button class="action-btn" onclick="actionCompareMetrics()" data-i18n="compare_metrics">Compare Metrics</button>
+      <button class="action-btn" onclick="actionChangeSummary()" data-i18n="change_summary">Code Change Summary</button>
+      <button class="action-btn" onclick="actionShareLink()" data-i18n="share_link">Share Link</button>
+      <button class="action-btn danger" onclick="actionClearSession()" data-i18n="clear_session">Clear Session</button>
+    </div>
+    <div class="panel-section">
+      <h3 data-i18n="session_files">Session Files</h3>
+      <ul id="panel-file-list"><li class="no-files" data-i18n="no_files">No files</li></ul>
+    </div>
+    <div class="panel-section">
+      <h3 data-i18n="modified_files">Modified Files</h3>
+      <ul id="panel-modified-list"><li class="no-files" data-i18n="no_modifications">No modifications</li></ul>
+    </div>
+  </aside>
+</div>
+
+<div id="toast"></div>
+<span id="sid-display" style="display:none;"></span>
+<span id="file-count" style="display:none;"></span>
+
+<script>
+// ═══════════════════════════════════════════════════════════
+// i18n
+// ═══════════════════════════════════════════════════════════
+
+const I18N = {
+  'zh-CN': {
+    app_title:'DMS Evaluator', welcome_text:'驾驶员监测系统性能评估与优化 Agent',
+    welcome_hint:'上传日志 CSV 或源码文件，然后告诉我需要做什么',
+    input_placeholder:'输入你的问题...', send:'Send', actions:'操作',
+    sessions:'会话列表', new_session:'新建会话',
+    gen_report:'生成评估报告', export_chat:'导出对话记录', save_pdf:'保存为 PDF',
+    download_all:'下载全部文件', compare_metrics:'对比性能指标',
+    change_summary:'代码修改摘要', share_link:'分享链接', clear_session:'清空会话',
+    session_files:'会话文件', modified_files:'已修改文件',
+    no_files:'暂无文件', no_modifications:'暂无修改',
+    upload_title:'上传文件', close:'关闭', thinking:'正在思考...', done:'回答完成',
+  },
+  'en': {
+    app_title:'DMS Evaluator', welcome_text:'Driver Monitoring System performance evaluation and optimization agent',
+    welcome_hint:'Upload log CSV or source code files, then tell me what you need',
+    input_placeholder:'Ask a question...', send:'Send', actions:'Actions',
+    sessions:'Sessions', new_session:'New Session',
+    gen_report:'Generate Report', export_chat:'Export Chat', save_pdf:'Save as PDF',
+    download_all:'Download All Files', compare_metrics:'Compare Metrics',
+    change_summary:'Code Change Summary', share_link:'Share Link', clear_session:'Clear Session',
+    session_files:'Session Files', modified_files:'Modified Files',
+    no_files:'No files', no_modifications:'No modifications',
+    upload_title:'Upload Files', close:'Close', thinking:'Thinking...', done:'Response complete',
+  }
+};
+let currentLang = localStorage.getItem('dms-lang') || 'zh-CN';
+function t(key) { return I18N[currentLang][key] || key; }
+
+function applyLanguage(lang) {
+  currentLang = lang;
+  localStorage.setItem('dms-lang', lang);
+  document.querySelectorAll('.lang-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.lang === lang);
+  });
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.getAttribute('data-i18n');
+    if (key && I18N[lang][key]) el.textContent = I18N[lang][key];
+  });
+  document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+    const key = el.getAttribute('data-i18n-placeholder');
+    if (key && I18N[lang][key]) el.placeholder = I18N[lang][key];
+  });
+  // Also update the status text if visible
+  const statusText = document.querySelector('.status-indicator .status-text');
+  if (statusText) {
+    const statusParent = statusText.closest('.status-indicator');
+    if (statusParent && statusParent.classList.contains('thinking')) statusText.textContent = I18N[lang].thinking;
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+// State
+// ═══════════════════════════════════════════════════════════
+
+let sessionId = null;
+let ws = null;
+let currentAgentBubble = null;
+let toolBlocks = {};
+let streamBuffer = '';
+let isStreaming = false;
+let modifiedFiles = [];
+let restoredHistory = null;  // Messages restored from localStorage, sent on first chat
+
+// ═══════════════════════════════════════════════════════════
+// Multi-session localStorage persistence
+// ═══════════════════════════════════════════════════════════
+
+const LS_KEY = 'dms_sessions';
+let localSessionId = null;  // ID of the active localStorage session (not server sessionId)
+
+function loadSessions() {
+  try {
+    const raw = localStorage.getItem(LS_KEY);
+    if (!raw) return { sessions: [], activeId: null };
+    const data = JSON.parse(raw);
+    return { sessions: data.sessions || [], activeId: data.activeId || null };
+  } catch (e) { return { sessions: [], activeId: null }; }
+}
+
+function saveSessions(data) {
+  try {
+    localStorage.setItem(LS_KEY, JSON.stringify(data));
+  } catch (e) { /* quota exceeded */ }
+}
+
+function saveToLocalStorage() {
+  if (!localSessionId) return;
+  const messages = extractMessages();
+  const data = loadSessions();
+  const idx = data.sessions.findIndex(s => s.id === localSessionId);
+  if (idx === -1) return;
+
+  data.sessions[idx].messages = messages;
+  data.sessions[idx].modifiedFiles = [...modifiedFiles];
+  data.sessions[idx].uploadedFiles = getUploadedFilenames();
+
+  // Auto-name session from first user message
+  if (!data.sessions[idx].name || data.sessions[idx].name.startsWith('Session')) {
+    const firstUser = messages.find(m => m.role === 'user');
+    if (firstUser) {
+      const snippet = firstUser.content.replace(/\n/g, ' ').trim().slice(0, 30);
+      data.sessions[idx].name = snippet || data.sessions[idx].name;
+    }
+  }
+
+  saveSessions(data);
+}
+
+function createNewSession() {
+  // Save current session state first
+  saveToLocalStorage();
+
+  const data = loadSessions();
+  const newId = 'ls_' + Date.now();
+  const count = data.sessions.length + 1;
+  const newSession = {
+    id: newId,
+    name: 'Session ' + count,
+    messages: [],
+    modifiedFiles: [],
+    uploadedFiles: [],
+    createdAt: new Date().toISOString(),
+  };
+  data.sessions.push(newSession);
+  data.activeId = newId;
+  saveSessions(data);
+
+  // Reload the page state for the new session
+  resetUIForNewSession();
+  localSessionId = newId;
+  renderSessionList();
+  serverInitPromise = null; initServerSession();
+}
+
+function switchSession(id) {
+  if (id === localSessionId) return;
+  saveToLocalStorage();
+
+  const data = loadSessions();
+  data.activeId = id;
+  saveSessions(data);
+
+  // Reload page for target session
+  resetUIForNewSession();
+  localSessionId = id;
+
+  // Restore target session's messages to DOM
+  const target = data.sessions.find(s => s.id === id);
+  if (target && target.messages && target.messages.length) {
+    restoreMessagesToDOM(target.messages);
+    restoredHistory = target.messages;
+    if (target.modifiedFiles) {
+      target.modifiedFiles.forEach(f => addModifiedFile(f.filename, f.url));
+      modifiedFiles = [...target.modifiedFiles];
+    }
+    updatePanelFileList(target.uploadedFiles || []);
+  }
+  renderSessionList();
+  serverInitPromise = null; initServerSession();
+}
+
+function deleteSession(id) {
+  const data = loadSessions();
+  if (data.sessions.length <= 1) {
+    showToast('Cannot delete the last session.');
+    return;
+  }
+  const idx = data.sessions.findIndex(s => s.id === id);
+  if (idx === -1) return;
+  data.sessions.splice(idx, 1);
+
+  if (data.activeId === id) {
+    data.activeId = data.sessions[Math.max(0, idx - 1)].id;
+  }
+  saveSessions(data);
+
+  if (data.activeId === localSessionId) {
+    // Reload
+    resetUIForNewSession();
+    localSessionId = data.activeId;
+    const target = data.sessions.find(s => s.id === data.activeId);
+    if (target && target.messages && target.messages.length) {
+      restoreMessagesToDOM(target.messages);
+      restoredHistory = target.messages;
+      if (target.modifiedFiles) {
+        target.modifiedFiles.forEach(f => addModifiedFile(f.filename, f.url));
+        modifiedFiles = [...target.modifiedFiles];
+      }
+    }
+    renderSessionList();
+    serverInitPromise = null; initServerSession();
+  } else {
+    renderSessionList();
+  }
+}
+
+function renderSessionList() {
+  const list = document.getElementById('session-list');
+  if (!list) return;
+  const data = loadSessions();
+  list.innerHTML = '';
+  data.sessions.forEach(s => {
+    const li = document.createElement('li');
+    li.className = 'session-item' + (s.id === localSessionId ? ' active' : '');
+    const msgCount = (s.messages && s.messages.length) ? Math.floor(s.messages.length / 2) : 0;
+    li.innerHTML = `
+      <span class="sess-name" title="${escapeHTML(s.name)}">${escapeHTML(s.name)}</span>
+      <span class="sess-count">${msgCount}</span>
+      <button class="sess-delete" title="Delete">&times;</button>`;
+    li.querySelector('.sess-name').onclick = () => switchSession(s.id);
+    li.querySelector('.sess-delete').onclick = (e) => { e.stopPropagation(); deleteSession(s.id); };
+    list.appendChild(li);
+  });
+}
+
+function resetUIForNewSession() {
+  // Close existing WS
+  if (ws) { try { ws.close(); } catch(e) {} ws = null; }
+  sessionId = null;
+  currentAgentBubble = null;
+  toolBlocks = {};
+  streamBuffer = '';
+  modifiedFiles = [];
+  restoredHistory = null;
+  isStreaming = false;
+
+  // Reset DOM
+  document.getElementById('messages-container').innerHTML = `
+    <div id="welcome-msg">
+      <div class="brand-name">DMS Evaluator</div>
+      <p data-i18n="welcome_text">Driver Monitoring System performance evaluation and optimization agent</p>
+      <p class="hint" data-i18n="welcome_hint">Upload log CSV or source code files, then tell me what you need</p>
+    </div>`;
+  document.getElementById('panel-modified-list').innerHTML = '<li class="no-files" data-i18n="no_modifications">No modifications</li>';
+  document.getElementById('panel-file-list').innerHTML = '<li class="no-files" data-i18n="no_files">No files</li>';
+  document.getElementById('file-list').innerHTML = '<li id="no-files" data-i18n="no_files">No files</li>';
+  document.getElementById('file-count').textContent = '0';
+  document.getElementById('sid-display').textContent = '--';
+  setInputEnabled(true);
+  applyLanguage(currentLang);
+}
+
+function updatePanelFileList(filenames) {
+  const panelList = document.getElementById('panel-file-list');
+  if (!panelList) return;
+  if (!filenames || !filenames.length) return;
+  const noFiles = panelList.querySelector('.no-files');
+  if (noFiles) noFiles.remove();
+  filenames.forEach(fn => {
+    const li = document.createElement('li');
+    li.textContent = fn;
+    panelList.appendChild(li);
+  });
+}
+
+function extractMessages() {
+  const messages = [];
+  const container = document.getElementById('messages-container');
+  if (!container) return messages;
+  for (const child of container.children) {
+    if (child.classList.contains('msg-user')) {
+      messages.push({ role: 'user', content: child.textContent });
+    } else if (child.classList.contains('msg-agent')) {
+      const agentContent = child.querySelector('.agent-content');
+      if (agentContent) {
+        messages.push({ role: 'agent', content: agentContent.innerHTML });
+      }
+    }
+  }
+  return messages;
+}
+
+function getUploadedFilenames() {
+  const panelList = document.getElementById('panel-file-list');
+  if (!panelList) return [];
+  return Array.from(panelList.querySelectorAll('li:not(.no-files)'))
+    .map(li => li.textContent.trim());
+}
+
+function restoreMessagesToDOM(messages) {
+  if (!messages || !messages.length) return;
+  const container = document.getElementById('messages-container');
+  const welcome = document.getElementById('welcome-msg');
+  if (welcome) welcome.remove();
+  for (const msg of messages) {
+    if (msg.role === 'user') {
+      appendUserBubble(msg.content);
+    } else {
+      const div = document.createElement('div');
+      div.className = 'msg-bubble msg-agent';
+      const content = document.createElement('div');
+      content.className = 'agent-content';
+      content.innerHTML = msg.content;
+      div.appendChild(content);
+      container.appendChild(div);
+    }
+  }
+  scrollToBottom();
+}
+
+// ═══════════════════════════════════════════════════════════
+// Init
+// ═══════════════════════════════════════════════════════════
+
+let initPromise = null;       // Guards init() — runs once per page load
+let serverInitPromise = null; // Guards initServerSession() — one at a time
+
+async function init() {
+  if (initPromise) return initPromise;
+
+  // Set initPromise immediately to prevent re-entry during synchronous setup
+  initPromise = (async () => {
+    // Load multi-session state from localStorage
+    const data = loadSessions();
+    if (data.sessions.length === 0) {
+      const defaultId = 'ls_' + Date.now();
+      data.sessions = [{
+        id: defaultId, name: 'Session 1',
+        messages: [], modifiedFiles: [], uploadedFiles: [],
+        createdAt: new Date().toISOString(),
+      }];
+      data.activeId = defaultId;
+      saveSessions(data);
+    }
+    if (!data.activeId && data.sessions.length > 0) {
+      data.activeId = data.sessions[0].id;
+      saveSessions(data);
+    }
+    localSessionId = data.activeId;
+
+    // Restore active session's messages to DOM
+    const active = data.sessions.find(s => s.id === localSessionId);
+    if (active && active.messages && active.messages.length) {
+      restoreMessagesToDOM(active.messages);
+      restoredHistory = active.messages;
+      if (active.modifiedFiles) {
+        active.modifiedFiles.forEach(f => addModifiedFile(f.filename, f.url));
+        modifiedFiles = [...active.modifiedFiles];
+      }
+      if (active.uploadedFiles) {
+        updatePanelFileList(active.uploadedFiles);
+      }
+    }
+
+    // Render session list
+    renderSessionList();
+
+    // Start server session
+    await initServerSession();
+  })();
+
+  return initPromise;
+}
+
+async function initServerSession() {
+  if (serverInitPromise) return serverInitPromise;
+
+  if (ws) { try { ws.close(); } catch(e) {} ws = null; }
+  sessionId = null;
+  currentAgentBubble = null;
+  toolBlocks = {};
+  streamBuffer = '';
+
+  serverInitPromise = (async () => {
+    const sidDisplay = document.getElementById('sid-display');
+    const uploadDropZone = document.getElementById('upload-drop-zone');
+    const uploadLabel = document.getElementById('upload-label');
+    const fileInput = document.getElementById('file-input');
+    const sendBtn = document.getElementById('send-btn');
+    const userInput = document.getElementById('user-input');
+
+    sidDisplay.textContent = 'Creating...';
+    uploadDropZone.style.opacity = '0.5';
+    uploadDropZone.style.pointerEvents = 'none';
+    uploadLabel.textContent = 'Agent 加载中...';
+    sendBtn.disabled = true;
+    userInput.disabled = true;
+
+    try {
+      // Gather previously uploaded filenames from localStorage for this session
+      let expectedFiles = [];
+      if (localSessionId) {
+        const sessionsData = loadSessions();
+        const ls = sessionsData.sessions.find(s => s.id === localSessionId);
+        if (ls && ls.uploadedFiles) expectedFiles = ls.uploadedFiles;
+      }
+      const res = await fetch('/api/session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          local_session_id: localSessionId || null,
+          expected_files: expectedFiles,
+        }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ detail: `HTTP ${res.status}` }));
+        throw new Error(err.detail || `HTTP ${res.status}`);
+      }
+      const data = await res.json();
+      if (!data.session_id) throw new Error('No session_id returned');
+      sessionId = data.session_id;
+      sidDisplay.textContent = sessionId;
+      uploadLabel.textContent = 'Agent 加载中...';
+
+      let dots = 0;
+      for (let i = 0; i < 120; i++) {
+        await new Promise(r => setTimeout(r, 500));
+        if (!sessionId) continue; // Guard against concurrent reset
+        try {
+          const statusRes = await fetch(`/api/session/${sessionId}/status`);
+          const status = await statusRes.json();
+          if (status.agent_ready) {
+            uploadDropZone.style.opacity = '';
+            uploadDropZone.style.pointerEvents = '';
+            uploadLabel.textContent = 'Drag files here or click to browse';
+            fileInput.disabled = false;
+            sendBtn.disabled = false;
+            userInput.disabled = false;
+            if (status.modified_files) {
+              status.modified_files.forEach(f => addModifiedFile(f.filename, f.download_url));
+            }
+            connectWS();
+            return;
+          }
+          if (status.agent_error) throw new Error(status.agent_error);
+          dots = (dots + 1) % 4;
+          uploadLabel.textContent = 'Agent 加载中' + '.'.repeat(dots);
+        } catch (e) {
+          if (e.message && !e.message.includes('status')) throw e;
+        }
+      }
+      throw new Error('Agent init timed out (60s)');
+    } catch (e) {
+      sidDisplay.textContent = 'RETRY';
+      uploadLabel.textContent = '初始化失败，点击重试';
+      showToast('Init failed: ' + e.message);
+      uploadDropZone.style.opacity = '';
+      uploadDropZone.style.pointerEvents = '';
+      uploadDropZone.onclick = () => { serverInitPromise = null; initServerSession(); };
+      fileInput.disabled = false;
+      sendBtn.disabled = false;
+      userInput.disabled = false;
+      serverInitPromise = null;  // Clear guard so user can retry
+    }
+  })();
+
+  return serverInitPromise;
+}
+
+function connectWS() {
+  const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+  const url = `${protocol}//${location.host}/ws/${sessionId}`;
+  ws = new WebSocket(url);
+
+  ws.onopen = () => console.log('WS connected');
+
+  ws.onclose = (event) => {
+    console.log('WS disconnected:', event.code, event.reason);
+    if (!event.wasClean && sessionId) {
+      setTimeout(() => {
+        if (sessionId && (!ws || ws.readyState === WebSocket.CLOSED)) {
+          console.log('Auto-reconnecting WS...');
+          connectWS();
+        }
+      }, 2000);
+    }
+  };
+
+  ws.onerror = () => console.log('WS error');
+
+  ws.onmessage = (event) => {
+    const msg = JSON.parse(event.data);
+    handleWSMessage(msg);
+  };
+}
+
+// ═══════════════════════════════════════════════════════════
+// WebSocket message handler
+// ═══════════════════════════════════════════════════════════
+
+function handleWSMessage(msg) {
+  switch (msg.type) {
+    case 'status':
+      if (msg.subtype === 'started') {
+        currentAgentBubble = createAgentBubble();
+        streamBuffer = '';
+        setInputEnabled(false);
+        removeWelcome();
+      }
+      break;
+
+    case 'token':
+      if (currentAgentBubble) {
+        streamBuffer += msg.content;
+        renderMarkdown(currentAgentBubble, streamBuffer);
+        scrollToBottom();
+      }
+      break;
+
+    case 'tool_start':
+      if (currentAgentBubble) {
+        const toolEl = createToolBlock(msg.id, msg.tool_name, msg.args);
+        currentAgentBubble.appendChild(toolEl);
+        toolBlocks[msg.id] = toolEl;
+        scrollToBottom();
+      }
+      break;
+
+    case 'tool_end':
+      const tel = toolBlocks[msg.id];
+      if (tel) {
+        const statusEl = tel.querySelector('.tool-status');
+        statusEl.textContent = msg.is_error ? 'error' : 'done';
+        statusEl.className = 'tool-status ' + (msg.is_error ? 'error' : 'done');
+        const resultEl = tel.querySelector('.tool-result');
+        resultEl.textContent = msg.result;
+        if (msg.is_error) {
+          tel.classList.add('expanded');
+        } else {
+          tel.classList.add('expanded');
+          setTimeout(() => { tel.classList.remove('expanded'); }, 2000);
+        }
+        delete toolBlocks[msg.id];
+      }
+      break;
+
+    case 'content_replace':
+      // Server-side cleaned text replaces the raw streaming content
+      if (currentAgentBubble) {
+        streamBuffer = msg.content;
+        renderMarkdown(currentAgentBubble, msg.content);
+      }
+      break;
+
+    case 'done':
+      if (currentAgentBubble) {
+        const status = currentAgentBubble.querySelector('.status-indicator');
+        if (status) {
+          status.className = 'status-indicator done';
+          status.querySelector('.status-text').textContent = I18N[currentLang].done || 'Response complete';
+          setTimeout(() => { status.style.display = 'none'; }, 3000);
+        }
+      }
+      setInputEnabled(true);
+      currentAgentBubble = null;
+      streamBuffer = '';
+      saveToLocalStorage();
+      break;
+
+    case 'error':
+      if (currentAgentBubble) {
+        const status = currentAgentBubble.querySelector('.status-indicator');
+        if (status) {
+          status.className = 'status-indicator error';
+          status.querySelector('.status-text').textContent = msg.message || 'Error';
+        }
+        const errDiv = document.createElement('div');
+        errDiv.style.cssText = 'color:var(--danger);margin-top:8px;font-family:var(--font-mono);font-size:0.85em;';
+        errDiv.textContent = '[Error] ' + msg.message;
+        const content = currentAgentBubble.querySelector('.agent-content');
+        if (content) content.appendChild(errDiv);
+      }
+      setInputEnabled(true);
+      currentAgentBubble = null;
+      break;
+
+    case 'diff_card':
+      if (currentAgentBubble) {
+        const diffEl = createDiffCard(msg);
+        // Insert diff card before the status indicator
+        const statusEl = currentAgentBubble.querySelector('.status-indicator');
+        if (statusEl) {
+          currentAgentBubble.insertBefore(diffEl, statusEl);
+        } else {
+          currentAgentBubble.appendChild(diffEl);
+        }
+        if (msg.filename && msg.download_url) {
+          addModifiedFile(msg.filename, msg.download_url);
+        }
+        scrollToBottom();
+      }
+      break;
+
+    case 'action_result':
+      showToast(msg.message || 'Action completed');
+      break;
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+// Chat
+// ═══════════════════════════════════════════════════════════
+
+async function sendMessage() {
+  const input = document.getElementById('user-input');
+  const text = input.value.trim();
+  if (!text || isStreaming) return;
+
+  if (!ws || ws.readyState !== WebSocket.OPEN) {
+    showToast('Connection lost. Reconnecting...');
+    connectWS();
+    await new Promise(r => setTimeout(r, 1500));
+    if (!ws || ws.readyState !== WebSocket.OPEN) {
+      showToast('Reconnection failed. Please refresh the page.');
+      return;
+    }
+  }
+
+  appendUserBubble(text);
+  input.value = '';
+  autoResize(input);
+  scrollToBottom();
+
+  const payload = { type: 'chat', content: text };
+  if (restoredHistory) {
+    payload.history = restoredHistory;
+    restoredHistory = null;
+  }
+  ws.send(JSON.stringify(payload));
+}
+
+function handleKeyDown(event) {
+  if (event.key === 'Enter' && !event.shiftKey) {
+    event.preventDefault();
+    sendMessage();
+  }
+}
+
+// ── Bubble helpers ──
+
+function appendUserBubble(text) {
+  const container = document.getElementById('messages-container');
+  const div = document.createElement('div');
+  div.className = 'msg-bubble msg-user';
+  div.textContent = text;
+  container.appendChild(div);
+}
+
+function createAgentBubble() {
+  const container = document.getElementById('messages-container');
+  const div = document.createElement('div');
+  div.className = 'msg-bubble msg-agent';
+  const content = document.createElement('div');
+  content.className = 'agent-content';
+  content.innerHTML = '<div class="loading-dots"><span></span><span></span><span></span></div>';
+  div.appendChild(content);
+  const status = document.createElement('div');
+  status.className = 'status-indicator thinking';
+  status.innerHTML = '<span class="status-dot"></span><span class="status-text">' + (I18N[currentLang].thinking || 'Thinking...') + '</span>';
+  div.appendChild(status);
+  container.appendChild(div);
+  return div;
+}
+
+function removeWelcome() {
+  const w = document.getElementById('welcome-msg');
+  if (w) w.remove();
+}
+
+// ── Tool block ──
+
+function createToolBlock(id, toolName, args) {
+  const div = document.createElement('div');
+  div.className = 'tool-call';
+  div.dataset.toolId = id;
+
+  div.innerHTML = `
+    <div class="tool-header" onclick="this.parentElement.classList.toggle('expanded')">
+      <span class="tool-chevron">&#9654;</span>
+      <span class="tool-prompt">&gt;</span>
+      <span class="tool-name">${escapeHTML(toolName)}</span>
+      <span class="tool-status running">running...</span>
+    </div>
+    <div class="tool-body">
+      <div class="tool-args">${escapeHTML(args || '(no arguments)')}</div>
+      <pre class="tool-result"></pre>
+    </div>
+  `;
+
+  return div;
+}
+
+// ── Minimal markdown renderer ──
+
+function renderMarkdown(container, raw) {
+  const content = container.querySelector('.agent-content');
+  if (!content) return;
+
+  const loader = content.querySelector('.loading-dots');
+  if (loader) loader.remove();
+
+  // NOTE: Tool blocks are siblings of agent-content, NOT inside it.
+  // content.innerHTML = '' below only clears agent-content internals,
+  // so tool blocks stay in place. Do NOT save/re-append them (causes exponential duplication).
+
+  let html = raw;
+
+  // Strip XML tool-call text hallucinated by DeepSeek.
+  // Pass 1: complete <function_calls>...</function_calls> or <tool_calls>...</tool_calls> blocks
+  html = html.replace(/<(function_calls|tool_calls)>[\s\S]*?<\/(function_calls|tool_calls)>/gi, '');
+  // Pass 2: lines starting with XML tags
+  html = html.replace(/^<(invoke|parameter|function_calls|tool_calls|\/invoke|\/parameter|\/function_calls|\/tool_calls)[^\n]*$/gim, '');
+  // Pass 3: orphaned closing tags
+  html = html.replace(/<\/(invoke|parameter|function_calls|tool_calls)>/gi, '');
+// Code fences (``` ... ```)
+  html = html.replace(/```(\w*)\n([\s\S]*?)```/g, (_, lang, code) => {
+    return `<pre><code>${escapeHTML(code.trimEnd())}</code></pre>`;
+  });
+
+  // Inline code
+  html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
+
+  // Headings
+  html = html.replace(/^### (.+)$/gm, '<h3>$1</h3>');
+  html = html.replace(/^## (.+)$/gm, '<h2>$1</h2>');
+  html = html.replace(/^# (.+)$/gm, '<h1>$1</h1>');
+
+  // Bold
+  html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+
+  // Italic
+  html = html.replace(/\*(.+?)\*/g, '<em>$1</em>');
+
+  // Tables
+  html = html.replace(/((?:^\|.+\|$\n?)+)/gm, (match) => {
+    const lines = match.trim().split('\n').filter(l => l.includes('|'));
+    if (lines.length < 2) return match;
+    const dataLines = lines.filter(l => !/^\|[\s\-:|]+\|$/.test(l));
+    if (dataLines.length === 0) return match;
+
+    let table = '<table>';
+    const headerCells = dataLines[0].split('|').filter(c => c.trim()).map(c => c.trim());
+    table += '<thead><tr>' + headerCells.map(c => `<th>${c}</th>`).join('') + '</tr></thead>';
+
+    if (dataLines.length > 1) {
+      table += '<tbody>';
+      for (let i = 1; i < dataLines.length; i++) {
+        const cells = dataLines[i].split('|').filter(c => c.trim()).map(c => c.trim());
+        table += '<tr>' + cells.map(c => `<td>${c}</td>`).join('') + '</tr>';
+      }
+      table += '</tbody>';
+    }
+    table += '</table>';
+    return table;
+  });
+
+  // Unordered lists
+  html = html.replace(/((?:^[\-\*] .+$\n?)+)/gm, (match) => {
+    const items = match.trim().split('\n').map(l => `<li>${l.replace(/^[\-\*] /, '')}</li>`).join('');
+    return `<ul>${items}</ul>`;
+  });
+
+  // Ordered lists
+  html = html.replace(/((?:^\d+\. .+$\n?)+)/gm, (match) => {
+    const items = match.trim().split('\n').map(l => `<li>${l.replace(/^\d+\. /, '')}</li>`).join('');
+    return `<ol>${items}</ol>`;
+  });
+
+  // Horizontal rules (--- or *** on their own line)
+  html = html.replace(/^[-*]{3,}\s*$/gm, '<hr>');
+
+  // Blockquotes
+  html = html.replace(/^&gt; (.+)$/gm, '<blockquote>$1</blockquote>');
+
+  // Paragraphs
+  const parts = html.split(/\n\n+/);
+  html = parts.map(part => {
+    const trimmed = part.trim();
+    if (!trimmed) return '';
+    if (/^<(h[1-3]|table|pre|ul|ol|blockquote|div)/.test(trimmed)) return trimmed;
+    return '<p>' + trimmed.replace(/\n/g, '<br>') + '</p>';
+  }).join('');
+
+  // Set content into agent-content div
+  const contentDiv = document.createElement('div');
+  contentDiv.innerHTML = html;
+  content.innerHTML = '';
+  content.appendChild(contentDiv);
+
+}
+
+// ═══════════════════════════════════════════════════════════
+// File upload
+// ═══════════════════════════════════════════════════════════
+
+async function handleFiles(fileList) {
+  if (!sessionId) {
+    showToast('Session not ready yet. Please wait for initialization to complete.');
+    return;
+  }
+
+  const existingFiles = new Set();
+  document.querySelectorAll('#file-list li:not(#no-files) span:first-child').forEach(s => {
+    existingFiles.add(s.textContent.trim());
+  });
+
+  for (const file of fileList) {
+    if (existingFiles.has(file.name)) {
+      showToast('File "' + file.name + '" already uploaded.');
+      continue;
+    }
+
+    const formData = new FormData();
+    formData.append('session_id', sessionId);
+    formData.append('file', file);
+
+    try {
+      const res = await fetch('/api/upload', { method: 'POST', body: formData });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        if (res.status === 404) {
+          showToast('Session lost (server may have restarted). Recovering...');
+          serverInitPromise = null; await initServerSession();
+          if (sessionId) {
+            const formData2 = new FormData();
+            formData2.append('session_id', sessionId);
+            formData2.append('file', file);
+            const retryRes = await fetch('/api/upload', { method: 'POST', body: formData2 });
+            if (retryRes.ok) {
+              const data = await retryRes.json();
+              addFileToList(data.filename);
+              continue;
+            }
+          }
+          showToast('Session recovery failed. Please refresh the page.');
+          return;
+        }
+        showToast('Upload failed: ' + (err.detail || res.statusText));
+        continue;
+      }
+      const data = await res.json();
+      addFileToList(data.filename);
+    } catch (e) {
+      showToast('Connection lost. Attempting to recover...');
+      serverInitPromise = null; await initServerSession();
+      if (sessionId) {
+        const formData2 = new FormData();
+        formData2.append('session_id', sessionId);
+        formData2.append('file', file);
+        try {
+          const retryRes = await fetch('/api/upload', { method: 'POST', body: formData2 });
+          if (retryRes.ok) {
+            const data = await retryRes.json();
+            addFileToList(data.filename);
+            continue;
+          }
+        } catch (e2) { /* fall through */ }
+      }
+      showToast('Upload error: ' + e.message);
+    }
+  }
+}
+
+function addFileToList(filename) {
+  // Remove no-files placeholder from overlay file list
+  const overlayNoFiles = document.getElementById('no-files');
+  if (overlayNoFiles) overlayNoFiles.remove();
+
+  // Add to overlay file list
+  const list = document.getElementById('file-list');
+  if (list) {
+    const li = document.createElement('li');
+    li.innerHTML = `
+      <span>${escapeHTML(filename)}</span>
+      <span class="remove-file" onclick="removeFile('${escapeHTML(filename)}', this.parentElement)">x</span>`;
+    list.appendChild(li);
+  }
+
+  // Also add to right panel file list
+  const panelList = document.getElementById('panel-file-list');
+  if (panelList) {
+    const panelNoFiles = panelList.querySelector('.no-files');
+    if (panelNoFiles) panelNoFiles.remove();
+    const panelLi = document.createElement('li');
+    panelLi.textContent = filename;
+    panelList.appendChild(panelLi);
+  }
+
+  updateFileCount();
+}
+
+function removeFile(filename, element) {
+  element.remove();
+
+  // Also remove from panel list
+  const panelList = document.getElementById('panel-file-list');
+  if (panelList) {
+    const panelItems = panelList.querySelectorAll('li:not(.no-files)');
+    for (const item of panelItems) {
+      if (item.textContent.trim() === filename) {
+        item.remove();
+        break;
+      }
+    }
+  }
+
+  updateFileCount();
+}
+
+function updateFileCount() {
+  const list = document.getElementById('file-list');
+  if (!list) return;
+  const items = list.querySelectorAll('li:not(#no-files)');
+  const fileCountEl = document.getElementById('file-count');
+  if (fileCountEl) fileCountEl.textContent = items.length;
+
+  if (items.length === 0) {
+    const li = document.createElement('li');
+    li.id = 'no-files';
+    li.setAttribute('data-i18n', 'no_files');
+    li.textContent = I18N[currentLang].no_files || 'No files';
+    list.appendChild(li);
+  }
+
+  // Also check panel file list for empty state
+  const panelList = document.getElementById('panel-file-list');
+  if (panelList) {
+    const panelItems = panelList.querySelectorAll('li:not(.no-files)');
+    if (panelItems.length === 0 && !panelList.querySelector('.no-files')) {
+      const noLi = document.createElement('li');
+      noLi.className = 'no-files';
+      noLi.setAttribute('data-i18n', 'no_files');
+      noLi.textContent = I18N[currentLang].no_files || 'No files';
+      panelList.appendChild(noLi);
+    }
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+// Diff Cards
+// ═══════════════════════════════════════════════════════════
+
+function createDiffCard(msg) {
+  const div = document.createElement('div');
+  div.className = 'diff-card';
+
+  if (msg.is_error) {
+    // Error card: modification failed
+    div.style.borderLeft = '2px solid var(--danger)';
+    const errText = msg.diff_text || 'Unknown error';
+    const errFirstLine = errText.split('\n')[0];
+    div.innerHTML = `
+      <div class="diff-header" style="background:rgba(179,74,74,0.06);">
+        <span class="diff-filename" style="color:var(--danger);">${escapeHTML(msg.filename)}</span>
+        <span class="diff-stats" style="color:var(--danger);">FAILED</span>
+      </div>
+      <div class="diff-body">
+        <div style="padding:10px 14px;color:var(--danger);font-size:0.9em;white-space:pre-wrap;word-break:break-word;">
+${escapeHTML(errText)}
+        </div>
+      </div>`;
+    return div;
+  }
+
+  const diffMatch = msg.diff_text.match(/```diff\n([\s\S]*?)```/);
+  let oldLines = [], newLines = [];
+  if (diffMatch) {
+    const diffLines = diffMatch[1].split('\n');
+    for (const line of diffLines) {
+      if (line.startsWith('-')) oldLines.push(line);
+      else if (line.startsWith('+')) newLines.push(line);
+    }
+  }
+  div.innerHTML = `
+    <div class="diff-header">
+      <span class="diff-filename">${escapeHTML(msg.filename)}</span>
+      <span class="diff-stats">+${newLines.length} -${oldLines.length}</span>
+    </div>
+    <div class="diff-body">
+      <div class="diff-side-by-side">
+        <div class="diff-old">${escapeHTML(oldLines.join('\n') || '(no removals)')}</div>
+        <div class="diff-new">${escapeHTML(newLines.join('\n') || '(no additions)')}</div>
+      </div>
+      <div class="diff-unified">${escapeHTML(diffMatch ? diffMatch[1] : msg.diff_text)}</div>
+    </div>
+    <div class="diff-actions">
+      <button onclick="var c=this.closest('.diff-card');c.classList.toggle('show-unified');this.textContent=c.classList.contains('show-unified')?'Side-by-side':'Unified Diff';">Unified Diff</button>
+      ${msg.download_url ? `<button class="primary" onclick="window.open('${msg.download_url}','_blank')">Download</button>` : ''}
+    </div>`;
+  return div;
+}
+
+function addModifiedFile(filename, url) {
+  modifiedFiles.push({ filename, url });
+  const list = document.getElementById('panel-modified-list');
+  if (!list) return;
+  const noFiles = list.querySelector('.no-files');
+  if (noFiles) noFiles.remove();
+  const li = document.createElement('li');
+  li.textContent = filename;
+  li.onclick = () => url ? window.open(url, '_blank') : null;
+  list.appendChild(li);
+}
+
+// ═══════════════════════════════════════════════════════════
+// Session clear
+// ═══════════════════════════════════════════════════════════
+
+async function actionClearSession() {
+  if (ws) { try { ws.close(); } catch(e) {} ws = null; }
+  try {
+    await fetch(`/api/session/${sessionId}`, { method: 'DELETE' });
+  } catch (e) { /* ignore */ }
+
+  // Clear current session in localStorage but keep the session entry
+  const data = loadSessions();
+  const idx = data.sessions.findIndex(s => s.id === localSessionId);
+  if (idx !== -1) {
+    data.sessions[idx].messages = [];
+    data.sessions[idx].modifiedFiles = [];
+    data.sessions[idx].uploadedFiles = [];
+  }
+  saveSessions(data);
+
+  resetUIForNewSession();
+  renderSessionList();
+  serverInitPromise = null; initServerSession();
+}
+
+// ═══════════════════════════════════════════════════════════
+// Right Panel Action Buttons
+// ═══════════════════════════════════════════════════════════
+
+function actionGenerateReport() {
+  if (isStreaming) {
+    showToast('Agent is still responding. Please wait.');
+    return;
+  }
+  if (!ws || ws.readyState !== WebSocket.OPEN) {
+    showToast('Not connected. Please wait for initialization.');
+    return;
+  }
+
+  // Detect context: has conversation? has files?
+  const container = document.getElementById('messages-container');
+  const chatBubbles = container ? container.querySelectorAll('.msg-user, .msg-agent') : [];
+  const hasChat = chatBubbles.length > 0;
+
+  const panelList = document.getElementById('panel-file-list');
+  const uploadedFiles = panelList ? panelList.querySelectorAll('li:not(.no-files)') : [];
+  const hasFiles = uploadedFiles.length > 0;
+
+  let prompt;
+  if (hasChat) {
+    // Has conversation: summarize existing conclusions
+    prompt = '请基于当前对话中已经讨论过的内容和发现，用中文生成一份完整的评估报告，然后调用 save_report 保存。';
+  } else if (hasFiles) {
+    // Files uploaded but no chat: analyze files first, then generate report
+    const fileNames = Array.from(uploadedFiles).map(li => li.textContent.trim()).join('、');
+    prompt = '请分析我已上传的文件（' + fileNames + '），对 DMS 系统进行全面评估，然后调用 save_report 保存评估报告。';
+  } else {
+    showToast('请先上传文件或开始对话。');
+    return;
+  }
+
+  ws.send(JSON.stringify({ type: 'chat', content: prompt }));
+  scrollToBottom();
+}
+
+function actionExportChat() {
+  const messages = document.getElementById('messages-container');
+  const text = messages.innerText;
+  const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'dms_chat_export_' + new Date().toISOString().slice(0,10) + '.txt';
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('Chat exported');
+}
+
+function actionSavePDF() {
+  window.print();
+}
+
+function actionDownloadAll() {
+  if (!sessionId) {
+    showToast('No active session');
+    return;
+  }
+  window.open('/api/session/' + sessionId + '/download-all', '_blank');
+}
+
+function actionCompareMetrics() {
+  if (isStreaming) {
+    showToast('Agent is still responding. Please wait.');
+    return;
+  }
+  if (!ws || ws.readyState !== WebSocket.OPEN) {
+    showToast('Not connected. Please wait for initialization.');
+    return;
+  }
+  // Check if there are CSV files uploaded
+  const fileList = document.getElementById('panel-file-list');
+  const csvFiles = fileList ? Array.from(fileList.querySelectorAll('li:not(.no-files)')).filter(li => li.textContent.endsWith('.csv')) : [];
+  if (csvFiles.length < 2) {
+    showToast('Need at least 2 CSV log files to compare. Upload before/after optimization logs.');
+    return;
+  }
+  ws.send(JSON.stringify({ type: 'chat', content: '请调用 compare_metrics 对比我上传的两份性能日志。不要做其他分析，只生成对比表。' }));
+  scrollToBottom();
+}
+
+function actionChangeSummary() {
+  if (modifiedFiles.length === 0) {
+    showToast('No modifications yet');
+    return;
+  }
+  const summary = 'Modified files (' + modifiedFiles.length + '):\n' +
+    modifiedFiles.map((f, i) => (i + 1) + '. ' + f.filename).join('\n');
+  showToast(summary);
+  // Also append a message to the chat
+  const container = document.getElementById('messages-container');
+  const div = document.createElement('div');
+  div.className = 'msg-bubble msg-agent';
+  div.style.cssText = 'max-width:85%;';
+  div.innerHTML = '<strong>Code Change Summary</strong><br><br>' +
+    modifiedFiles.map((f, i) => {
+      const dlUrl = f.url || ('/api/session/' + sessionId + '/download/' + f.filename);
+      return (i + 1) + '. <a href="' + dlUrl + '" target="_blank" style="color:var(--accent);">' + escapeHTML(f.filename) + '</a>';
+    }).join('<br>');
+  container.appendChild(div);
+  scrollToBottom();
+}
+
+function actionShareLink() {
+  const url = location.origin + '/?session=' + (sessionId || '');
+  navigator.clipboard.writeText(url).then(() => {
+    showToast('Link copied to clipboard');
+  }).catch(() => {
+    showToast('Failed to copy link: ' + url);
+  });
+}
+
+// ═══════════════════════════════════════════════════════════
+// Helpers
+// ═══════════════════════════════════════════════════════════
+
+function setInputEnabled(enabled) {
+  isStreaming = !enabled;
+  document.getElementById('user-input').disabled = !enabled;
+  document.getElementById('send-btn').disabled = !enabled;
+  if (enabled) document.getElementById('user-input').focus();
+}
+
+function scrollToBottom() {
+  const container = document.getElementById('messages-container');
+  container.scrollTop = container.scrollHeight;
+}
+
+function autoResize(textarea) {
+  textarea.style.height = 'auto';
+  textarea.style.height = Math.min(textarea.scrollHeight, 150) + 'px';
+}
+
+function escapeHTML(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+function showToast(message) {
+  const toast = document.getElementById('toast');
+  toast.textContent = message;
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 4000);
+}
+
+// ═══════════════════════════════════════════════════════════
+// Event Listeners
+// ═══════════════════════════════════════════════════════════
+
+// Language switcher
+document.querySelectorAll('.lang-btn').forEach(btn => {
+  btn.addEventListener('click', () => applyLanguage(btn.dataset.lang));
+});
+
+// Nav upload button — show overlay
+document.getElementById('nav-upload-btn').addEventListener('click', () => {
+  document.getElementById('upload-overlay').style.display = 'flex';
+});
+
+// Upload close button — hide overlay
+document.getElementById('upload-close-btn').addEventListener('click', () => {
+  document.getElementById('upload-overlay').style.display = 'none';
+});
+
+// Upload drop zone — click to browse, drag/drop
+const uploadDropZone = document.getElementById('upload-drop-zone');
+const fileInput = document.getElementById('file-input');
+
+uploadDropZone.addEventListener('click', (e) => {
+  // Don't trigger if clicking on the file input itself
+  if (e.target !== fileInput) fileInput.click();
+});
+
+uploadDropZone.addEventListener('dragover', (e) => {
+  e.preventDefault();
+  uploadDropZone.classList.add('dragover');
+});
+
+uploadDropZone.addEventListener('dragleave', () => {
+  uploadDropZone.classList.remove('dragover');
+});
+
+uploadDropZone.addEventListener('drop', (e) => {
+  e.preventDefault();
+  uploadDropZone.classList.remove('dragover');
+  handleFiles(e.dataTransfer.files);
+});
+
+fileInput.addEventListener('change', () => {
+  handleFiles(fileInput.files);
+  fileInput.value = '';
+});
+
+// Auto-resize textarea
+document.getElementById('user-input').addEventListener('input', function() {
+  autoResize(this);
+});
+
+// Apply language on load, then init
+applyLanguage(currentLang);
+init();
+</script>
+</body>
+</html>

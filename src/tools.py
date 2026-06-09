@@ -1,3 +1,5 @@
+"""LangChain tools — codebase exploration, log analysis, code modification, standards search, report generation."""
+
 from __future__ import annotations
 
 import difflib
@@ -42,22 +44,26 @@ def _get_log_parser() -> LogParser:
 # ═══════════════════════════════════════════════════════════
 
 @tool
-def scan_codebase(source_dir: str = "data/source_code") -> str:
+def scan_codebase(source_dir: str) -> str:
     """扫描 DMS 源码目录，返回所有 .py 文件的目录树和文件大小。
     这是探索代码的第一步，了解有哪些文件后再用 analyze_code_structure 深入。
-    参数: source_dir - 源码目录路径，默认为 data/source_code
+    参数: source_dir - 源码目录路径（必填）
     """
-    path = ROOT_DIR / source_dir if not Path(source_dir).is_absolute() else Path(source_dir)
+    path = Path(source_dir)
+    if not path.is_absolute():
+        path = ROOT_DIR / source_dir
     return scan_directory(path)
 
 
 @tool
-def analyze_code_structure(source_dir: str = "data/source_code") -> str:
+def analyze_code_structure(source_dir: str) -> str:
     """用 AST 解析所有 Python 源码文件，提取类名、方法名、函数、导入依赖、关键常量。
     不读取实现细节，只提取结构骨架。适合在了解文件列表后快速定位关键模块。
-    参数: source_dir - 源码目录路径，默认为 data/source_code
+    参数: source_dir - 源码目录路径（必填）
     """
-    path = ROOT_DIR / source_dir if not Path(source_dir).is_absolute() else Path(source_dir)
+    path = Path(source_dir)
+    if not path.is_absolute():
+        path = ROOT_DIR / source_dir
     return analyze_python_files(path)
 
 
@@ -209,14 +215,10 @@ def modify_code(file_path: str, old_snippet: str, new_snippet: str) -> str:
     """
     path = Path(file_path)
     if not path.is_absolute():
-        alt = ROOT_DIR / "data" / "source_code" / file_path
-        if alt.exists():
-            path = alt
-        else:
-            path = ROOT_DIR / file_path
+        path = ROOT_DIR / file_path
 
     if not path.exists():
-        return f"[ERR] 文件不存在: {path}\n请先用 scan_codebase 确认文件路径。"
+        return f"[ERR] 文件不存在: {path}\n请确认文件路径是否正确，或先用 scan_codebase 查看可用文件。"
 
     try:
         original = path.read_text(encoding="utf-8")
