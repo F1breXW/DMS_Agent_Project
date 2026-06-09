@@ -1,14 +1,12 @@
 from __future__ import annotations
 
 import sys
-from datetime import datetime
 from pathlib import Path
-from typing import Callable, Iterable, Optional
 
-import pandas as pd
+from langchain.agents import AgentExecutor, create_react_agent
+from langchain.memory import ConversationBufferWindowMemory
 from langchain_openai import ChatOpenAI
 
-# 运行脚本时把项目根目录加入 sys.path，确保可以导入 src.*
 ROOT_DIR = Path(__file__).resolve().parents[1]
 if str(ROOT_DIR) not in sys.path:
     sys.path.insert(0, str(ROOT_DIR))
@@ -22,12 +20,101 @@ from src.config import (
     DMS_TOP_P,
     LOGGER,
 )
-from src.parsers import CodeParser, LogParseResult, LogParser
-from src.rag_engine import StandardKnowledgeBase
+from src.tools import (
+    analyze_code_structure,
+    compare_metrics,
+    modify_code,
+    parse_performance_logs,
+    read_code_file,
+    save_report,
+    scan_codebase,
+    search_standards,
+    search_web,
+)
 
 
-class DMSDigitalEngineer:
-    """整合日志解析、标准检索与 LLM 推理的数字工程师。"""
+# ═══════════════════════════════════════════════════════════
+# DMS 领域 System Prompt（ReAct 版本）
+# ═══════════════════════════════════════════════════════════
+
+DMS_REACT_PREFIX = """你是一位资深的 DMS（驾驶员监测系统）数字工程师 Agent。
+你的使命是：评估 DMS 系统的性能，发现与国标的差距，给出并执行优化方案。
+
+## 领域知识
+
+### DMS 标准架构
+```
+Camera → Face Detection → Feature Extraction → State Determination → Alert
+  │         ├─ RetinaFace/MTCNN    ├─ Eye (EAR)        ├─ Fatigue (PERCLOS)
+  │         └─ MobileNet/轻量模型   ├─ Mouth (MAR)      ├─ Distraction (Gaze Zone)
+  │                                └─ Head Pose        └─ Phone/Smoking (YOLO)
+```
+
+### 核心指标体系
+| 指标 | 合格标准 | 优秀标准 |
+|------|----------|----------|
+| FPS | ≥15 | ≥30 |
+| 端到端延迟 | <200ms | <100ms |
+| CPU占用 | <80% | <50% |
+| 内存占用 | <2GB | <1GB |
+
+### 国标关键要求
+1. 告警延迟 ≤ 行为持续时间的 50%（闭眼2s→告警需在1s内触发）
+2. 至少 2 种提示方式（视觉 + 听觉）
+3. 系统需有上电自检功能
+4. 故障时必须有降级策略
+5. 打哈欠检测时间窗约3s（非1s）
+
+## 强制评估维度（每次评估必须覆盖）
+1. 实时性评估（FPS、延迟是否满足 DMS 场景要求）
+2. 模型选型评估（backbone 是否适合嵌入式/实时场景）
+3. 检测准确性评估（阈值是否合理，漏检/误检风险）
+4. 国标合规性评估（逐一对照检索到的国标条款）
+5. 告警机制评估（告警方式≥2种，告警延迟满足要求）
+6. 鲁棒性评估（光照/姿态变化下的适应能力）
+7. 资源效率评估（CPU/内存占用是否合理）
+
+## 工作原则
+1. 先探索后判断：用工具获取事实，不要猜测
+2. 每次只读需要的代码：定位到具体模块后再精读
+3. 评价对标 DMS 标准：说"FPS 8.96 远低于 DMS 要求的 15fps，每帧间隔 112ms，对于持续 2s 的闭眼行为只能捕获约 18 帧——可能导致疲劳判定不稳定"，而不是"FPS 有点低"
+4. 修改代码前解释原因并评估风险，高风险操作必须征求确认
+5. 绝对禁止：删除安全逻辑、降低告警灵敏度、移除国标要求功能
+6. 主动建议下一步方向
+
+## 对话风格
+- 专业但不生硬，像经验丰富的工程师同事
+- 用数据说话
+- 发现严重问题时明确指出
+- 必要时用通俗语言解释
+- 中文回复
+
+## 推荐工作流
+探索阶段: scan_codebase → analyze_code_structure → parse_performance_logs → search_standards
+深入阶段: read_code_file → search_web
+行动阶段: modify_code → compare_metrics → save_report
+
+你有 9 个工具可用。根据情况自主决定调用什么、何时调用。
+
+TOOLS:
+------"""
+
+DMS_REACT_SUFFIX = """## 重要提醒
+
+在给出最终答案之前，请确保你已经覆盖了以下维度（至少覆盖与当前问题相关的维度）：
+- 实时性: FPS/延迟是否达标？
+- 模型选型: 是否适合嵌入式场景？
+- 检测准确性: 阈值是否合理？
+- 国标合规: 是否符合国标要求？
+- 告警机制: 是否≥2种提示方式？
+
+如果用户刚上传了文件或指定了新的分析目标，先用工具探索，再做判断。
+
+开始!"""
+
+
+class DMSAgent:
+    """DMS 数字工程师 Agent —— ReAct 模式，兼容所有 LLM。"""
 
     def __init__(
         self,
@@ -35,14 +122,8 @@ class DMSDigitalEngineer:
         temperature: float | None = None,
         top_p: float | None = None,
         max_tokens: int | None = None,
+        max_history: int = 10,
     ) -> None:
-        self.log_parser = LogParser()
-        self.code_parser = CodeParser()
-        self.knowledge_base = StandardKnowledgeBase()
-        self.code_summary = self._load_code_summary(
-            ROOT_DIR / "docs" / "dms_prompt_snippet.txt"
-        )
-
         if not DEEPSEEK_API_KEY:
             LOGGER.warning("DEEPSEEK_API_KEY is empty; LLM call may fail.")
 
@@ -58,249 +139,102 @@ class DMSDigitalEngineer:
             temperature=temperature,
             top_p=top_p,
             max_tokens=max_tokens,
+            streaming=True,
         )
 
-    def analyze_and_optimize(
-        self,
-        log_file: str | Path | list[str | Path],
-        code_file: str | Path | list[str | Path],
-        status_callback: Callable[[str], None] | None = None,
-        save_report: bool = False,
-    ) -> str:
-        """解析日志与源码，检索国标并调用大模型输出评估报告。"""
-
-        self._update_status(status_callback, "解析日志中...")
-
-        # 先解析日志，获取平均指标
-        log_result = self._parse_log_input(log_file)
-
-        self._update_status(status_callback, "解析源码中...")
-        # 再解析源码
-        code_text = self._read_code_content(code_file)
-        code_is_summary = False
-        if self.code_summary:
-            code_text = self.code_summary
-            code_is_summary = True
-
-        self._update_status(status_callback, "检索国标中...")
-        # 再根据指标检索国标要求
-        standard_query = self._build_standard_query(log_result.avg_latency_ms)
-        standard_text = self.knowledge_base.search_standard(standard_query, k=3)
-
-        self._update_status(status_callback, "调用大模型生成报告中...")
-        context_block = self._build_context(
-            log_result=log_result,
-            code_text=code_text,
-            standard_text=standard_text,
-            code_is_summary=code_is_summary,
-        )
-        report = self._generate_report_by_sections(context_block, status_callback)
-
-        if save_report:
-            self._save_report(report)
-
-        self._update_status(status_callback, "报告生成完成")
-        return report
-
-    def _parse_log_input(self, log_input: str | Path | list[str | Path]) -> LogParseResult:
-        """解析单个或多个日志文件/目录并计算平均指标。"""
-
-        paths = self._normalize_paths(log_input)
-        log_files = self._collect_files(paths, suffixes={".csv"})
-        if not log_files:
-            LOGGER.error("No log files found from input: %s", log_input)
-            return LogParseResult(items=[], avg_fps=None, avg_latency_ms=None)
-
-        items = []
-        for log_path in log_files:
-            try:
-                df = pd.read_csv(log_path)
-                items.extend(self.log_parser._rows_to_models(df))
-            except Exception as exc:  # noqa: BLE001
-                LOGGER.error("Failed to parse log file %s: %s", log_path, exc)
-
-        if not items:
-            return LogParseResult(items=[], avg_fps=None, avg_latency_ms=None)
-
-        avg_fps = sum(x.fps for x in items) / len(items)
-        avg_latency_ms = sum(x.latency_ms for x in items) / len(items)
-        return LogParseResult(items=items, avg_fps=avg_fps, avg_latency_ms=avg_latency_ms)
-
-    def _read_code_content(self, code_input: str | Path | list[str | Path]) -> str:
-        """读取源码内容，支持单文件、多个文件或目录。"""
-
-        paths = self._normalize_paths(code_input)
-        code_files = self._collect_files(paths, suffixes={".py"})
-        if not code_files:
-            LOGGER.error("No code files found from input: %s", code_input)
-            return ""
-
-        parts: list[str] = []
-        for path in code_files:
-            try:
-                content = path.read_text(encoding="utf-8")
-            except Exception as exc:  # noqa: BLE001
-                LOGGER.error("Failed to read code file %s: %s", path, exc)
-                continue
-            parts.append(f"\n# File: {path}\n{content}")
-
-        return "\n".join(parts).strip()
-
-    def _normalize_paths(
-        self, value: str | Path | list[str | Path] | None
-    ) -> list[Path]:
-        """将输入统一转换为路径列表。"""
-
-        if value is None:
-            return []
-        if isinstance(value, (str, Path)):
-            return [Path(value)]
-        return [Path(item) for item in value if item]
-
-    def _collect_files(self, paths: Iterable[Path], suffixes: set[str]) -> list[Path]:
-        """从文件/目录列表中收集指定后缀的文件。"""
-
-        results: list[Path] = []
-        seen: set[Path] = set()
-
-        for path in paths:
-            if path.is_dir():
-                for file_path in sorted(path.rglob("*")):
-                    if file_path.suffix.lower() in suffixes and file_path not in seen:
-                        results.append(file_path)
-                        seen.add(file_path)
-                continue
-
-            if path.is_file():
-                if path.suffix.lower() in suffixes and path not in seen:
-                    results.append(path)
-                    seen.add(path)
-                continue
-
-            LOGGER.warning("Path does not exist: %s", path)
-
-        return results
-
-    def _build_standard_query(self, avg_latency_ms: Optional[float]) -> str:
-        """根据平均延迟构造国标检索问题。"""
-
-        if avg_latency_ms is None:
-            return "报警延迟 要求"
-        if avg_latency_ms > 1000:
-            return "报警延迟 超时 要求"
-        return "报警响应 时间 要求"
-
-    def _build_context(
-        self,
-        log_result: LogParseResult,
-        code_text: str,
-        standard_text: str,
-        code_is_summary: bool,
-    ) -> str:
-        """组合评估所需的上下文信息。"""
-
-        avg_fps_text = (
-            f"{log_result.avg_fps:.2f}" if log_result.avg_fps is not None else "未知"
-        )
-        avg_latency_text = (
-            f"{log_result.avg_latency_ms:.2f} ms"
-            if log_result.avg_latency_ms is not None
-            else "未知"
-        )
-
-        code_label = "【源码摘要】" if code_is_summary else "【源码】"
-
-        return (
-            "【实测数据摘要】\n"
-            f"- 平均FPS: {avg_fps_text}\n"
-            f"- 平均延迟: {avg_latency_text}\n\n"
-            "【国标条款参考】\n"
-            f"{standard_text}\n\n"
-            f"{code_label}\n"
-            f"{code_text}\n"
-        )
-
-    def _generate_report_by_sections(
-        self,
-        context_block: str,
-        status_callback: Callable[[str], None] | None,
-    ) -> str:
-        """分段生成报告并合并，降低单次输出被截断的风险。"""
-
-        sections = [
-            (
-                "合规性评估（对比国标条款）",
-                "基于国标条款与实测数据进行评估，输出结论与证据。",
-            ),
-            (
-                "发现的问题清单（含证据）",
-                "列出问题点并注明证据来源（指标或源码摘要）。",
-            ),
-            (
-                "优化建议（优先级排序）",
-                "给出可落地的优化建议，按优先级排序。",
-            ),
-            (
-                "关键代码修改建议（可给出伪代码或片段）",
-                "给出关键修改方向，并提供伪代码或短片段。",
-            ),
+        self.tools = [
+            scan_codebase,
+            analyze_code_structure,
+            read_code_file,
+            parse_performance_logs,
+            search_standards,
+            search_web,
+            modify_code,
+            compare_metrics,
+            save_report,
         ]
 
-        outputs: list[str] = ["# DMS系统评估报告\n"]
-        for title, guidance in sections:
-            self._update_status(status_callback, f"生成报告：{title}...")
-            section_text = self._generate_section(context_block, title, guidance)
-            outputs.append(f"## {title}\n\n{section_text}\n")
-
-        return "\n".join(outputs).strip()
-
-    def _generate_section(self, context_block: str, title: str, guidance: str) -> str:
-        """生成单个报告章节。"""
-
-        prompt = (
-            "你是一个DMS数字工程师。请严格只输出指定章节的内容，不要输出其他章节标题。\n\n"
-            f"【章节标题】\n{title}\n\n"
-            f"【写作要求】\n{guidance}\n\n"
-            f"{context_block}\n"
+        self.memory = ConversationBufferWindowMemory(
+            k=max_history,
+            return_messages=True,
+            memory_key="chat_history",
+            input_key="input",
+            output_key="output",
         )
-        response = self.llm.invoke(prompt)
-        return getattr(response, "content", "").strip()
 
-    def _load_code_summary(self, summary_path: Path) -> str:
-        """读取压缩后的源码摘要文本。"""
+        from langchain_core.prompts import PromptTemplate
 
-        if not summary_path.is_file():
-            return ""
-        try:
-            return summary_path.read_text(encoding="utf-8").strip()
-        except Exception as exc:  # noqa: BLE001
-            LOGGER.error("Failed to read summary file %s: %s", summary_path, exc)
-            return ""
+        prompt = PromptTemplate.from_template(
+            DMS_REACT_PREFIX
+            + "\n{tools}\n\n"
+            + "使用以下格式回答:\n"
+            + "Question: 需要回答的问题\n"
+            + "Thought: 你应该思考要做什么\n"
+            + "Action: 要使用的工具名称，必须是[{tool_names}]中的一个\n"
+            + "Action Input: 工具的输入参数\n"
+            + "Observation: 工具返回的结果\n"
+            + "... (Thought/Action/Action Input/Observation 可以重复多次)\n"
+            + "Thought: 我现在知道最终答案了\n"
+            + "Final Answer: 对用户问题的最终回答\n\n"
+            + "开始!\n\n"
+            + "Chat History:\n{chat_history}\n\n"
+            + "Question: {input}\n"
+            + "Thought: {agent_scratchpad}"
+        )
 
-    def _update_status(
-        self, callback: Callable[[str], None] | None, message: str
-    ) -> None:
-        if callback is not None:
-            callback(message)
+        self.agent = create_react_agent(
+            llm=self.llm,
+            tools=self.tools,
+            prompt=prompt,
+        )
 
-    def _save_report(self, report: str) -> None:
-        reports_dir = ROOT_DIR / "reports"
-        reports_dir.mkdir(parents=True, exist_ok=True)
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        report_path = reports_dir / f"dms_report_{timestamp}.md"
-        report_path.write_text(report, encoding="utf-8")
-        LOGGER.info("Report saved to %s", report_path)
+        self.executor = AgentExecutor.from_agent_and_tools(
+            agent=self.agent,
+            tools=self.tools,
+            memory=self.memory,
+            verbose=True,
+            handle_parsing_errors=True,
+            max_iterations=15,
+        )
+
+        LOGGER.info("DMS Agent initialized with %d tools (ReAct mode)", len(self.tools))
+
+    def run(self, message: str) -> dict:
+        """执行一次对话交互，返回结果和中间步骤。"""
+        result = self.executor.invoke({"input": message})
+        return {
+            "output": result.get("output", ""),
+            "intermediate_steps": result.get("intermediate_steps", []),
+        }
+
+    def stream(self, message: str):
+        """流式执行，逐步 yield 事件。用于 Chainlit 实时展示。"""
+        return self.executor.astream_events(
+            {"input": message},
+            version="v2",
+        )
+
+    def clear_history(self) -> None:
+        """清空对话历史。"""
+        self.memory.clear()
+        LOGGER.info("Conversation history cleared")
 
 
 if __name__ == "__main__":
-    agent = DMSDigitalEngineer()
-    report = agent.analyze_and_optimize(
-        log_file="data/logs/sample_dms_log.csv",
-        code_file="data/source_code",
-    )
-    reports_dir = ROOT_DIR / "reports"
-    reports_dir.mkdir(parents=True, exist_ok=True)
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    report_path = reports_dir / f"dms_report_{timestamp}.md"
-    report_path.write_text(report, encoding="utf-8")
-    print(f"Report saved to: {report_path}")
+    agent = DMSAgent()
+    print("DMS Agent ready (ReAct mode). Type 'quit' to exit.\n")
+
+    while True:
+        try:
+            user_input = input(">>> ").strip()
+        except (EOFError, KeyboardInterrupt):
+            break
+        if not user_input:
+            continue
+        if user_input.lower() in ("quit", "exit"):
+            break
+
+        result = agent.run(user_input)
+        print(f"\n{result['output']}\n")
+        if result["intermediate_steps"]:
+            print(f"--- 调用了 {len(result['intermediate_steps'])} 个工具 ---")
