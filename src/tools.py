@@ -134,15 +134,15 @@ def parse_performance_logs(log_path: str) -> str:
         elif avg_fps >= 15:
             judgments.append("FPS 合格 (≥15)")
         else:
-            judgments.append("⚠ FPS 不合格 (<15)，存在严重实时性问题")
+            judgments.append("[FAIL] FPS 不合格 (<15)，存在严重实时性问题")
 
     if avg_lat is not None:
         if avg_lat <= 200:
             judgments.append("延迟合格 (≤200ms)")
         elif avg_lat <= 500:
-            judgments.append("⚠ 延迟偏高 (200-500ms)，需优化")
+            judgments.append("[!] 延迟偏高 (200-500ms)，需优化")
         else:
-            judgments.append("⛔ 延迟严重超标 (>500ms)，系统不可用")
+            judgments.append("[X] 延迟严重超标 (>500ms)，系统不可用")
 
     output = json.dumps(result, ensure_ascii=False, indent=2)
     if judgments:
@@ -183,7 +183,7 @@ def search_web(query: str) -> str:
         for i, r in enumerate(results, 1):
             lines.append(f"{i}. **{r.get('title', '无标题')}**")
             lines.append(f"   {r.get('body', '')[:200]}")
-            lines.append(f"   🔗 {r.get('href', '')}")
+            lines.append(f"   [link] {r.get('href', '')}")
             lines.append("")
         return "\n".join(lines)
     except Exception as e:
@@ -196,7 +196,7 @@ def search_web(query: str) -> str:
 
 @tool
 def modify_code(file_path: str, old_snippet: str, new_snippet: str) -> str:
-    """⚠ 修改 DMS 系统源码。使用前必须确认:
+    """[!] 修改 DMS 系统源码。使用前必须确认:
     1. 已理解修改的影响范围
     2. 不删除安全相关逻辑
     3. 不降低告警灵敏度
@@ -216,20 +216,20 @@ def modify_code(file_path: str, old_snippet: str, new_snippet: str) -> str:
             path = ROOT_DIR / file_path
 
     if not path.exists():
-        return f"❌ 文件不存在: {path}\n请先用 scan_codebase 确认文件路径。"
+        return f"[ERR] 文件不存在: {path}\n请先用 scan_codebase 确认文件路径。"
 
     try:
         original = path.read_text(encoding="utf-8")
     except Exception as e:
-        return f"❌ 读取文件失败: {e}"
+        return f"[ERR] 读取文件失败: {e}"
 
     count = original.count(old_snippet)
     if count == 0:
-        return f"❌ 在 {path.name} 中未找到要替换的代码片段。\n请用 read_code_file 确认准确内容。"
+        return f"[ERR] 在 {path.name} 中未找到要替换的代码片段。\n请用 read_code_file 确认准确内容。"
 
     if count > 1:
         return (
-            f"⚠ 找到 {count} 处匹配，请提供更精确的上下文以确保只修改目标位置。\n"
+            f"[!] 找到 {count} 处匹配，请提供更精确的上下文以确保只修改目标位置。\n"
             f"用 read_code_file 查看完整内容后选择更长的唯一片段。"
         )
 
@@ -238,7 +238,7 @@ def modify_code(file_path: str, old_snippet: str, new_snippet: str) -> str:
     # 安全检查
     safety_keywords = ["alert", "warn", "safety", "critical", "emergency"]
     is_safety_related = any(k in old_snippet.lower() for k in safety_keywords)
-    risk = "⚠ 高风险" if is_safety_related else "✅ 低风险"
+    risk = "[!] 高风险" if is_safety_related else "[OK] 低风险"
 
     # 生成 diff
     diff = difflib.unified_diff(
@@ -253,13 +253,13 @@ def modify_code(file_path: str, old_snippet: str, new_snippet: str) -> str:
     try:
         path.write_text(modified, encoding="utf-8")
     except Exception as e:
-        return f"❌ 写入文件失败: {e}"
+        return f"[ERR] 写入文件失败: {e}"
 
     return (
-        f"✅ 已修改 {path.name}\n"
+        f"[OK] 已修改 {path.name}\n"
         f"风险评估: {risk}\n\n"
         f"```diff\n{diff_text}\n```\n"
-        f"💡 建议: 修改后请在实际 DMS 系统上验证相关指标是否改善。"
+        f"[TIP] 建议: 修改后请在实际 DMS 系统上验证相关指标是否改善。"
     )
 
 
@@ -317,11 +317,11 @@ def compare_metrics(old_log: str, new_log: str) -> str:
             good = change < 0
 
         if abs(pct) < 5:
-            verdict = "➡ 基本持平"
+            verdict = "-> 基本持平"
         elif good:
-            verdict = "✅ 改善" if abs(pct) < 30 else "✅ 显著改善"
+            verdict = "[OK] 改善" if abs(pct) < 30 else "[OK] 显著改善"
         else:
-            verdict = "⚠ 恶化" if abs(pct) < 30 else "⛔ 严重恶化"
+            verdict = "[!] 恶化" if abs(pct) < 30 else "[X] 严重恶化"
 
         lines.append(f"| {labels[m]} | {old_val} | {new_val} | {change:+} ({pct:+}%) | {verdict} |")
 
@@ -339,6 +339,6 @@ def save_report(report_content: str) -> str:
     report_path = reports_dir / f"dms_report_{timestamp}.md"
     try:
         report_path.write_text(report_content, encoding="utf-8")
-        return f"✅ 报告已保存到: {report_path}"
+        return f"[OK] 报告已保存到: {report_path}"
     except Exception as e:
-        return f"❌ 保存报告失败: {e}"
+        return f"[ERR] 保存报告失败: {e}"

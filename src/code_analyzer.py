@@ -11,7 +11,7 @@ def scan_directory(root: str | Path) -> str:
     if not root.exists():
         return f"目录不存在: {root}"
 
-    lines: list[str] = [f"📁 {root.name}/"]
+    lines: list[str] = [f"[DIR] {root.name}/"]
     py_files = sorted(root.rglob("*.py"))
     if not py_files:
         return "未找到任何 .py 文件。"
@@ -60,7 +60,7 @@ def analyze_python_files(root: str | Path) -> str:
         try:
             tree = ast.parse(source)
         except SyntaxError:
-            output.append(f"### {rel_path} ({size_kb} KB) ⚠ 语法错误，无法解析")
+            output.append(f"### {rel_path} ({size_kb} KB) [SYNTAX ERROR]")
             continue
 
         info = _extract_structure(tree, source)

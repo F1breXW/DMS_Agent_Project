@@ -1,6 +1,8 @@
 langchain
 langchain-openai
-gradio
+langchain-community
+chainlit
+duckduckgo-search
 pandas
 pydantic
 faiss-cpu

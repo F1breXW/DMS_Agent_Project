@@ -1,2 +1,10 @@
 .env
 setup_env.py
+.claude/
+.agents/
+__pycache__/
+*.pyc
+nul
+reports/
+skills-lock.json
+.chainlit/translations/

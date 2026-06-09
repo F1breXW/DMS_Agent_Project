@@ -3,8 +3,7 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
-from langchain.agents import AgentExecutor, create_react_agent
-from langchain.memory import ConversationBufferWindowMemory
+from langchain.agents import create_agent
 from langchain_openai import ChatOpenAI
 
 ROOT_DIR = Path(__file__).resolve().parents[1]
@@ -32,89 +31,79 @@ from src.tools import (
     search_web,
 )
 
-
 # ═══════════════════════════════════════════════════════════
-# DMS 领域 System Prompt（ReAct 版本）
+# DMS 领域 System Prompt
 # ═══════════════════════════════════════════════════════════
 
-DMS_REACT_PREFIX = """你是一位资深的 DMS（驾驶员监测系统）数字工程师 Agent。
+DMS_SYSTEM_PROMPT = """你是一位资深的 DMS（驾驶员监测系统）数字工程师 Agent。
 你的使命是：评估 DMS 系统的性能，发现与国标的差距，给出并执行优化方案。
 
 ## 领域知识
 
 ### DMS 标准架构
-```
-Camera → Face Detection → Feature Extraction → State Determination → Alert
-  │         ├─ RetinaFace/MTCNN    ├─ Eye (EAR)        ├─ Fatigue (PERCLOS)
-  │         └─ MobileNet/轻量模型   ├─ Mouth (MAR)      ├─ Distraction (Gaze Zone)
-  │                                └─ Head Pose        └─ Phone/Smoking (YOLO)
-```
+Camera -> Face Detection -> Feature Extraction -> State Determination -> Alert
+  Face Detection: RetinaFace / MTCNN / MobileNet
+  Feature Extraction: Eye (EAR闭眼比例), Mouth (MAR打哈欠比例), Head Pose (头部姿态)
+  State Determination: Fatigue (PERCLOS疲劳判定), Distraction (Gaze Zone分心判定)
+  Alert: Phone/Smoking detection (YOLO), visual + audio alerts
 
-### 核心指标体系
-| 指标 | 合格标准 | 优秀标准 |
-|------|----------|----------|
-| FPS | ≥15 | ≥30 |
-| 端到端延迟 | <200ms | <100ms |
-| CPU占用 | <80% | <50% |
-| 内存占用 | <2GB | <1GB |
+### DMS 核心指标体系
+| 指标类别 | 具体指标 | 评判标准 |
+|----------|----------|----------|
+| 实时性 | FPS | >=15 合格，>=30 优秀，<15 严重缺陷 |
+| 响应延迟 | 端到端延迟(ms) | <200ms 合格，200-500ms 偏高，>500ms 严重缺陷 |
+| 疲劳检测 | 闭眼 EAR、打哈欠 MAR | 时间窗必须对标国标 |
+| 分心检测 | 注视区域、头部姿态 | 需覆盖低头/抬头/转头三种姿态 |
+| 违规检测 | 打电话、吸烟 | 需至少2种告警方式（视觉+听觉） |
+| 资源 | CPU、内存 | 需适配嵌入式/边缘设备 |
 
-### 国标关键要求
-1. 告警延迟 ≤ 行为持续时间的 50%（闭眼2s→告警需在1s内触发）
-2. 至少 2 种提示方式（视觉 + 听觉）
+### 国标关键要求（必须严格遵守）
+1. 告警延迟必须 <= 行为持续时间的 50%（如闭眼持续2s，告警必须在1s内触发）
+2. 至少 2 种提示方式（视觉提示 + 听觉提示）
 3. 系统需有上电自检功能
 4. 故障时必须有降级策略
-5. 打哈欠检测时间窗约3s（非1s）
+5. 打哈欠检测的时间窗应为持续约3s（非1s）
 
-## 强制评估维度（每次评估必须覆盖）
-1. 实时性评估（FPS、延迟是否满足 DMS 场景要求）
-2. 模型选型评估（backbone 是否适合嵌入式/实时场景）
-3. 检测准确性评估（阈值是否合理，漏检/误检风险）
-4. 国标合规性评估（逐一对照检索到的国标条款）
-5. 告警机制评估（告警方式≥2种，告警延迟满足要求）
-6. 鲁棒性评估（光照/姿态变化下的适应能力）
-7. 资源效率评估（CPU/内存占用是否合理）
+## 强制评估流程
+
+每次评估 DMS 系统时，你必须覆盖以下 7 个维度（不可跳过）：
+[ ] 实时性评估（FPS、端到端延迟是否满足 DMS 场景要求）
+[ ] 模型选型评估（backbone/检测模型是否适合嵌入式/实时场景）
+[ ] 检测准确性评估（阈值设置是否合理，是否存在漏检/误检风险）
+[ ] 国标合规性评估（逐一对照 RAG 检索到的国标条款）
+[ ] 告警机制评估（告警方式是否>=2种，告警延迟是否满足要求）
+[ ] 鲁棒性评估（光照变化、姿态变化下的适应能力）
+[ ] 资源效率评估（CPU/内存占用是否合理）
 
 ## 工作原则
-1. 先探索后判断：用工具获取事实，不要猜测
-2. 每次只读需要的代码：定位到具体模块后再精读
-3. 评价对标 DMS 标准：说"FPS 8.96 远低于 DMS 要求的 15fps，每帧间隔 112ms，对于持续 2s 的闭眼行为只能捕获约 18 帧——可能导致疲劳判定不稳定"，而不是"FPS 有点低"
-4. 修改代码前解释原因并评估风险，高风险操作必须征求确认
-5. 绝对禁止：删除安全逻辑、降低告警灵敏度、移除国标要求功能
-6. 主动建议下一步方向
+
+1. **先探索，后判断**：不要猜测，用工具获取事实。
+2. **每次只读需要的代码**：定位到具体模块后，只读那个模块。
+3. **评价必须对标 DMS 标准**：给具体的数值对比和影响分析。
+4. **修改代码必须严谨**：
+   - 修改前解释原因，关联到具体指标或国标条款
+   - 评估风险等级（低/中/高）
+   - 高风险修改必须征求用户确认
+   - 绝对禁止：删除安全逻辑、降低告警灵敏度、移除国标要求的功能
+5. **主动提供下一步方向**：每次分析后，告诉用户发现了什么，建议下一步。
 
 ## 对话风格
+
 - 专业但不生硬，像经验丰富的工程师同事
-- 用数据说话
+- 用数据说话，不空谈
 - 发现严重问题时明确指出
-- 必要时用通俗语言解释
-- 中文回复
+- 用户可能不是 DMS 专家，必要时用通俗语言解释
+- 使用中文回复
 
 ## 推荐工作流
-探索阶段: scan_codebase → analyze_code_structure → parse_performance_logs → search_standards
-深入阶段: read_code_file → search_web
-行动阶段: modify_code → compare_metrics → save_report
-
-你有 9 个工具可用。根据情况自主决定调用什么、何时调用。
-
-TOOLS:
-------"""
-
-DMS_REACT_SUFFIX = """## 重要提醒
-
-在给出最终答案之前，请确保你已经覆盖了以下维度（至少覆盖与当前问题相关的维度）：
-- 实时性: FPS/延迟是否达标？
-- 模型选型: 是否适合嵌入式场景？
-- 检测准确性: 阈值是否合理？
-- 国标合规: 是否符合国标要求？
-- 告警机制: 是否≥2种提示方式？
-
-如果用户刚上传了文件或指定了新的分析目标，先用工具探索，再做判断。
-
-开始!"""
+探索阶段: scan_codebase -> analyze_code_structure -> parse_performance_logs -> search_standards
+深入阶段: read_code_file -> search_web
+行动阶段: modify_code -> compare_metrics -> save_report
+"""
 
 
 class DMSAgent:
-    """DMS 数字工程师 Agent —— ReAct 模式，兼容所有 LLM。"""
+    """DMS 数字工程师 Agent —— 基于 LangChain 1.x create_agent。"""
 
     def __init__(
         self,
@@ -122,7 +111,6 @@ class DMSAgent:
         temperature: float | None = None,
         top_p: float | None = None,
         max_tokens: int | None = None,
-        max_history: int = 10,
     ) -> None:
         if not DEEPSEEK_API_KEY:
             LOGGER.warning("DEEPSEEK_API_KEY is empty; LLM call may fail.")
@@ -154,75 +142,55 @@ class DMSAgent:
             save_report,
         ]
 
-        self.memory = ConversationBufferWindowMemory(
-            k=max_history,
-            return_messages=True,
-            memory_key="chat_history",
-            input_key="input",
-            output_key="output",
-        )
-
-        from langchain_core.prompts import PromptTemplate
-
-        prompt = PromptTemplate.from_template(
-            DMS_REACT_PREFIX
-            + "\n{tools}\n\n"
-            + "使用以下格式回答:\n"
-            + "Question: 需要回答的问题\n"
-            + "Thought: 你应该思考要做什么\n"
-            + "Action: 要使用的工具名称，必须是[{tool_names}]中的一个\n"
-            + "Action Input: 工具的输入参数\n"
-            + "Observation: 工具返回的结果\n"
-            + "... (Thought/Action/Action Input/Observation 可以重复多次)\n"
-            + "Thought: 我现在知道最终答案了\n"
-            + "Final Answer: 对用户问题的最终回答\n\n"
-            + "开始!\n\n"
-            + "Chat History:\n{chat_history}\n\n"
-            + "Question: {input}\n"
-            + "Thought: {agent_scratchpad}"
-        )
-
-        self.agent = create_react_agent(
-            llm=self.llm,
+        # LangChain 1.x: create_agent 返回 CompiledStateGraph
+        self.agent = create_agent(
+            model=self.llm,
             tools=self.tools,
-            prompt=prompt,
+            system_prompt=DMS_SYSTEM_PROMPT,
         )
 
-        self.executor = AgentExecutor.from_agent_and_tools(
-            agent=self.agent,
-            tools=self.tools,
-            memory=self.memory,
-            verbose=True,
-            handle_parsing_errors=True,
-            max_iterations=15,
-        )
-
-        LOGGER.info("DMS Agent initialized with %d tools (ReAct mode)", len(self.tools))
+        LOGGER.info("DMS Agent initialized with %d tools (LangChain %s)",
+                     len(self.tools), "1.x")
 
     def run(self, message: str) -> dict:
-        """执行一次对话交互，返回结果和中间步骤。"""
-        result = self.executor.invoke({"input": message})
-        return {
-            "output": result.get("output", ""),
-            "intermediate_steps": result.get("intermediate_steps", []),
-        }
+        """执行一次对话，返回输出和中间步骤。
+
+        返回值: {"output": str, "intermediate_steps": [...]}
+        """
+        result = self.agent.invoke({"messages": [{"role": "user", "content": message}]})
+
+        # 提取最终输出和工具调用步骤
+        messages = result.get("messages", [])
+        output = ""
+        steps = []
+
+        for msg in messages:
+            if hasattr(msg, "type"):
+                if msg.type == "ai" and hasattr(msg, "content"):
+                    output = msg.content or ""
+                elif msg.type == "tool":
+                    steps.append({
+                        "tool": getattr(msg, "name", "unknown"),
+                        "input": getattr(msg, "content", "")[:200],
+                    })
+
+        return {"output": output, "intermediate_steps": steps}
 
     def stream(self, message: str):
-        """流式执行，逐步 yield 事件。用于 Chainlit 实时展示。"""
-        return self.executor.astream_events(
-            {"input": message},
+        """流式执行，逐步 yield 事件。"""
+        return self.agent.astream_events(
+            {"messages": [{"role": "user", "content": message}]},
             version="v2",
         )
 
     def clear_history(self) -> None:
-        """清空对话历史。"""
-        self.memory.clear()
-        LOGGER.info("Conversation history cleared")
+        """重置会话（LangChain 1.x 无状态，每次 run 独立）。"""
+        LOGGER.info("Session reset (stateless agent)")
 
 
 if __name__ == "__main__":
     agent = DMSAgent()
-    print("DMS Agent ready (ReAct mode). Type 'quit' to exit.\n")
+    print("DMS Agent ready. Type 'quit' to exit.\n")
 
     while True:
         try:
