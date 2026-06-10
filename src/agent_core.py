@@ -31,6 +31,7 @@ from src.config import (
 )
 from src.tools import (
     analyze_code_structure,
+    clear_session_kb,
     compare_metrics,
     modify_code,
     parse_performance_logs,
@@ -39,6 +40,7 @@ from src.tools import (
     scan_codebase,
     search_standards,
     search_web,
+    set_session_kb,
 )
 
 # ═══════════════════════════════════════════════════════════
@@ -212,7 +214,9 @@ class DMSAgent:
         temperature: float | None = None,
         top_p: float | None = None,
         max_tokens: int | None = None,
+        session_kb=None,  # SessionKnowledgeBase | None
     ) -> None:
+        self.session_kb = session_kb
         if not DEEPSEEK_API_KEY:
             LOGGER.warning("DEEPSEEK_API_KEY is empty; LLM call may fail.")
 
@@ -420,12 +424,13 @@ class DMSAgent:
             config={"recursion_limit": 100},
         )
 
-    def stream_with_context(
+    async def stream_with_context(
         self,
         message: str,
         upload_dir: str = "",
         files: list[str] | None = None,
         history: list[dict] | None = None,
+        knowledge_files: list[str] | None = None,
     ):
         """注入会话上下文后流式执行。
 
@@ -434,8 +439,10 @@ class DMSAgent:
           upload_dir: 上传目录路径
           files: 已上传文件列表
           history: 之前的对话历史 [{"role": "user"/"agent", "content": ...}, ...]
+          knowledge_files: 用户上传的知识文档名列表
         """
         files = files or []
+        knowledge_files = knowledge_files or []
         history = history or []
 
         # Build message list from conversation history
@@ -445,30 +452,37 @@ class DMSAgent:
             all_messages.append({"role": role, "content": m["content"]})
 
         # Build current message with file context
+        context_parts = []
         if files:
             file_list = "\n".join(f"  - {f}" for f in files)
-            context_prefix = f"""[会话上下文]
-用户已上传以下文件（位于 {upload_dir}）：
-{file_list}
-
-用户消息：
-"""
-            full_message = context_prefix + message
+            context_parts.append(f"用户已上传以下文件（位于 {upload_dir}）：\n{file_list}")
+        if knowledge_files:
+            kf_list = "\n".join(f"  - {f}" for f in knowledge_files)
+            context_parts.append(f"用户已上传以下知识文档（可通过 search_standards 检索）：\n{kf_list}")
+        if context_parts:
+            full_message = f"[会话上下文]\n" + "\n\n".join(context_parts) + f"\n\n用户消息：\n{message}"
         else:
             full_message = message
 
         all_messages.append({"role": "user", "content": full_message})
 
-        return self.agent.astream_events(
-            {
-                "messages": all_messages,
-                "tool_call_count": 0,
-                "tool_call_history": [],
-                "round_count": 0,
-            },
-            version="v2",
-            config={"recursion_limit": 100},
-        )
+        if self.session_kb is not None:
+            set_session_kb(self.session_kb)
+        try:
+            async for event in self.agent.astream_events(
+                {
+                    "messages": all_messages,
+                    "tool_call_count": 0,
+                    "tool_call_history": [],
+                    "round_count": 0,
+                },
+                version="v2",
+                config={"recursion_limit": 100},
+            ):
+                yield event
+        finally:
+            if self.session_kb is not None:
+                clear_session_kb()
 
     def clear_history(self) -> None:
         """重置会话（LangChain 1.x 无状态，每次 run 独立）。"""

@@ -52,8 +52,16 @@ class StandardKnowledgeBase:
         self.index_dir = Path(index_dir)
         self.embedding_model = embedding_model
 
+        self._embeddings = None  # Built lazily, exposed via property
         # 初始化向量库（优先加载已有索引，避免重复解析 PDF）
         self.vectorstore = self._load_or_build_index()
+
+    @property
+    def embeddings(self):
+        """返回共享的 embedding 模型实例（懒加载）。"""
+        if self._embeddings is None:
+            self._embeddings = self._build_embeddings()
+        return self._embeddings
 
     def _load_or_build_index(self) -> Optional[FAISS]:
         """加载或构建本地向量索引。"""
@@ -70,10 +78,9 @@ class StandardKnowledgeBase:
         """从本地加载 FAISS 索引。"""
 
         try:
-            embeddings = self._build_embeddings()
             return FAISS.load_local(
                 str(self.index_dir),
-                embeddings,
+                self.embeddings,
                 allow_dangerous_deserialization=True,
             )
         except Exception as exc:  # noqa: BLE001
@@ -109,8 +116,7 @@ class StandardKnowledgeBase:
         chunks = splitter.split_documents(documents)
 
         try:
-            embeddings = self._build_embeddings()
-            vectorstore = FAISS.from_documents(chunks, embeddings)
+            vectorstore = FAISS.from_documents(chunks, self.embeddings)
             self.index_dir.mkdir(parents=True, exist_ok=True)
             vectorstore.save_local(str(self.index_dir))
             LOGGER.info("FAISS index saved to %s", self.index_dir)

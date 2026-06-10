@@ -7,7 +7,7 @@ import pygame
 import time
 import threading
 from models.retinaface import Retinaface
-from extract_eye import detectEyeAndMouthState
+from extract_eye import detectEyeAndMouthState, detectHeadPose
 from state import State
 from ultralytics import YOLO
 
@@ -18,8 +18,10 @@ def resource_path(relative_path):
 
 # 配置参数
 YOLO_INTERVAL = 0.1
-CHECK_INTERVAL = 5
+CHECK_INTERVAL = 1
 WARN_INTERVAL = 5
+PHONE_DURATION_THRESHOLD = 3.0
+SMOKE_DURATION_THRESHOLD = 2.0
 FATIGUE_TRIGGER_COUNT = 3
 
 # 全局状态变量
@@ -29,6 +31,8 @@ last_smoke_warn_time = 0
 fatigue_buffer = 0
 phone_detected = False
 smoke_detected = False
+phone_start_time = 0
+smoke_start_time = 0
 stop_threads = False
 yolo_frame = None
 yolo_lock = threading.Lock()
@@ -62,8 +66,8 @@ def play_warning_sound(filename):
     pygame.mixer.music.load(filename)
     pygame.mixer.music.play()
 
-def display(is_fatigue, fat_score, phone, smoke):
-    global last_check_time, last_phone_warn_time, last_smoke_warn_time
+def display(is_fatigue, fat_score, phone, smoke, is_head_abnormal=False, head_reason=""):
+    global last_check_time, last_phone_warn_time, last_smoke_warn_time, phone_start_time, smoke_start_time
     now = time.time()
 
     if now - last_check_time >= CHECK_INTERVAL and is_fatigue:
@@ -73,17 +77,30 @@ def display(is_fatigue, fat_score, phone, smoke):
 
     print("状态:", "疲劳" if is_fatigue else "正常")
 
+    if is_head_abnormal:
+        print(f"⚠ 头部姿态异常: {head_reason}")
+
     if phone:
-        print("⚠ 检测到打电话")
-        if now - last_phone_warn_time >= WARN_INTERVAL:
-            play_warning_sound(resource_path("NoPhone.mp3"))
-            last_phone_warn_time = now
+        if phone_start_time == 0:
+            phone_start_time = now
+        elif now - phone_start_time >= PHONE_DURATION_THRESHOLD:
+            print("⚠ 检测到打电话 (持续 {:.1f}s)".format(now - phone_start_time))
+            if now - last_phone_warn_time >= WARN_INTERVAL:
+                play_warning_sound(resource_path("NoPhone.mp3"))
+                last_phone_warn_time = now
+    else:
+        phone_start_time = 0
 
     if smoke:
-        print("⚠ 检测到吸烟")
-        if now - last_smoke_warn_time >= WARN_INTERVAL:
-            play_warning_sound(resource_path("NoSmoking.mp3"))
-            last_smoke_warn_time = now
+        if smoke_start_time == 0:
+            smoke_start_time = now
+        elif now - smoke_start_time >= SMOKE_DURATION_THRESHOLD:
+            print("⚠ 检测到吸烟 (持续 {:.1f}s)".format(now - smoke_start_time))
+            if now - last_smoke_warn_time >= WARN_INTERVAL:
+                play_warning_sound(resource_path("NoSmoking.mp3"))
+                last_smoke_warn_time = now
+    else:
+        smoke_start_time = 0
 
     print(f"疲劳分数: {fat_score:.2f}")
     print("-" * 30)
@@ -107,10 +124,21 @@ def main():
     phone_thread.start()
     smoke_thread.start()
 
-    state = State(fps=5.0)
+    state = State(fps=30.0)
     state.start()
 
-    print("开始处理摄像头画面...")
+    # ====== 上电自检 ======
+    print("=" * 40)
+    print("DMS 系统上电自检中...")
+    print(f"[✓] 摄像头: 已连接")
+    print(f"[✓] 人脸检测模型: RetinaFace (mobile0.25)")
+    print(f"[✓] 关键点模型: dlib shape_predictor")
+    print(f"[✓] 电话检测模型: YOLO (phone_best.pt)")
+    print(f"[✓] 吸烟检测模型: YOLO (cigarette_best.pt)")
+    print(f"[✓] 音频系统: pygame.mixer 已初始化")
+    print(f"[✓] 状态判定: State(fps=30.0, yawn_len=3.0s)")
+    print("=" * 40)
+    print("自检通过，开始处理摄像头画面...")
     while True:
         state.nextFrame()
         ret, frame = capture.read()
@@ -136,13 +164,22 @@ def main():
 
         _, fat_score = state.fat_judge(*detectEyeAndMouthState(face_frame, eye_predictor))
 
+        # 头部姿态检测（国标 4.2 要求）
+        head_pose = detectHeadPose(face_frame, eye_predictor)
+        if head_pose is not None:
+            pitch, yaw, roll = head_pose
+            is_head_abnormal, head_reason, _ = state.head_pose_judge(pitch, yaw, roll)
+            print(f"Pitch:{pitch:+.0f} Yaw:{yaw:+.0f} Roll:{roll:+.0f}", end=' ')
+        else:
+            is_head_abnormal, head_reason = False, ""
+
         if fat_score >= 1.0:
             fatigue_buffer += 1
         else:
             fatigue_buffer = 0
 
         is_fatigue = fatigue_buffer >= FATIGUE_TRIGGER_COUNT
-        display(is_fatigue, fat_score, current_phone, current_smoke)
+        display(is_fatigue, fat_score, current_phone, current_smoke, is_head_abnormal, head_reason)
 
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break

@@ -667,6 +667,18 @@ body {
 
 #panel-new-folder-btn { width: 100%; padding: 6px; margin-top: 8px; background: transparent; border: 1px dashed var(--border-visible); border-radius: var(--radius-sm); cursor: pointer; font-family: var(--font-sans); font-size: 12px; color: var(--text-muted); transition: all var(--transition); }
 #panel-new-folder-btn:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
+
+/* Knowledge base section */
+.panel-knowledge-item { display: flex; align-items: center; gap: 4px; padding: 3px 6px; border-radius: var(--radius-sm); cursor: default; font-size: 12px; color: var(--text-secondary); transition: background var(--transition); }
+.panel-knowledge-item:hover { background: var(--bg-hover); color: var(--text-primary); }
+.panel-knowledge-item .kb-icon { width: 16px; text-align: center; flex-shrink: 0; }
+.panel-knowledge-item .kb-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.panel-knowledge-item .kb-delete { cursor: pointer; width: 16px; text-align: center; opacity: 0; color: var(--accent); font-size: 11px; flex-shrink: 0; transition: opacity var(--transition); }
+.panel-knowledge-item:hover .kb-delete { opacity: 0.6; }
+.panel-knowledge-item:hover .kb-delete:hover { opacity: 1; color: #b34a4a; }
+
+#panel-add-knowledge-btn { width: 100%; padding: 6px; margin-top: 8px; background: transparent; border: 1px dashed var(--border-visible); border-radius: var(--radius-sm); cursor: pointer; font-family: var(--font-sans); font-size: 12px; color: var(--text-muted); transition: all var(--transition); }
+#panel-add-knowledge-btn:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
 </style>
 </head>
 <body>
@@ -743,6 +755,14 @@ body {
       <h3 data-i18n="session_files">Session Files</h3>
       <ul id="panel-file-tree" class="file-tree"><li class="no-files" data-i18n="no_files">No files</li></ul>
       <button id="panel-new-folder-btn">+ New Folder</button>
+    </div>
+    <div class="panel-section">
+      <h3>Knowledge Base</h3>
+      <ul id="panel-knowledge-list" class="file-tree">
+        <li class="no-files">No documents</li>
+      </ul>
+      <button id="panel-add-knowledge-btn">+ Add Document</button>
+      <input type="file" id="knowledge-input" accept=".pdf,.txt,.md,.markdown" style="display:none" />
     </div>
     <div class="panel-section">
       <h3 data-i18n="modified_files">Modified Files</h3>
@@ -882,6 +902,7 @@ function createNewSession() {
     messages: [],
     modifiedFiles: [],
     fileTree: [],
+    knowledgeFiles: [],
     createdAt: new Date().toISOString(),
   };
   data.sessions.push(newSession);
@@ -917,6 +938,7 @@ function switchSession(id) {
       modifiedFiles = [...target.modifiedFiles];
     }
     renderPanelTree();
+    renderKnowledgeList();
   }
   renderSessionList();
   serverInitPromise = null; initServerSession();
@@ -999,6 +1021,8 @@ function resetUIForNewSession() {
   if (pt) pt.innerHTML = '<li class="no-files" data-i18n="no_files">No files</li>';
   const nfb = document.getElementById('panel-new-folder-btn');
   if (nfb) nfb.style.display = 'none';
+  const pkl = document.getElementById('panel-knowledge-list');
+  if (pkl) pkl.innerHTML = '<li class="no-files">No documents</li>';
   document.getElementById('file-list').innerHTML = '<li id="no-files" data-i18n="no_files">No files</li>';
   document.getElementById('file-count').textContent = '0';
   document.getElementById('sid-display').textContent = '--';
@@ -1115,6 +1139,91 @@ function saveFileTree(tree) {
     delete active.uploadedFiles;
     saveSessions(data);
   }
+}
+
+// ═══════════════════════════════════════════════════════════
+// Knowledge base helpers
+// ═══════════════════════════════════════════════════════════
+
+function getKnowledgeFiles() {
+  const data = loadSessions();
+  if (!data || !data.activeId) return [];
+  const active = data.sessions.find(s => s.id === data.activeId);
+  if (!active) return [];
+  if (!active.knowledgeFiles) active.knowledgeFiles = [];
+  return active.knowledgeFiles;
+}
+
+function saveKnowledgeFiles(files) {
+  const data = loadSessions();
+  if (!data || !data.activeId) return;
+  const active = data.sessions.find(s => s.id === data.activeId);
+  if (active) {
+    active.knowledgeFiles = files;
+    saveSessions(data);
+  }
+}
+
+function renderKnowledgeList() {
+  const listEl = document.getElementById('panel-knowledge-list');
+  const addBtn = document.getElementById('panel-add-knowledge-btn');
+  if (!listEl) return;
+
+  const files = getKnowledgeFiles();
+  if (files.length === 0) {
+    listEl.innerHTML = '<li class="no-files">No documents</li>';
+    if (addBtn) addBtn.style.display = '';
+    return;
+  }
+  if (addBtn) addBtn.style.display = '';
+
+  listEl.innerHTML = '';
+  files.forEach(fname => {
+    const li = document.createElement('li');
+    li.className = 'panel-knowledge-item';
+    const icon = fname.endsWith('.pdf') ? '📕' : '📄';
+    li.innerHTML = `<span class="kb-icon">${icon}</span><span class="kb-name">${escapeHTML(fname)}</span><span class="kb-delete" title="删除文档">✕</span>`;
+    li.querySelector('.kb-delete').addEventListener('click', async (e) => {
+      e.stopPropagation();
+      if (!confirm(`删除知识文档 "${fname}"？`)) return;
+      try {
+        const resp = await fetch(`/api/session/${sessionId}/knowledge/${encodeURIComponent(fname)}`, { method: 'DELETE' });
+        if (!resp.ok) { const err = await resp.json(); showToast(err.detail || '删除失败'); return; }
+        const updated = getKnowledgeFiles().filter(f => f !== fname);
+        saveKnowledgeFiles(updated);
+        renderKnowledgeList();
+        showToast(`已删除 "${fname}"`);
+      } catch (e) { showToast('删除请求失败'); }
+    });
+    listEl.appendChild(li);
+  });
+}
+
+async function refreshKnowledgeList() {
+  if (!sessionId) return;
+  try {
+    const resp = await fetch(`/api/session/${sessionId}/knowledge`);
+    if (!resp.ok) return;
+    const data = await resp.json();
+    saveKnowledgeFiles(data.knowledge_files || []);
+    renderKnowledgeList();
+  } catch (e) { /* ignore */ }
+}
+
+async function uploadKnowledgeDocument(file) {
+  const form = new FormData();
+  form.append('session_id', sessionId);
+  form.append('file', file);
+  try {
+    const resp = await fetch(`/api/session/${sessionId}/knowledge`, { method: 'POST', body: form });
+    if (!resp.ok) { const err = await resp.json(); showToast(err.detail || '上传失败'); return; }
+    const result = await resp.json();
+    const files = getKnowledgeFiles();
+    if (!files.includes(result.filename)) { files.push(result.filename); }
+    saveKnowledgeFiles(files);
+    renderKnowledgeList();
+    showToast(`知识文档 "${result.filename}" 已添加`);
+  } catch (e) { showToast('上传请求失败'); }
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -1274,7 +1383,7 @@ async function init() {
       const defaultId = 'ls_' + Date.now();
       data.sessions = [{
         id: defaultId, name: 'Session 1',
-        messages: [], modifiedFiles: [], fileTree: [],
+        messages: [], modifiedFiles: [], fileTree: [], knowledgeFiles: [],
         createdAt: new Date().toISOString(),
       }];
       data.activeId = defaultId;
@@ -1377,6 +1486,7 @@ async function initServerSession() {
               status.modified_files.forEach(f => addModifiedFile(f.filename, f.download_url));
             }
             connectWS();
+            refreshKnowledgeList();
             return;
           }
           if (status.agent_error) throw new Error(status.agent_error);
@@ -1966,6 +2076,7 @@ async function actionClearSession() {
     data.sessions[idx].messages = [];
     data.sessions[idx].modifiedFiles = [];
     data.sessions[idx].fileTree = [];
+    data.sessions[idx].knowledgeFiles = [];
   }
   saveSessions(data);
 
@@ -2149,6 +2260,21 @@ document.getElementById('panel-new-folder-btn').addEventListener('click', () => 
   tree.push({ type: 'folder', name: trimmed, children: [] });
   saveFileTree(tree);
   renderPanelTree();
+});
+
+// Knowledge upload button
+const knowledgeInput = document.getElementById('knowledge-input');
+document.getElementById('panel-add-knowledge-btn').addEventListener('click', () => {
+  if (!sessionId) { showToast('等待会话初始化...'); return; }
+  knowledgeInput.click();
+});
+knowledgeInput.addEventListener('change', async () => {
+  const files = knowledgeInput.files;
+  if (!files || files.length === 0) return;
+  for (const f of files) {
+    await uploadKnowledgeDocument(f);
+  }
+  knowledgeInput.value = '';
 });
 
 // Upload close button — hide overlay

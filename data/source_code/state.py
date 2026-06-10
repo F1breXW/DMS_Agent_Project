@@ -21,7 +21,7 @@ class State():
         self.fat_len = 2
         self.fat_rate_l1 = 0.20
         self.fat_rate_l2 = 0.35
-        self.yawn_len = 1.0
+        self.yawn_len = 3.0
         self.yawn_rate = 0.30
         self.eye_open_thres = 0.18
         self.yawn_thres = 0.45
@@ -29,6 +29,13 @@ class State():
         self.fat_l1_frames = self.fat_len * self.fat_rate_l1 * self.fps
         self.fat_l2_frames = self.fat_len * self.fat_rate_l2 * self.fps
         self.fat_yawn_frames = self.yawn_len * self.yawn_rate * self.fps
+
+        # 头部姿态异常阈值（国标要求）
+        self.head_pitch_down = -30.0   # 低头超过 30°
+        self.head_pitch_up = 30.0      # 抬头超过 30°
+        self.head_yaw_limit = 45.0     # 左/右转头超过 45°
+        self.head_pose_duration = 2.0  # 异常持续 2s 触发告警
+        self.head_pose_frames = int(self.head_pose_duration * self.fps)
 
     def dis_start(self):
         self.dis_queue = queue.Queue(int(self.fps*self.shortdis_len))
@@ -44,6 +51,7 @@ class State():
         self.close_counts = 0
         self.yawn_counts = 0
         self.last_mouth_open_ratio = 0
+        self.head_abnormal_count = 0
 
     def start(self):
         self.timestamp = 0
@@ -141,6 +149,36 @@ class State():
             if self.longzone_counts[4] + self.longzone_counts[6] + self.longzone_counts[7] + self.longzone_counts[9] > self.shortdis_frames:
                 is_shortdis = True
         return is_longdis,is_shortdis,long_score,short_score
+
+    def head_pose_judge(self, pitch, yaw, roll):
+        """判定头部姿态是否异常。
+        返回 (is_abnormal: bool, reason: str, score: float)"""
+        if pitch is None or yaw is None or roll is None:
+            return False, "无法计算", 0.0
+
+        reasons = []
+        score = 0.0
+
+        if pitch < self.head_pitch_down:
+            reasons.append(f"低头({pitch:.0f}°)")
+            score = max(score, abs(pitch / self.head_pitch_down))
+        elif pitch > self.head_pitch_up:
+            reasons.append(f"抬头({pitch:.0f}°)")
+            score = max(score, abs(pitch / self.head_pitch_up))
+
+        if abs(yaw) > self.head_yaw_limit:
+            direction = "右转" if yaw > 0 else "左转"
+            reasons.append(f"{direction}({yaw:.0f}°)")
+            score = max(score, abs(yaw / self.head_yaw_limit))
+
+        if reasons:
+            self.head_abnormal_count += 1
+            if self.head_abnormal_count >= self.head_pose_frames:
+                return True, ", ".join(reasons), min(score, 1.0)
+        else:
+            self.head_abnormal_count = 0
+
+        return False, "", 0.0
 
 
 

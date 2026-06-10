@@ -28,6 +28,7 @@ if str(ROOT_DIR) not in sys.path:
     sys.path.insert(0, str(ROOT_DIR))
 
 from src.config import LOGGER, UPLOAD_DIR
+from src.session_kb import SessionKnowledgeBase
 
 # Lazy import — DMSAgent is heavy (~13s for ML dependencies)
 DMSAgent = None
@@ -54,6 +55,8 @@ class Session:
     agent: object = None              # DMSAgent instance, set after lazy init
     agent_ready: bool = False
     agent_error: str | None = None
+    knowledge_dir: Path | None = None  # User knowledge documents storage
+    knowledge_kb: object = None        # SessionKnowledgeBase instance
 
 
 class SessionManager:
@@ -80,9 +83,23 @@ class SessionManager:
                 if DMSAgent is None:
                     from src.agent_core import DMSAgent as _DMSAgent
                     DMSAgent = _DMSAgent
-                session.agent = DMSAgent()
+
+                # Ensure global KB is loaded before creating session KB
+                from src.tools import _get_kb
+                global_kb = _get_kb()
+
+                # Create session knowledge base
+                session.knowledge_dir = upload_dir / "knowledge"
+                session.knowledge_dir.mkdir(parents=True, exist_ok=True)
+                session.knowledge_kb = SessionKnowledgeBase(
+                    knowledge_dir=session.knowledge_dir,
+                    global_kb=global_kb,
+                )
+
+                session.agent = DMSAgent(session_kb=session.knowledge_kb)
                 session.agent_ready = True
-                LOGGER.info("Session %s: agent ready", sid)
+                LOGGER.info("Session %s: agent ready (KB: %d docs)",
+                            sid, len(session.knowledge_kb.files))
             except Exception as exc:
                 session.agent_error = str(exc)
                 LOGGER.error("Session %s: agent init failed: %s", sid, exc)
@@ -197,11 +214,13 @@ async def session_status(session_id: str):
     session = session_manager.get(session_id)
     if session is None:
         raise HTTPException(status_code=404, detail="Session not found")
+    kb_files = session.knowledge_kb.files if session.knowledge_kb else []
     return {
         "agent_ready": session.agent_ready,
         "agent_error": session.agent_error,
         "files": session.uploaded_files,
         "modified_files": session.modified_files,
+        "knowledge_files": kb_files,
     }
 
 
@@ -221,6 +240,73 @@ async def list_files(session_id: str):
     if session is None:
         raise HTTPException(status_code=404, detail="Session not found")
     return {"files": session.uploaded_files}
+
+
+# ---------------------------------------------------------------------------
+# Knowledge document endpoints
+# ---------------------------------------------------------------------------
+
+
+@app.post("/api/session/{session_id}/knowledge")
+async def upload_knowledge(session_id: str, file: UploadFile = File(...)):
+    """上传知识文档（PDF/TXT/MD）到会话知识库。"""
+    session = session_manager.get(session_id)
+    if session is None:
+        raise HTTPException(status_code=404, detail="Session not found")
+
+    safe_name = file.filename.replace('\\', '/')
+    if not safe_name or safe_name.startswith('/'):
+        raise HTTPException(status_code=400, detail="Invalid filename")
+    if '..' in safe_name:
+        raise HTTPException(status_code=400, detail="Invalid filename (path traversal)")
+
+    suffix = Path(safe_name).suffix.lower()
+    if suffix not in (".pdf", ".txt", ".md", ".markdown"):
+        raise HTTPException(status_code=400, detail=f"不支持的文件格式: {suffix}（支持 .pdf / .txt / .md）")
+
+    if not session.knowledge_kb:
+        raise HTTPException(status_code=503, detail="Knowledge base not ready yet")
+
+    dest = session.knowledge_dir / Path(safe_name).name
+    content = await file.read()
+    with open(dest, "wb") as f:
+        f.write(content)
+
+    err = session.knowledge_kb.add_document(dest, Path(safe_name).name)
+    if err:
+        raise HTTPException(status_code=500, detail=err)
+
+    LOGGER.info("Session %s: knowledge doc '%s' added (%d bytes)",
+                session_id, Path(safe_name).name, len(content))
+    return {"filename": Path(safe_name).name, "size": len(content)}
+
+
+@app.delete("/api/session/{session_id}/knowledge/{filename:path}")
+async def delete_knowledge(session_id: str, filename: str):
+    """删除会话知识库中的指定文档。"""
+    session = session_manager.get(session_id)
+    if session is None:
+        raise HTTPException(status_code=404, detail="Session not found")
+    if not session.knowledge_kb:
+        raise HTTPException(status_code=503, detail="Knowledge base not ready yet")
+
+    err = session.knowledge_kb.remove_document(filename)
+    if err:
+        raise HTTPException(status_code=404, detail=err)
+
+    LOGGER.info("Session %s: knowledge doc '%s' removed", session_id, filename)
+    return {"status": "deleted", "filename": filename}
+
+
+@app.get("/api/session/{session_id}/knowledge")
+async def list_knowledge(session_id: str):
+    """列出会话知识库中的所有文档。"""
+    session = session_manager.get(session_id)
+    if session is None:
+        raise HTTPException(status_code=404, detail="Session not found")
+    if not session.knowledge_kb:
+        return {"knowledge_files": []}
+    return {"knowledge_files": session.knowledge_kb.files}
 
 
 @app.get("/api/session/{session_id}/download/{filename}")
@@ -342,11 +428,13 @@ async def websocket_chat(ws: WebSocket, session_id: str):
                 dbg_tool_count = 0
 
                 try:
+                    kb_files = session.knowledge_kb.files if session.knowledge_kb else []
                     async for event in agent.stream_with_context(
                         message=user_text,
                         upload_dir=upload_dir,
                         files=session.uploaded_files,
                         history=session.chat_messages,
+                        knowledge_files=kb_files,
                     ):
                         kind = event.get("event", "")
 

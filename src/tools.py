@@ -23,6 +23,7 @@ from src.rag_engine import StandardKnowledgeBase
 
 _kb: StandardKnowledgeBase | None = None
 _log_parser: LogParser | None = None
+_session_kb = None  # SessionKnowledgeBase, set per-request
 
 
 def _get_kb() -> StandardKnowledgeBase:
@@ -37,6 +38,18 @@ def _get_log_parser() -> LogParser:
     if _log_parser is None:
         _log_parser = LogParser()
     return _log_parser
+
+
+def set_session_kb(kb) -> None:
+    """Set the session-level knowledge base for the current request."""
+    global _session_kb
+    _session_kb = kb
+
+
+def clear_session_kb() -> None:
+    """Clear the session-level knowledge base after the request."""
+    global _session_kb
+    _session_kb = None
 
 
 # ═══════════════════════════════════════════════════════════
@@ -158,10 +171,18 @@ def parse_performance_logs(log_path: str) -> str:
 
 @tool
 def search_standards(query: str) -> str:
-    """从国标 GB/T 知识库中检索与 DMS 相关的条款。
+    """从国标 GB/T 知识库和用户上传的参考文档中检索 DMS 相关条款。
+    同时搜索两个来源：国标提供合规依据，用户文档提供补充参考。
     用于检查当前系统是否符合国标要求（如实时性、告警延迟、功能覆盖率等）。
     参数: query - 搜索关键词，如 "报警延迟 要求" 或 "疲劳检测 时间窗"
     """
+    global _session_kb
+
+    # If a session KB is active, use its merged search
+    if _session_kb is not None:
+        return _session_kb.search(query, k=3)
+
+    # Fallback: global standards only
     kb = _get_kb()
     results = kb.search_standard(query, k=3)
     if not results:
