@@ -130,12 +130,12 @@ body {
 .action-btn.danger { color: var(--danger); }
 .action-btn.danger:hover { background: rgba(179,74,74,0.06); border-color: var(--danger); }
 
-#panel-file-list, #panel-modified-list { list-style: none; display: flex; flex-direction: column; gap: 2px; }
-#panel-file-list li, #panel-modified-list li {
+#panel-modified-list { list-style: none; display: flex; flex-direction: column; gap: 2px; }
+#panel-modified-list li {
   font-size: 11px; color: var(--text-secondary); padding: 3px 0;
   font-family: var(--font-mono); cursor: pointer;
 }
-#panel-file-list li:hover, #panel-modified-list li:hover { color: var(--accent); }
+#panel-modified-list li:hover { color: var(--accent); }
 .no-files { color: var(--text-muted) !important; font-family: var(--font-sans) !important; font-style: italic; cursor: default !important; }
 
 /* ── Top Bar ── */
@@ -473,11 +473,20 @@ body {
   transition: all var(--transition);
 }
 #upload-close-btn:hover { background: var(--bg-hover); }
+#upload-folder-btn {
+  margin-top: 8px; width: 100%; padding: 8px;
+  background: var(--accent-soft); border: 1px solid var(--accent);
+  border-radius: var(--radius-sm); cursor: pointer;
+  font-family: var(--font-sans); font-size: 13px; color: var(--accent);
+  transition: all var(--transition);
+}
+#upload-folder-btn:hover { background: var(--accent); color: #fff; }
+#upload-folder-btn:disabled { opacity: 0.5; pointer-events: none; }
 
 /* File list (inside overlay) */
 #file-list {
   list-style: none; display: flex; flex-direction: column; gap: 4px;
-  margin-top: 12px;
+  margin-top: 12px; max-height: 280px; overflow-y: auto;
 }
 #file-list li {
   display: flex; align-items: center; justify-content: space-between;
@@ -632,6 +641,32 @@ body {
 
 /* Session info (hidden) */
 #session-info-hidden { display: none; }
+
+/* ═══════════════════════════════════════════════════════════
+   Panel File Tree
+   ═══════════════════════════════════════════════════════════ */
+
+.file-tree { list-style: none; padding: 0; margin: 0; }
+.ft-item { display: flex; align-items: center; gap: 4px; padding: 3px 6px; border-radius: var(--radius-sm); cursor: default; font-size: 12px; color: var(--text-secondary); transition: background var(--transition); }
+.ft-item:hover { background: var(--bg-hover); color: var(--text-primary); }
+.ft-item .ft-toggle { cursor: pointer; width: 14px; font-size: 10px; color: var(--text-muted); user-select: none; flex-shrink: 0; }
+.ft-item .ft-toggle:hover { color: var(--text-primary); }
+.ft-item .ft-icon { width: 16px; text-align: center; flex-shrink: 0; }
+.ft-item .ft-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ft-item .ft-delete { cursor: pointer; width: 16px; text-align: center; opacity: 0; color: var(--accent); font-size: 11px; flex-shrink: 0; transition: opacity var(--transition); }
+.ft-item:hover .ft-delete { opacity: 0.6; }
+.ft-item:hover .ft-delete:hover { opacity: 1; color: #b34a4a; }
+.ft-item .ft-drag-handle { cursor: grab; color: var(--text-muted); opacity: 0; flex-shrink: 0; }
+.ft-item:hover .ft-drag-handle { opacity: 0.5; }
+
+.ft-children { list-style: none; padding-left: 18px; margin: 0; }
+.ft-folder.collapsed > .ft-children { display: none; }
+
+.ft-item.dragging { opacity: 0.4; }
+.ft-item.drag-target { background: var(--accent-soft); outline: 1px dashed var(--accent); border-radius: var(--radius-sm); }
+
+#panel-new-folder-btn { width: 100%; padding: 6px; margin-top: 8px; background: transparent; border: 1px dashed var(--border-visible); border-radius: var(--radius-sm); cursor: pointer; font-family: var(--font-sans); font-size: 12px; color: var(--text-muted); transition: all var(--transition); }
+#panel-new-folder-btn:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
 </style>
 </head>
 <body>
@@ -656,7 +691,9 @@ body {
         <div style="font-size:28px;color:var(--text-muted);margin-bottom:8px;">+</div>
         <span id="upload-label">Drag files here or click to browse</span>
         <input type="file" id="file-input" multiple accept=".py,.csv,.txt,.log,.md" disabled>
+        <input type="file" id="folder-input" webkitdirectory directory>
       </div>
+      <button id="upload-folder-btn">Select Folder</button>
       <ul id="file-list"><li id="no-files">No files</li></ul>
       <button id="upload-close-btn" data-i18n="close">Close</button>
     </div>
@@ -704,7 +741,8 @@ body {
     </div>
     <div class="panel-section">
       <h3 data-i18n="session_files">Session Files</h3>
-      <ul id="panel-file-list"><li class="no-files" data-i18n="no_files">No files</li></ul>
+      <ul id="panel-file-tree" class="file-tree"><li class="no-files" data-i18n="no_files">No files</li></ul>
+      <button id="panel-new-folder-btn">+ New Folder</button>
     </div>
     <div class="panel-section">
       <h3 data-i18n="modified_files">Modified Files</h3>
@@ -817,7 +855,7 @@ function saveToLocalStorage() {
 
   data.sessions[idx].messages = messages;
   data.sessions[idx].modifiedFiles = [...modifiedFiles];
-  data.sessions[idx].uploadedFiles = getUploadedFilenames();
+  data.sessions[idx].fileTree = getFileTree();
 
   // Auto-name session from first user message
   if (!data.sessions[idx].name || data.sessions[idx].name.startsWith('Session')) {
@@ -843,7 +881,7 @@ function createNewSession() {
     name: 'Session ' + count,
     messages: [],
     modifiedFiles: [],
-    uploadedFiles: [],
+    fileTree: [],
     createdAt: new Date().toISOString(),
   };
   data.sessions.push(newSession);
@@ -878,7 +916,7 @@ function switchSession(id) {
       target.modifiedFiles.forEach(f => addModifiedFile(f.filename, f.url));
       modifiedFiles = [...target.modifiedFiles];
     }
-    updatePanelFileList(target.uploadedFiles || []);
+    renderPanelTree();
   }
   renderSessionList();
   serverInitPromise = null; initServerSession();
@@ -957,7 +995,10 @@ function resetUIForNewSession() {
       <p class="hint" data-i18n="welcome_hint">Upload log CSV or source code files, then tell me what you need</p>
     </div>`;
   document.getElementById('panel-modified-list').innerHTML = '<li class="no-files" data-i18n="no_modifications">No modifications</li>';
-  document.getElementById('panel-file-list').innerHTML = '<li class="no-files" data-i18n="no_files">No files</li>';
+  const pt = document.getElementById('panel-file-tree');
+  if (pt) pt.innerHTML = '<li class="no-files" data-i18n="no_files">No files</li>';
+  const nfb = document.getElementById('panel-new-folder-btn');
+  if (nfb) nfb.style.display = 'none';
   document.getElementById('file-list').innerHTML = '<li id="no-files" data-i18n="no_files">No files</li>';
   document.getElementById('file-count').textContent = '0';
   document.getElementById('sid-display').textContent = '--';
@@ -966,16 +1007,210 @@ function resetUIForNewSession() {
 }
 
 function updatePanelFileList(filenames) {
-  const panelList = document.getElementById('panel-file-list');
-  if (!panelList) return;
-  if (!filenames || !filenames.length) return;
-  const noFiles = panelList.querySelector('.no-files');
-  if (noFiles) noFiles.remove();
-  filenames.forEach(fn => {
+  // Legacy: 兼容旧调用，转换为 fileTree 再渲染
+  const tree = getFileTree();
+  if (tree && filenames) {
+    filenames.forEach(f => addToRoot(tree, f));
+    saveFileTree(tree);
+  }
+  renderPanelTree();
+}
+
+// ═══════════════════════════════════════════════════════════
+// File tree helpers
+// ═══════════════════════════════════════════════════════════
+
+function getFileTree() {
+  const data = loadSessions();
+  if (!data || !data.activeId) return null;
+  const active = data.sessions.find(s => s.id === data.activeId);
+  if (!active) return null;
+  if (active.uploadedFiles && !active.fileTree) {
+    active.fileTree = active.uploadedFiles.map(f => ({ type: 'file', name: f }));
+    delete active.uploadedFiles;
+    saveSessions(data);
+  }
+  if (!active.fileTree) active.fileTree = [];
+  return active.fileTree;
+}
+
+function flattenTree(tree) {
+  const result = [];
+  for (const node of tree) {
+    if (node.type === 'file') result.push(node.name);
+    else if (node.type === 'folder' && node.children) result.push(...flattenTree(node.children));
+  }
+  return result;
+}
+
+function addToRoot(tree, name) {
+  if (!tree.some(n => n.type === 'file' && n.name === name)) {
+    tree.push({ type: 'file', name });
+  }
+}
+
+/** 按路径自动创建嵌套文件夹结构，将文件放入最深一层 */
+function addToTreeWithPath(tree, path) {
+  const parts = path.split('/');
+  const fileName = parts.pop();
+  let current = tree;
+
+  for (const folderName of parts) {
+    let folder = current.find(n => n.type === 'folder' && n.name === folderName);
+    if (!folder) {
+      folder = { type: 'folder', name: folderName, children: [] };
+      current.push(folder);
+    }
+    current = folder.children;
+  }
+
+  // 去重：同一文件夹下不重复添加同名文件
+  if (!current.some(n => n.type === 'file' && n.name === fileName)) {
+    current.push({ type: 'file', name: fileName });
+  }
+}
+
+function removeFromTree(tree, name) {
+  for (let i = 0; i < tree.length; i++) {
+    if (tree[i].name === name) {
+      if (tree[i].type === 'folder' && tree[i].children && tree[i].children.length > 0) return false;
+      tree.splice(i, 1);
+      return true;
+    }
+    if (tree[i].type === 'folder' && tree[i].children) {
+      if (removeFromTree(tree[i].children, name)) return true;
+    }
+  }
+  return false;
+}
+
+function findNodeInTree(tree, name) {
+  for (let i = 0; i < tree.length; i++) {
+    if (tree[i].name === name) return { node: tree[i], parentArray: tree, index: i };
+    if (tree[i].type === 'folder' && tree[i].children) {
+      const found = findNodeInTree(tree[i].children, name);
+      if (found) return found;
+    }
+  }
+  return null;
+}
+
+function moveToFolder(tree, srcName, dstFolderName) {
+  const src = findNodeInTree(tree, srcName);
+  if (!src || src.node.type !== 'file') return false;
+  const dst = findNodeInTree(tree, dstFolderName);
+  if (!dst || dst.node.type !== 'folder') return false;
+  if (src.parentArray === dst.node.children) return false;
+  src.parentArray.splice(src.index, 1);
+  dst.node.children.push(src.node);
+  return true;
+}
+
+function saveFileTree(tree) {
+  const data = loadSessions();
+  if (!data || !data.activeId) return;
+  const active = data.sessions.find(s => s.id === data.activeId);
+  if (active) {
+    active.fileTree = tree;
+    delete active.uploadedFiles;
+    saveSessions(data);
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+// Panel tree renderer
+// ═══════════════════════════════════════════════════════════
+
+function renderPanelTree() {
+  const treeEl = document.getElementById('panel-file-tree');
+  const newFolderBtn = document.getElementById('panel-new-folder-btn');
+  if (!treeEl) return;
+
+  const tree = getFileTree();
+  if (!tree || tree.length === 0) {
+    treeEl.innerHTML = '<li class="no-files" data-i18n="no_files">No files</li>';
+    if (newFolderBtn) newFolderBtn.style.display = 'none';
+    return;
+  }
+  if (newFolderBtn) newFolderBtn.style.display = '';
+
+  treeEl.innerHTML = '';
+  tree.forEach(node => renderTreeNode(treeEl, node, tree));
+
+  function renderTreeNode(parent, node, treeRef) {
     const li = document.createElement('li');
-    li.textContent = fn;
-    panelList.appendChild(li);
-  });
+    li.className = 'ft-item';
+
+    if (node.type === 'folder') {
+      li.classList.add('ft-folder');
+      li.innerHTML = `<span class="ft-toggle">▼</span><span class="ft-icon">📁</span><span class="ft-name">${escapeHTML(node.name)}</span><span class="ft-delete" title="删除文件夹">✕</span>`;
+      const ul = document.createElement('ul');
+      ul.className = 'ft-children';
+      (node.children || []).forEach(c => renderTreeNode(ul, c, treeRef));
+      li.appendChild(ul);
+
+      li.querySelector('.ft-toggle').addEventListener('click', (e) => {
+        e.stopPropagation();
+        li.classList.toggle('collapsed');
+      });
+
+      li.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        li.classList.add('drag-target');
+      });
+      li.addEventListener('dragleave', () => li.classList.remove('drag-target'));
+      li.addEventListener('drop', (e) => {
+        e.preventDefault();
+        li.classList.remove('drag-target');
+        const srcName = e.dataTransfer.getData('text/plain');
+        if (srcName && srcName !== node.name && moveToFolder(treeRef, srcName, node.name)) {
+          saveFileTree(treeRef);
+          renderPanelTree();
+        }
+      });
+
+      li.querySelector('.ft-name').addEventListener('dblclick', (e) => {
+        e.stopPropagation();
+        const newName = prompt('新文件夹名：', node.name);
+        if (newName && newName.trim() && newName !== node.name) {
+          const trimmed = newName.trim();
+          if (!treeRef.some(n => n.type === 'folder' && n.name === trimmed)) {
+            node.name = trimmed;
+            saveFileTree(treeRef);
+            renderPanelTree();
+          } else {
+            showToast('文件夹名已存在');
+          }
+        }
+      });
+    } else {
+      li.draggable = true;
+      li.innerHTML = `<span class="ft-drag-handle">⋮⋮</span><span class="ft-icon">📄</span><span class="ft-name">${escapeHTML(node.name)}</span><span class="ft-delete" title="删除文件">✕</span>`;
+      li.addEventListener('dragstart', (e) => {
+        li.classList.add('dragging');
+        e.dataTransfer.setData('text/plain', node.name);
+        e.dataTransfer.effectAllowed = 'move';
+      });
+      li.addEventListener('dragend', () => li.classList.remove('dragging'));
+    }
+
+    li.querySelector('.ft-delete').addEventListener('click', (e) => {
+      e.stopPropagation();
+      const label = node.type === 'folder' ? '文件夹' : '文件';
+      const msg = node.type === 'folder'
+        ? `删除空文件夹 "${node.name}"？`
+        : `删除文件 "${node.name}"？`;
+      if (!confirm(msg)) return;
+      if (removeFromTree(treeRef, node.name)) {
+        saveFileTree(treeRef);
+        renderPanelTree();
+      } else {
+        showToast('文件夹非空，请先移走内部文件');
+      }
+    });
+
+    parent.appendChild(li);
+  }
 }
 
 function extractMessages() {
@@ -996,10 +1231,8 @@ function extractMessages() {
 }
 
 function getUploadedFilenames() {
-  const panelList = document.getElementById('panel-file-list');
-  if (!panelList) return [];
-  return Array.from(panelList.querySelectorAll('li:not(.no-files)'))
-    .map(li => li.textContent.trim());
+  const tree = getFileTree();
+  return tree ? flattenTree(tree) : [];
 }
 
 function restoreMessagesToDOM(messages) {
@@ -1041,7 +1274,7 @@ async function init() {
       const defaultId = 'ls_' + Date.now();
       data.sessions = [{
         id: defaultId, name: 'Session 1',
-        messages: [], modifiedFiles: [], uploadedFiles: [],
+        messages: [], modifiedFiles: [], fileTree: [],
         createdAt: new Date().toISOString(),
       }];
       data.activeId = defaultId;
@@ -1062,9 +1295,7 @@ async function init() {
         active.modifiedFiles.forEach(f => addModifiedFile(f.filename, f.url));
         modifiedFiles = [...active.modifiedFiles];
       }
-      if (active.uploadedFiles) {
-        updatePanelFileList(active.uploadedFiles);
-      }
+      renderPanelTree();
     }
 
     // Render session list
@@ -1098,6 +1329,7 @@ async function initServerSession() {
     uploadDropZone.style.opacity = '0.5';
     uploadDropZone.style.pointerEvents = 'none';
     uploadLabel.textContent = 'Agent 加载中...';
+    setUploadEnabled(false);
     sendBtn.disabled = true;
     userInput.disabled = true;
 
@@ -1107,7 +1339,7 @@ async function initServerSession() {
       if (localSessionId) {
         const sessionsData = loadSessions();
         const ls = sessionsData.sessions.find(s => s.id === localSessionId);
-        if (ls && ls.uploadedFiles) expectedFiles = ls.uploadedFiles;
+        if (ls && ls.fileTree) expectedFiles = flattenTree(ls.fileTree);
       }
       const res = await fetch('/api/session', {
         method: 'POST',
@@ -1138,7 +1370,7 @@ async function initServerSession() {
             uploadDropZone.style.opacity = '';
             uploadDropZone.style.pointerEvents = '';
             uploadLabel.textContent = 'Drag files here or click to browse';
-            fileInput.disabled = false;
+            setUploadEnabled(true);
             sendBtn.disabled = false;
             userInput.disabled = false;
             if (status.modified_files) {
@@ -1162,7 +1394,7 @@ async function initServerSession() {
       uploadDropZone.style.opacity = '';
       uploadDropZone.style.pointerEvents = '';
       uploadDropZone.onclick = () => { serverInitPromise = null; initServerSession(); };
-      fileInput.disabled = false;
+      setUploadEnabled(true);
       sendBtn.disabled = false;
       userInput.disabled = false;
       serverInitPromise = null;  // Clear guard so user can retry
@@ -1508,7 +1740,7 @@ function renderMarkdown(container, raw) {
 // File upload
 // ═══════════════════════════════════════════════════════════
 
-async function handleFiles(fileList) {
+async function handleFiles(fileList, isFolder = false) {
   if (!sessionId) {
     showToast('Session not ready yet. Please wait for initialization to complete.');
     return;
@@ -1519,31 +1751,38 @@ async function handleFiles(fileList) {
     existingFiles.add(s.textContent.trim());
   });
 
+  let uploaded = 0;
+  let skipped = 0;
+  const total = fileList.length;
+
   for (const file of fileList) {
-    if (existingFiles.has(file.name)) {
-      showToast('File "' + file.name + '" already uploaded.');
+    const uploadName = isFolder ? (file.webkitRelativePath || file.name) : file.name;
+
+    if (existingFiles.has(uploadName)) {
+      skipped++;
       continue;
     }
 
     const formData = new FormData();
     formData.append('session_id', sessionId);
-    formData.append('file', file);
+    formData.append('file', file, uploadName);
 
     try {
       const res = await fetch('/api/upload', { method: 'POST', body: formData });
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
         if (res.status === 404) {
-          showToast('Session lost (server may have restarted). Recovering...');
+          showToast('Session lost. Recovering...');
           serverInitPromise = null; await initServerSession();
           if (sessionId) {
-            const formData2 = new FormData();
-            formData2.append('session_id', sessionId);
-            formData2.append('file', file);
-            const retryRes = await fetch('/api/upload', { method: 'POST', body: formData2 });
+            const retryForm = new FormData();
+            retryForm.append('session_id', sessionId);
+            retryForm.append('file', file, uploadName);
+            const retryRes = await fetch('/api/upload', { method: 'POST', body: retryForm });
             if (retryRes.ok) {
               const data = await retryRes.json();
               addFileToList(data.filename);
+              uploaded++;
               continue;
             }
           }
@@ -1555,18 +1794,23 @@ async function handleFiles(fileList) {
       }
       const data = await res.json();
       addFileToList(data.filename);
+      existingFiles.add(data.filename);
+      uploaded++;
     } catch (e) {
-      showToast('Connection lost. Attempting to recover...');
+      showToast('Connection lost. Recovering...');
       serverInitPromise = null; await initServerSession();
       if (sessionId) {
-        const formData2 = new FormData();
-        formData2.append('session_id', sessionId);
-        formData2.append('file', file);
+        const retryForm = new FormData();
+        retryForm.append('session_id', sessionId);
+        const blob2 = file.slice(0, file.size, file.type);
+        retryForm.append('file', blob2, uploadName);
         try {
-          const retryRes = await fetch('/api/upload', { method: 'POST', body: formData2 });
+          const retryRes = await fetch('/api/upload', { method: 'POST', body: retryForm });
           if (retryRes.ok) {
             const data = await retryRes.json();
             addFileToList(data.filename);
+            existingFiles.add(data.filename);
+            uploaded++;
             continue;
           }
         } catch (e2) { /* fall through */ }
@@ -1574,31 +1818,35 @@ async function handleFiles(fileList) {
       showToast('Upload error: ' + e.message);
     }
   }
+
+  if (total > 1) {
+    showToast('Folder upload done: ' + uploaded + ' uploaded' + (skipped > 0 ? ', ' + skipped + ' skipped' : ''));
+  }
 }
 
 function addFileToList(filename) {
-  // Remove no-files placeholder from overlay file list
   const overlayNoFiles = document.getElementById('no-files');
   if (overlayNoFiles) overlayNoFiles.remove();
 
-  // Add to overlay file list
   const list = document.getElementById('file-list');
   if (list) {
     const li = document.createElement('li');
     li.innerHTML = `
       <span>${escapeHTML(filename)}</span>
-      <span class="remove-file" onclick="removeFile('${escapeHTML(filename)}', this.parentElement)">x</span>`;
+      <span class="remove-file" onclick="removeFile('${escapeHTML(filename)}', this.parentElement)">×</span>`;
     list.appendChild(li);
   }
 
-  // Also add to right panel file list
-  const panelList = document.getElementById('panel-file-list');
-  if (panelList) {
-    const panelNoFiles = panelList.querySelector('.no-files');
-    if (panelNoFiles) panelNoFiles.remove();
-    const panelLi = document.createElement('li');
-    panelLi.textContent = filename;
-    panelList.appendChild(panelLi);
+  // 同步到 fileTree 并重新渲染面板树
+  const tree = getFileTree();
+  if (tree) {
+    if (filename.includes('/')) {
+      addToTreeWithPath(tree, filename);
+    } else {
+      addToRoot(tree, filename);
+    }
+    saveFileTree(tree);
+    renderPanelTree();
   }
 
   updateFileCount();
@@ -1607,16 +1855,12 @@ function addFileToList(filename) {
 function removeFile(filename, element) {
   element.remove();
 
-  // Also remove from panel list
-  const panelList = document.getElementById('panel-file-list');
-  if (panelList) {
-    const panelItems = panelList.querySelectorAll('li:not(.no-files)');
-    for (const item of panelItems) {
-      if (item.textContent.trim() === filename) {
-        item.remove();
-        break;
-      }
-    }
+  // 从 fileTree 中移除并重新渲染
+  const tree = getFileTree();
+  if (tree) {
+    removeFromTree(tree, filename);
+    saveFileTree(tree);
+    renderPanelTree();
   }
 
   updateFileCount();
@@ -1637,18 +1881,6 @@ function updateFileCount() {
     list.appendChild(li);
   }
 
-  // Also check panel file list for empty state
-  const panelList = document.getElementById('panel-file-list');
-  if (panelList) {
-    const panelItems = panelList.querySelectorAll('li:not(.no-files)');
-    if (panelItems.length === 0 && !panelList.querySelector('.no-files')) {
-      const noLi = document.createElement('li');
-      noLi.className = 'no-files';
-      noLi.setAttribute('data-i18n', 'no_files');
-      noLi.textContent = I18N[currentLang].no_files || 'No files';
-      panelList.appendChild(noLi);
-    }
-  }
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -1733,7 +1965,7 @@ async function actionClearSession() {
   if (idx !== -1) {
     data.sessions[idx].messages = [];
     data.sessions[idx].modifiedFiles = [];
-    data.sessions[idx].uploadedFiles = [];
+    data.sessions[idx].fileTree = [];
   }
   saveSessions(data);
 
@@ -1761,18 +1993,15 @@ function actionGenerateReport() {
   const chatBubbles = container ? container.querySelectorAll('.msg-user, .msg-agent') : [];
   const hasChat = chatBubbles.length > 0;
 
-  const panelList = document.getElementById('panel-file-list');
-  const uploadedFiles = panelList ? panelList.querySelectorAll('li:not(.no-files)') : [];
-  const hasFiles = uploadedFiles.length > 0;
+  const allFiles = getUploadedFilenames();
+  const hasFiles = allFiles.length > 0;
 
   let prompt;
   if (hasChat) {
-    // Has conversation: summarize existing conclusions
-    prompt = '请基于当前对话中已经讨论过的内容和发现，用中文生成一份完整的评估报告，然后调用 save_report 保存。';
+    prompt = '请基于当前对话中已经讨论过的内容和发现，用中文生成一份完整的评估报告。需要同时调用 search_standards 检索国标要求、search_web 搜索业界参考，然后调用 save_report 保存。';
   } else if (hasFiles) {
-    // Files uploaded but no chat: analyze files first, then generate report
-    const fileNames = Array.from(uploadedFiles).map(li => li.textContent.trim()).join('、');
-    prompt = '请分析我已上传的文件（' + fileNames + '），对 DMS 系统进行全面评估，然后调用 save_report 保存评估报告。';
+    const fileNames = allFiles.join('、');
+    prompt = '请分析我已上传的文件（' + fileNames + '），对 DMS 系统进行全面评估。注意：必须同时使用 search_standards（检索国标合规要求）和 search_web（搜索业界最佳实践），两者结合给出判断，最后调用 save_report 保存评估报告。';
   } else {
     showToast('请先上传文件或开始对话。');
     return;
@@ -1817,8 +2046,8 @@ function actionCompareMetrics() {
     return;
   }
   // Check if there are CSV files uploaded
-  const fileList = document.getElementById('panel-file-list');
-  const csvFiles = fileList ? Array.from(fileList.querySelectorAll('li:not(.no-files)')).filter(li => li.textContent.endsWith('.csv')) : [];
+  const allFiles = getUploadedFilenames();
+  const csvFiles = allFiles.filter(f => f.endsWith('.csv'));
   if (csvFiles.length < 2) {
     showToast('Need at least 2 CSV log files to compare. Upload before/after optimization logs.');
     return;
@@ -1906,6 +2135,22 @@ document.getElementById('nav-upload-btn').addEventListener('click', () => {
   document.getElementById('upload-overlay').style.display = 'flex';
 });
 
+// New folder button
+document.getElementById('panel-new-folder-btn').addEventListener('click', () => {
+  const tree = getFileTree();
+  if (!tree) return;
+  const name = prompt('文件夹名称：');
+  if (!name || !name.trim()) return;
+  const trimmed = name.trim();
+  if (tree.some(n => n.type === 'folder' && n.name === trimmed)) {
+    showToast('同名文件夹已存在');
+    return;
+  }
+  tree.push({ type: 'folder', name: trimmed, children: [] });
+  saveFileTree(tree);
+  renderPanelTree();
+});
+
 // Upload close button — hide overlay
 document.getElementById('upload-close-btn').addEventListener('click', () => {
   document.getElementById('upload-overlay').style.display = 'none';
@@ -1916,8 +2161,7 @@ const uploadDropZone = document.getElementById('upload-drop-zone');
 const fileInput = document.getElementById('file-input');
 
 uploadDropZone.addEventListener('click', (e) => {
-  // Don't trigger if clicking on the file input itself
-  if (e.target !== fileInput) fileInput.click();
+  if (e.target.tagName !== 'INPUT') fileInput.click();
 });
 
 uploadDropZone.addEventListener('dragover', (e) => {
@@ -1939,6 +2183,26 @@ fileInput.addEventListener('change', () => {
   handleFiles(fileInput.files);
   fileInput.value = '';
 });
+
+// Folder input — select entire directory
+const folderInput = document.getElementById('folder-input');
+const folderBtn = document.getElementById('upload-folder-btn');
+folderBtn.addEventListener('click', (e) => {
+  e.stopPropagation();
+  folderInput.click();
+});
+folderInput.addEventListener('change', async () => {
+  if (folderInput.files.length > 0) {
+    await handleFiles(folderInput.files, true);
+  }
+  folderInput.value = '';
+});
+
+// Enable/disable folder button alongside file input
+function setUploadEnabled(enabled) {
+  fileInput.disabled = !enabled;
+  folderBtn.disabled = !enabled;
+}
 
 // Auto-resize textarea
 document.getElementById('user-input').addEventListener('input', function() {

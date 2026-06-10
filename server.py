@@ -161,11 +161,15 @@ async def upload_file(session_id: str = Form(...), file: UploadFile = File(...))
     if session is None:
         raise HTTPException(status_code=404, detail="Session not found")
 
-    safe_name = Path(file.filename).name
-    if not safe_name:
+    safe_name = file.filename.replace('\\', '/')
+    if not safe_name or safe_name.startswith('/'):
         raise HTTPException(status_code=400, detail="Invalid filename")
+    # Prevent path traversal
+    if '..' in safe_name:
+        raise HTTPException(status_code=400, detail="Invalid filename (path traversal)")
 
     dest = session.upload_dir / safe_name
+    dest.parent.mkdir(parents=True, exist_ok=True)
     content = await file.read()
 
     with open(dest, "wb") as f:
@@ -352,7 +356,7 @@ async def websocket_chat(ws: WebSocket, session_id: str):
                             content = getattr(chunk, "content", None)
                             if content:
                                 # Flag XML tokens for diagnostics
-                                if "<function_calls>" in content.lower() or "<invoke" in content.lower():
+                                if re.search(r'<(?:function_calls|tool_calls|invoke)', content, re.IGNORECASE):
                                     LOGGER.warning("WS[%s] XML token detected in stream: %r",
                                                    session_id, content[:120])
                                 await ws.send_json({"type": "token", "content": content})

@@ -176,15 +176,18 @@ def search_web(query: str) -> str:
     参数: query - 搜索问题，如 "RetinaFace MobileNet 替代方案 实时人脸检测"
     """
     try:
-        from duckduckgo_search import DDGS
+        from ddgs import DDGS
     except ImportError:
-        return "duckduckgo-search 未安装。请运行: pip install duckduckgo-search"
+        try:
+            from duckduckgo_search import DDGS
+        except ImportError:
+            return "ddgs 未安装。请运行: pip install ddgs"
 
     try:
         with DDGS() as ddgs:
             results = list(ddgs.text(query, max_results=5))
         if not results:
-            return f"未找到关于 '{query}' 的搜索结果。"
+            return f"未找到关于 '{query}' 的搜索结果（可能被网络限制，建议检查网络环境）。"
         lines = [f"搜索: {query}\n"]
         for i, r in enumerate(results, 1):
             lines.append(f"{i}. **{r.get('title', '无标题')}**")
@@ -193,7 +196,7 @@ def search_web(query: str) -> str:
             lines.append("")
         return "\n".join(lines)
     except Exception as e:
-        return f"搜索失败: {e}"
+        return f"搜索失败: {e}\n提示：校园网可能限制 DuckDuckGo，可尝试更换网络环境。"
 
 
 # ═══════════════════════════════════════════════════════════

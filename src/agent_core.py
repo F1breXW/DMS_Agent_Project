@@ -88,11 +88,16 @@ Camera -> Face Detection -> Feature Extraction -> State Determination -> Alert
 2. **同一工具不要重复调用同一目标**。例如：
    - parse_performance_logs 对同一个 CSV 文件只调 1 次
    - scan_codebase 对同一个目录只调 1 次
-   - search_standards 对同一个关键词只调 1 次
-3. **工具返回错误时不重试**。如果结果以 [ERR] 或 [FAIL] 开头，直接告知用户失败原因。
-4. **简单问题不调工具**。"你好"、"FPS最低多少"这类问题直接回答。
-5. **用已有信息回答**。不需要为回答一个问题把所有相关工具都调一遍。
-6. **修改代码时必须一步一步来**（严格遵守）：
+   - search_standards / search_web 对同一个关键词各调 1 次
+3. **信息检索必须双管齐下**。涉及技术问题时：
+   - search_standards 检索国标 GB/T 知识库 → 提供合规依据和标准条款
+   - search_web 搜索互联网 → 获取技术方案、优化技巧、开源实现参考
+   - 两者互补：国标告诉"标准要求什么"，互联网告诉"业界怎么做到的"
+   - 例：用户问"疲劳检测怎么优化"→ 同时调 search_standards("疲劳检测 时间窗 要求") 和 search_web("PERCLOS 疲劳检测 优化方案")
+4. **工具返回错误时不重试**。如果结果以 [ERR] 或 [FAIL] 开头，直接告知用户失败原因。
+5. **简单问题不调工具**。"你好"、"FPS最低多少"这类问题直接回答。
+6. **用已有信息回答**。不需要为回答一个问题把所有相关工具都调一遍。
+7. **修改代码时必须一步一步来**（严格遵守）：
    - 每次只描述并执行 1 处修改，绝不要一次描述多处
    - 严格遵守流程：描述修改 → 调用 modify_code → 根据结果确认成功/失败 → 再继续下一处
    - 每处修改的描述独占一行，用「---」分隔不同修改
@@ -122,15 +127,15 @@ Camera -> Face Detection -> Feature Extraction -> State Determination -> Alert
 def _strip_xml(text: str) -> str:
     """Strip XML-format tool call text that DeepSeek hallucinates when tools are unavailable.
 
-    Handles both complete blocks (with closing tags) and incomplete fragments
-    (orphaned opening tags without closing counterparts).
+    Handles both <function_calls> and <tool_calls> variants, plus complete /
+    incomplete fragments.
     """
     # Pass 1: complete blocks with closing tags
-    text = re.sub(r'<function_calls>[\s\S]*?</function_calls>', '', text, flags=re.IGNORECASE)
+    text = re.sub(r'<(?:function_calls|tool_calls)>[\s\S]*?</(?:function_calls|tool_calls)>', '', text, flags=re.IGNORECASE)
     text = re.sub(r'<invoke\b[^>]*>[\s\S]*?</invoke>', '', text, flags=re.IGNORECASE)
     text = re.sub(r'<parameter\b[^>]*>[\s\S]*?</parameter>', '', text, flags=re.IGNORECASE)
     # Pass 2: orphaned opening/closing tags (incomplete fragments)
-    text = re.sub(r'</?(?:function_calls|invoke|parameter)\b[^>]*>', '', text, flags=re.IGNORECASE)
+    text = re.sub(r'</?(?:function_calls|tool_calls|invoke|parameter)\b[^>]*>', '', text, flags=re.IGNORECASE)
     return text.strip()
 
 
@@ -143,10 +148,10 @@ def _parse_xml_to_tool_calls(text: str, tools_by_name: dict) -> tuple[str, list[
 
     Returns (cleaned_text, tool_calls_or_None).
     """
-    if not text or "<function_calls>" not in text.lower():
+    if not text or not re.search(r'<(?:function_calls|tool_calls)>', text, re.IGNORECASE):
         return text, None
 
-    pattern = r'<function_calls>(.*?)</function_calls>'
+    pattern = r'<(?:function_calls|tool_calls)>(.*?)</(?:function_calls|tool_calls)>'
     match = re.search(pattern, text, re.IGNORECASE | re.DOTALL)
     if not match:
         # Opening tag exists but no closing tag (streaming fragment)
@@ -246,12 +251,12 @@ class DMSAgent:
                      len(self.tools))
 
     def _build_graph(self):
-        """Build a StateGraph that hard-enforces tool call limits.
+        """Build a StateGraph that enforces tool call discipline.
 
         Unlike create_agent which trusts the model to stop, this graph:
-        - Caps total tool calls at 5
         - Detects repeated calls to the same tool+target
-        - Forces the model to respond when limits are hit
+        - Forces the model to respond when duplicate calls are detected
+        - Hard recursion_limit=100 as safety net
         """
         tool_node = ToolNode(tools=self.tools)
         system_message = SystemMessage(content=DMS_SYSTEM_PROMPT)
@@ -263,7 +268,7 @@ class DMSAgent:
             response = llm_with_tools.invoke(messages)
             content = response.content or ""
 
-            if "<function_calls>" in content.lower():
+            if re.search(r'<(?:function_calls|tool_calls)>', content, re.IGNORECASE):
                 if not getattr(response, "tool_calls", None):
                     # No native tool calls — parse XML into real tool calls
                     cleaned, tool_calls = _parse_xml_to_tool_calls(
@@ -285,26 +290,13 @@ class DMSAgent:
             messages = state["messages"]
             last_message = messages[-1] if messages else None
 
-            # Limit 1: allow enough rounds for reading files + sequential modifications
-            rounds = state.get("round_count", 0)
-            if rounds >= 12:
-                LOGGER.info("Agent hit round limit (%d), forcing response", rounds)
-                return "force_respond"
-
-            # Limit 2: cap total tool calls
-            count = state.get("tool_call_count", 0)
-            if count >= 20:
-                LOGGER.info("Agent hit tool call limit (%d), forcing response", count)
-                return "force_respond"
-
-            # Limit 3: No duplicate tool+target pairs.
-            # EXCEPTION: read_code_file is allowed to re-read files that were
-            # modified since last read — the content has changed so it's not
-            # a true duplicate. Also allow scan_codebase to be re-called.
+            # Limit: No duplicate tool+target pairs.
+            # EXCEPTION: read_code_file / scan_codebase / search_web / search_standards
+            # are allowed to be re-called — content may have changed or queries differ.
             history = state.get("tool_call_history", [])
             if isinstance(last_message, AIMessage) and last_message.tool_calls:
                 for tc in last_message.tool_calls:
-                    if tc["name"] in ("read_code_file", "scan_codebase"):
+                    if tc["name"] in ("read_code_file", "scan_codebase", "search_web", "search_standards"):
                         continue
                     target = str(tc.get("args", {}))
                     for h in history:
@@ -401,7 +393,7 @@ class DMSAgent:
         """执行一次对话，返回输出和中间步骤。"""
         result = self.agent.invoke(
             self._initial_state(message),
-            config={"recursion_limit": 25},
+            config={"recursion_limit": 100},
         )
 
         messages = result.get("messages", [])
@@ -425,7 +417,7 @@ class DMSAgent:
         return self.agent.astream_events(
             self._initial_state(message),
             version="v2",
-            config={"recursion_limit": 25},
+            config={"recursion_limit": 100},
         )
 
     def stream_with_context(
@@ -475,7 +467,7 @@ class DMSAgent:
                 "round_count": 0,
             },
             version="v2",
-            config={"recursion_limit": 25},
+            config={"recursion_limit": 100},
         )
 
     def clear_history(self) -> None:
