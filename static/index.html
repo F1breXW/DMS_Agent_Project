@@ -3,42 +3,56 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>DMS Evaluator</title>
+<title>DMS 智能评估系统</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Source+Serif+4:wght@500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+4:wght@500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 /* ==================================================================
-   DMS Evaluator — NotebookLM Style · 3-Column Light Theme
+   DMS Evaluator — Refined 3-Column Light Theme
    ================================================================== */
 
 :root {
-  --bg-root: #faf8f5;
-  --bg-surface: #f5f1eb;
+  --bg-root: #f4f6f8;
+  --bg-surface: #eef1f4;
   --bg-raised: #ffffff;
-  --bg-hover: #efe9e0;
-  --text-primary: #3d392f;
-  --text-secondary: #6b5f4f;
-  --text-muted: #9c8b74;
-  --accent: #4a7c59;
-  --accent-soft: rgba(74, 124, 89, 0.08);
-  --accent-glow: rgba(74, 124, 89, 0.15);
-  --border-subtle: #e8e3db;
-  --border-visible: #e0d8cc;
-  --success: #4a7c59;
-  --danger: #b34a4a;
-  --warning: #c9954a;
-  --radius-sm: 4px;
-  --radius-md: 8px;
+  --bg-hover: #e8ecf0;
+  --text-primary: #1a2332;
+  --text-secondary: #4a5568;
+  --text-muted: #8b95a5;
+  --accent: #2d6a4f;
+  --accent-light: #40916c;
+  --accent-soft: rgba(45, 106, 79, 0.08);
+  --accent-glow: rgba(45, 106, 79, 0.18);
+  --accent-gradient: linear-gradient(135deg, #2d6a4f 0%, #40916c 100%);
+  --border-subtle: #e2e8f0;
+  --border-visible: #cbd5e1;
+  --success: #2d6a4f;
+  --danger: #c53030;
+  --warning: #d69e2e;
+  --radius-sm: 6px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --shadow-sm: 0 1px 3px rgba(26, 35, 50, 0.06);
+  --shadow-md: 0 4px 16px rgba(26, 35, 50, 0.08);
+  --shadow-lg: 0 12px 40px rgba(26, 35, 50, 0.12);
   --font-mono: 'JetBrains Mono', 'Cascadia Code', 'Consolas', monospace;
   --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   --font-serif: 'Source Serif 4', Georgia, 'Times New Roman', serif;
-  --transition: 180ms ease;
+  --transition: 200ms cubic-bezier(0.4, 0, 0.2, 1);
+  --nav-width: 68px;
+  --panel-width: 288px;
+  --app-gap: 12px;
+  --shell-radius: 18px;
+  --chat-column: 760px;
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {
-  background: var(--bg-root);
+  background:
+    radial-gradient(ellipse 80% 50% at 20% -10%, rgba(64, 145, 108, 0.12) 0%, transparent 50%),
+    radial-gradient(ellipse 60% 40% at 90% 100%, rgba(45, 106, 79, 0.08) 0%, transparent 50%),
+    var(--bg-root);
   color: var(--text-primary);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
@@ -49,131 +63,426 @@ body {
 #app {
   display: flex;
   height: 100vh;
+  padding: var(--app-gap);
+  gap: var(--app-gap);
+  min-width: 0;
+}
+
+#workspace {
+  flex: 1;
+  display: flex;
+  gap: var(--app-gap);
+  min-width: 0;
+  min-height: 0;
+  transition: gap var(--transition);
+}
+#workspace.panel-collapsed { gap: 0; }
+#workspace.panel-collapsed #right-panel {
+  width: 0; min-width: 0; opacity: 0; pointer-events: none;
+  border: none; box-shadow: none; overflow: hidden;
 }
 
 /* ── Left Nav ── */
 #left-nav {
-  width: 56px; min-width: 56px;
-  background: var(--bg-surface);
-  border-right: 1px solid var(--border-subtle);
+  width: var(--nav-width); min-width: var(--nav-width);
+  background: var(--bg-raised);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--shell-radius);
   display: flex; flex-direction: column; align-items: center;
-  padding: 12px 0; gap: 4px;
+  padding: 14px 0; gap: 6px;
+  box-shadow: var(--shadow-sm);
 }
 #nav-brand {
-  font-family: var(--font-serif); font-size: 11px; font-weight: 600;
-  color: var(--text-primary); writing-mode: vertical-rl;
-  letter-spacing: 0.08em; padding: 12px 0;
+  width: 36px; height: 36px;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-serif); font-size: 11px; font-weight: 700;
+  color: #fff; letter-spacing: 0.04em;
+  background: var(--accent-gradient);
+  border-radius: 10px;
+  box-shadow: 0 4px 12px var(--accent-glow);
+  margin-bottom: 8px;
 }
 .nav-btn {
-  width: 36px; height: 36px; border: none; background: transparent;
-  border-radius: var(--radius-sm); color: var(--text-muted); cursor: pointer;
+  width: 40px; height: 40px; border: none; background: transparent;
+  border-radius: 10px; color: var(--text-muted); cursor: pointer;
   display: flex; align-items: center; justify-content: center;
   transition: all var(--transition);
+  position: relative;
 }
-.nav-btn:hover { background: var(--bg-hover); color: var(--text-primary); }
-.nav-btn.active { background: var(--accent-soft); color: var(--accent); }
+.nav-btn:hover { background: var(--bg-hover); color: var(--accent); transform: translateY(-1px); }
+.nav-btn.active {
+  background: var(--accent-soft); color: var(--accent);
+  box-shadow: inset 0 0 0 1px rgba(45, 106, 79, 0.15);
+}
+.nav-btn.active::before {
+  content: '';
+  position: absolute; left: 4px; top: 50%; transform: translateY(-50%);
+  width: 3px; height: 18px; border-radius: 3px;
+  background: var(--accent-gradient);
+}
 
 /* ── Session List (in right panel) ── */
-#session-list { list-style: none; display: flex; flex-direction: column; gap: 2px; }
+#session-list {
+  list-style: none; display: flex; flex-direction: column; gap: 4px;
+  max-height: 132px; overflow-y: auto; margin-bottom: 8px;
+}
 .session-item {
-  display: flex; align-items: center; gap: 6px;
-  padding: 5px 8px; border-radius: var(--radius-sm);
-  cursor: pointer; font-size: 11px; color: var(--text-secondary);
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 10px; border-radius: var(--radius-sm);
+  cursor: pointer; font-size: 12px; color: var(--text-secondary);
   transition: all var(--transition);
+  border: 1px solid transparent;
+  background: var(--bg-root);
 }
-.session-item:hover { background: var(--bg-hover); }
-.session-item.active { background: var(--accent-soft); color: var(--accent); font-weight: 500; }
+.session-item:hover { background: var(--bg-hover); border-color: var(--border-subtle); }
+.session-item.active {
+  background: var(--accent-soft); color: var(--accent); font-weight: 500;
+  border-color: rgba(45, 106, 79, 0.18);
+  box-shadow: inset 3px 0 0 var(--accent-light);
+}
+.session-item .sess-dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--border-visible); flex-shrink: 0;
+}
+.session-item.active .sess-dot {
+  background: var(--accent-light);
+  box-shadow: 0 0 6px var(--accent-glow);
+}
+.session-item .sess-info { flex: 1; min-width: 0; }
 .session-item .sess-name {
-  flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-  font-family: var(--font-sans);
+  display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  font-family: var(--font-sans); line-height: 1.3;
 }
+.session-item .sess-meta {
+  font-size: 10px; color: var(--text-muted); margin-top: 1px;
+}
+.session-item.active .sess-meta { color: rgba(45, 106, 79, 0.65); }
 .session-item .sess-count {
-  font-family: var(--font-mono); font-size: 10px; color: var(--text-muted); flex-shrink: 0;
+  font-family: var(--font-mono); font-size: 10px; color: var(--text-muted);
+  background: var(--bg-raised); border: 1px solid var(--border-subtle);
+  border-radius: 999px; padding: 1px 7px; flex-shrink: 0;
 }
 .session-item .sess-delete {
-  flex-shrink: 0; width: 16px; height: 16px; border: none; background: transparent;
-  color: var(--text-muted); cursor: pointer; font-size: 12px; line-height: 1;
-  border-radius: 2px; display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; width: 22px; height: 22px; border: none;
+  background: transparent; color: var(--text-muted); cursor: pointer;
+  font-size: 14px; line-height: 1; border-radius: 5px;
+  display: flex; align-items: center; justify-content: center;
   opacity: 0; transition: all var(--transition);
 }
 .session-item:hover .sess-delete { opacity: 1; }
-.session-item .sess-delete:hover { color: var(--danger); background: rgba(179,74,74,0.10); }
+.session-item .sess-delete:hover { color: var(--danger); background: rgba(197,48,48,0.08); }
 #session-new-btn {
-  width: 100%; padding: 4px 8px; margin-top: 2px;
-  font-size: 11px; font-family: var(--font-sans);
-  background: transparent; border: 1px dashed var(--border-visible);
-  border-radius: var(--radius-sm); color: var(--text-muted); cursor: pointer;
+  width: 100%; padding: 8px 12px;
+  font-size: 12px; font-weight: 500; font-family: var(--font-sans);
+  background: var(--bg-raised); border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm); color: var(--text-secondary); cursor: pointer;
   transition: all var(--transition);
+  display: flex; align-items: center; justify-content: center; gap: 6px;
 }
-#session-new-btn:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
+#session-new-btn:hover {
+  border-color: var(--accent-light); color: var(--accent);
+  background: var(--accent-soft);
+}
 
 /* ── Right Panel ── */
 #right-panel {
-  width: 240px; min-width: 240px;
-  background: var(--bg-surface); border-left: 1px solid var(--border-subtle);
-  padding: 16px 12px; overflow-y: auto;
-  display: flex; flex-direction: column; gap: 16px;
+  width: var(--panel-width); min-width: var(--panel-width);
+  background: var(--bg-raised);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--shell-radius);
+  overflow: hidden;
+  display: flex; flex-direction: column;
+  box-shadow: var(--shadow-md);
+  transition: width var(--transition), min-width var(--transition), opacity var(--transition);
 }
-.panel-section h3 {
-  font-family: var(--font-sans); font-size: 11px; font-weight: 600;
-  text-transform: uppercase; letter-spacing: 0.05em;
-  color: var(--text-muted); margin-bottom: 8px;
+.panel-scroll {
+  flex: 1; overflow-y: auto; overflow-x: hidden;
+  display: flex; flex-direction: column;
 }
-.action-btn {
-  display: block; width: 100%; padding: 8px 12px; margin-bottom: 4px;
-  background: var(--bg-raised); border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-sm); font-family: var(--font-sans);
-  font-size: 12px; color: var(--text-primary); cursor: pointer; text-align: left;
+.panel-header {
+  position: sticky; top: 0; z-index: 5;
+  padding: 18px 16px 14px;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border-subtle);
+}
+.panel-header h2 {
+  font-family: var(--font-serif); font-size: 15px; font-weight: 600;
+  color: var(--text-primary); margin-bottom: 2px;
+}
+.panel-header-desc {
+  font-size: 11px; color: var(--text-muted); line-height: 1.4;
+}
+.panel-body {
+  padding: 12px 14px 20px;
+  display: flex; flex-direction: column; gap: 10px;
+}
+.panel-section {
+  background: var(--bg-root);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 12px;
+}
+.panel-section-title {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 10px;
+}
+.panel-section-title h3 {
+  font-family: var(--font-sans); font-size: 11px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.07em;
+  color: var(--text-muted); margin: 0; padding: 0; border: none;
+}
+.panel-section-badge {
+  font-family: var(--font-mono); font-size: 10px;
+  color: var(--text-muted); background: var(--bg-raised);
+  border: 1px solid var(--border-subtle);
+  border-radius: 999px; padding: 1px 8px;
+}
+
+.panel-cta {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  width: 100%; padding: 12px 16px;
+  background: var(--accent-gradient); color: #fff; border: none;
+  border-radius: var(--radius-md); cursor: pointer;
+  font-family: var(--font-sans); font-size: 13px; font-weight: 600;
+  box-shadow: 0 4px 16px var(--accent-glow);
   transition: all var(--transition);
 }
-.action-btn:hover { background: var(--bg-hover); border-color: var(--border-visible); }
-.action-btn.danger { color: var(--danger); }
-.action-btn.danger:hover { background: rgba(179,74,74,0.06); border-color: var(--danger); }
-
-#panel-modified-list { list-style: none; display: flex; flex-direction: column; gap: 2px; }
-#panel-modified-list li {
-  font-size: 11px; color: var(--text-secondary); padding: 3px 0;
-  font-family: var(--font-mono); cursor: pointer;
+.panel-cta:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 22px var(--accent-glow);
+  filter: brightness(1.04);
 }
-#panel-modified-list li:hover { color: var(--accent); }
-.no-files { color: var(--text-muted) !important; font-family: var(--font-sans) !important; font-style: italic; cursor: default !important; }
+.panel-cta:active { transform: translateY(0); }
+
+.action-group { margin-bottom: 10px; }
+.action-group:last-child { margin-bottom: 0; }
+.action-group-label {
+  font-size: 10px; font-weight: 600; text-transform: uppercase;
+  letter-spacing: 0.06em; color: var(--text-muted);
+  margin-bottom: 6px; padding-left: 2px;
+}
+.action-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 6px;
+}
+.action-grid .action-btn { margin-bottom: 0; padding: 8px 10px; font-size: 11px; }
+.action-grid .action-btn .action-icon {
+  width: 22px; height: 22px; font-size: 11px; border-radius: 6px;
+}
+.action-grid .action-btn .action-label { flex: 1; line-height: 1.3; }
+.action-stack .action-btn:last-child { margin-bottom: 0; }
+
+.panel-upload-btn {
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  width: 100%; padding: 7px 10px; margin-top: 8px;
+  background: var(--bg-raised); border: 1px dashed var(--border-visible);
+  border-radius: var(--radius-sm); cursor: pointer;
+  font-family: var(--font-sans); font-size: 11px; font-weight: 500;
+  color: var(--text-muted); transition: all var(--transition);
+}
+.panel-upload-btn:hover {
+  border-color: var(--accent-light); color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.panel-accordion { display: flex; flex-direction: column; gap: 8px; }
+.accordion-item {
+  background: var(--bg-root); border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md); overflow: hidden;
+}
+.accordion-header {
+  display: flex; align-items: center; gap: 8px;
+  width: 100%; padding: 10px 12px;
+  background: transparent; border: none; cursor: pointer;
+  font-family: var(--font-sans); text-align: left;
+  transition: background var(--transition);
+}
+.accordion-header:hover { background: var(--bg-hover); }
+.accordion-chevron {
+  font-size: 9px; color: var(--text-muted);
+  transition: transform var(--transition); flex-shrink: 0;
+}
+.accordion-item.open .accordion-chevron { transform: rotate(90deg); }
+.accordion-title {
+  flex: 1; font-size: 12px; font-weight: 600; color: var(--text-primary);
+}
+.accordion-count {
+  font-family: var(--font-mono); font-size: 10px;
+  color: var(--text-muted); background: var(--bg-raised);
+  border: 1px solid var(--border-subtle);
+  border-radius: 999px; padding: 1px 7px;
+}
+.accordion-body {
+  display: none; padding: 0 12px 12px;
+  border-top: 1px solid var(--border-subtle);
+}
+.accordion-item.open .accordion-body { display: block; }
+.accordion-body .file-tree,
+.accordion-body #panel-modified-list { margin-top: 8px; }
+
+.panel-empty-hint {
+  font-size: 11px; color: var(--text-muted); line-height: 1.5;
+  padding: 8px 4px 4px; text-align: center;
+}
+.panel-divider {
+  height: 1px; background: var(--border-subtle); margin: 4px 0;
+}
+.panel-footer-actions {
+  display: flex; gap: 6px; margin-top: 4px;
+}
+.panel-footer-actions .action-btn { flex: 1; margin-bottom: 0; justify-content: center; }
+.panel-footer-actions .action-btn .action-label { display: none; }
+.panel-footer-actions .action-btn .action-icon { margin: 0; }
+
+#panel-modified-list { list-style: none; display: flex; flex-direction: column; gap: 3px; }
+#panel-modified-list li {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 11px; color: var(--text-secondary); padding: 7px 8px;
+  font-family: var(--font-mono); cursor: pointer;
+  border-radius: var(--radius-sm); transition: all var(--transition);
+  background: var(--bg-raised); border: 1px solid var(--border-subtle);
+}
+#panel-modified-list li::before {
+  content: '●'; font-size: 8px; color: var(--accent-light);
+}
+#panel-modified-list li:hover {
+  background: var(--accent-soft); color: var(--accent);
+  border-color: rgba(45, 106, 79, 0.2);
+}
+.no-files {
+  color: var(--text-muted) !important; font-family: var(--font-sans) !important;
+  font-style: normal !important; cursor: default !important;
+  background: transparent !important; border: none !important;
+  padding: 6px 4px !important; font-size: 11px !important;
+}
+.no-files::before { content: none !important; }
 
 /* ── Top Bar ── */
 #top-bar {
   display: flex; align-items: center; justify-content: space-between;
-  padding: 12px 24px; border-bottom: 1px solid var(--border-subtle);
+  padding: 12px 20px;
+  border-bottom: 1px solid var(--border-subtle);
   background: var(--bg-raised);
+  flex-shrink: 0;
 }
-#top-title { font-family: var(--font-serif); font-size: 16px; font-weight: 600; color: var(--text-primary); }
-#lang-switcher { display: flex; gap: 2px; background: var(--bg-surface); border-radius: var(--radius-sm); padding: 2px; }
+.top-bar-left { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.top-bar-meta {
+  display: flex; flex-direction: column; gap: 2px; min-width: 0;
+}
+.top-bar-breadcrumb {
+  font-size: 10px; font-weight: 600; text-transform: uppercase;
+  letter-spacing: 0.08em; color: var(--text-muted);
+}
+#top-title {
+  font-family: var(--font-serif); font-size: 16px; font-weight: 600;
+  color: var(--text-primary); line-height: 1.2;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.top-subtitle {
+  font-size: 11px; color: var(--text-muted); font-weight: 400;
+}
+.top-bar-actions {
+  display: flex; align-items: center; gap: 8px; flex-shrink: 0;
+}
+.panel-toggle-btn {
+  width: 34px; height: 34px;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--bg-root); border: 1px solid var(--border-subtle);
+  border-radius: 9px; color: var(--text-muted); cursor: pointer;
+  transition: all var(--transition);
+}
+.panel-toggle-btn:hover {
+  color: var(--accent); border-color: rgba(45, 106, 79, 0.25);
+  background: var(--accent-soft);
+}
+.panel-toggle-btn.active { color: var(--accent); background: var(--accent-soft); }
+#lang-switcher {
+  display: flex; gap: 2px;
+  background: var(--bg-surface); border-radius: 999px;
+  padding: 3px; border: 1px solid var(--border-subtle);
+}
 .lang-btn {
-  border: none; background: transparent; padding: 4px 10px;
-  font-size: 11px; font-family: var(--font-sans); color: var(--text-muted);
-  border-radius: 3px; cursor: pointer; transition: all var(--transition);
+  border: none; background: transparent; padding: 5px 14px;
+  font-size: 11px; font-weight: 500; font-family: var(--font-sans);
+  color: var(--text-muted); border-radius: 999px;
+  cursor: pointer; transition: all var(--transition);
 }
-.lang-btn.active { background: var(--bg-raised); color: var(--text-primary); box-shadow: 0 1px 2px rgba(0,0,0,0.04); }
+.lang-btn.active {
+  background: var(--bg-raised); color: var(--accent);
+  box-shadow: var(--shadow-sm);
+}
 .lang-btn:hover:not(.active) { color: var(--text-secondary); }
 
 /* ── Chat Area ── */
-#chat-area { flex: 1; display: flex; flex-direction: column; min-width: 0; background: var(--bg-root); }
+#chat-area {
+  flex: 1; display: flex; flex-direction: column; min-width: 0; min-height: 0;
+  background: var(--bg-raised);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--shell-radius);
+  box-shadow: var(--shadow-md);
+  overflow: hidden;
+  position: relative;
+}
+.chat-body {
+  flex: 1; min-height: 0; overflow: hidden;
+  display: flex; flex-direction: column;
+  position: relative;
+  background:
+    radial-gradient(circle, rgba(45, 106, 79, 0.055) 1px, transparent 1px);
+  background-size: 22px 22px;
+}
+.chat-body::after {
+  content: '';
+  position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(to bottom, var(--bg-raised) 0%, transparent 6%, transparent 94%, rgba(244,246,248,0.5) 100%);
+}
 
 #messages-container {
   flex: 1;
   overflow-y: auto;
-  padding: 24px 32px;
+  padding: 24px 24px 12px;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 18px;
+  width: 100%;
+  max-width: var(--chat-column);
+  margin: 0 auto;
+  position: relative;
+  z-index: 1;
+}
+
+/* ── Message rows with avatars ── */
+.msg-row {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  max-width: 100%;
+  animation: fadeIn 280ms ease;
+}
+.msg-row-user { flex-direction: row-reverse; align-self: flex-end; }
+.msg-row-agent { align-self: flex-start; }
+.msg-avatar {
+  width: 34px; height: 34px; border-radius: 11px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 10px; font-weight: 700; letter-spacing: 0.02em;
+  flex-shrink: 0; margin-top: 2px;
+}
+.user-avatar {
+  background: var(--accent-gradient); color: #fff;
+  box-shadow: 0 3px 10px var(--accent-glow);
+}
+.agent-avatar {
+  background: var(--bg-raised); border: 1px solid var(--border-subtle);
+  color: var(--accent); box-shadow: var(--shadow-sm);
 }
 
 /* ── Messages ── */
 .msg-bubble {
-  max-width: 80%;
-  padding: 12px 16px;
+  max-width: min(520px, 78vw);
+  padding: 14px 18px;
   border-radius: var(--radius-md);
   font-size: 14px;
-  line-height: 1.7;
-  animation: fadeIn 200ms ease;
+  line-height: 1.75;
 }
 
 @keyframes fadeIn {
@@ -183,18 +492,31 @@ body {
 
 .msg-user {
   align-self: flex-end;
-  background: var(--bg-raised);
-  color: var(--text-primary);
-  border-radius: var(--radius-md) var(--radius-md) 0 var(--radius-md);
+  background: var(--accent-gradient);
+  color: #fff;
+  border-radius: var(--radius-lg) var(--radius-lg) 4px var(--radius-lg);
+  box-shadow: 0 4px 16px var(--accent-glow);
 }
 
 .msg-agent {
   align-self: flex-start;
-  background: var(--accent-soft);
-  border-left: 2px solid var(--accent);
-  border-radius: 0 var(--radius-md) var(--radius-md) var(--radius-md);
-  max-width: 85%;
+  background: var(--bg-raised);
+  border: 1px solid var(--border-subtle);
+  border-left: 3px solid var(--accent-light);
+  border-radius: 4px var(--radius-lg) var(--radius-lg) var(--radius-lg);
+  max-width: min(560px, 82vw);
   color: var(--text-primary);
+  box-shadow: var(--shadow-md);
+  position: relative;
+}
+.msg-agent::before {
+  content: '';
+  position: absolute; top: 14px; left: -6px;
+  width: 10px; height: 10px;
+  background: var(--bg-raised);
+  border-left: 1px solid var(--border-subtle);
+  border-bottom: 1px solid var(--border-subtle);
+  transform: rotate(45deg);
 }
 
 /* Agent message markdown elements */
@@ -297,14 +619,15 @@ body {
 
 /* ── Tool Call Blocks (inline inside agent bubble) ── */
 .tool-call {
-  margin: 8px 0;
-  background: var(--bg-surface);
-  border: 1px solid var(--border-subtle);
-  border-left: 2px solid var(--accent);
-  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  margin: 10px 0;
+  background: linear-gradient(to right, var(--accent-soft), var(--bg-surface));
+  border: 1px solid rgba(45, 106, 79, 0.12);
+  border-left: 3px solid var(--accent-light);
+  border-radius: var(--radius-sm);
   font-family: var(--font-mono);
   font-size: 0.78em;
   overflow: hidden;
+  box-shadow: var(--shadow-sm);
 }
 
 .tool-header {
@@ -384,8 +707,8 @@ body {
 /* ── Status Indicator ── */
 .status-indicator {
   display: flex; align-items: center; gap: 6px;
-  padding: 6px 0 0 0; font-size: 12px; color: var(--text-muted);
-  border-top: 1px solid var(--border-subtle); margin-top: 8px;
+  padding: 10px 0 0 0; font-size: 12px; color: var(--text-muted);
+  border-top: 1px dashed var(--border-subtle); margin-top: 12px;
 }
 .status-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--text-muted); flex-shrink: 0; }
 .status-indicator.thinking .status-dot { background: var(--text-muted); animation: statusPulse 1.2s ease-in-out infinite; }
@@ -404,6 +727,7 @@ body {
   overflow: hidden;
   font-family: var(--font-mono);
   font-size: 0.78em;
+  box-shadow: var(--shadow-sm);
 }
 .diff-header {
   display: flex; justify-content: space-between; align-items: center;
@@ -447,22 +771,53 @@ body {
 
 /* ── Upload Overlay ── */
 #upload-overlay {
-  position: fixed; inset: 0; background: rgba(0,0,0,0.3);
+  position: fixed; inset: 0;
+  background: rgba(26, 35, 50, 0.35);
+  backdrop-filter: blur(6px);
   z-index: 50; display: flex; align-items: center; justify-content: center;
+  animation: overlayIn 200ms ease;
+}
+@keyframes overlayIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 #upload-overlay-content {
-  background: var(--bg-raised); border-radius: var(--radius-md);
-  padding: 32px; max-width: 420px; width: 90%;
-  box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+  background: var(--bg-raised); border-radius: var(--radius-lg);
+  padding: 32px; max-width: 440px; width: 90%;
+  box-shadow: var(--shadow-lg);
+  border: 1px solid var(--border-subtle);
+  animation: modalIn 250ms cubic-bezier(0.34, 1.56, 0.64, 1);
 }
-#upload-overlay-content h2 { font-family: var(--font-serif); font-size: 18px; margin-bottom: 16px; color: var(--text-primary); }
+@keyframes modalIn {
+  from { opacity: 0; transform: scale(0.95) translateY(10px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+#upload-overlay-content h2 {
+  font-family: var(--font-serif); font-size: 20px; font-weight: 600;
+  margin-bottom: 6px; color: var(--text-primary);
+}
+.upload-overlay-desc {
+  font-size: 13px; color: var(--text-muted); margin-bottom: 18px;
+}
 #upload-drop-zone {
   border: 2px dashed var(--border-visible); border-radius: var(--radius-md);
-  padding: 24px; text-align: center; color: var(--text-muted); cursor: pointer;
+  padding: 32px 24px; text-align: center; color: var(--text-muted); cursor: pointer;
+  transition: all var(--transition);
+  background: var(--bg-root);
+}
+.upload-icon {
+  width: 48px; height: 48px; margin: 0 auto 12px;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--accent-soft); border-radius: 50%;
+  color: var(--accent); font-size: 22px; font-weight: 300;
   transition: all var(--transition);
 }
 #upload-drop-zone:hover, #upload-drop-zone.dragover {
-  border-color: var(--accent); background: var(--accent-soft);
+  border-color: var(--accent-light); background: var(--accent-soft);
+  transform: scale(1.01);
+}
+#upload-drop-zone:hover .upload-icon, #upload-drop-zone.dragover .upload-icon {
+  background: var(--accent); color: #fff; transform: translateY(-2px);
 }
 #upload-drop-zone input[type="file"] { display: none; }
 #upload-close-btn {
@@ -474,13 +829,16 @@ body {
 }
 #upload-close-btn:hover { background: var(--bg-hover); }
 #upload-folder-btn {
-  margin-top: 8px; width: 100%; padding: 8px;
-  background: var(--accent-soft); border: 1px solid var(--accent);
+  margin-top: 10px; width: 100%; padding: 10px;
+  background: var(--accent-soft); border: 1px solid rgba(45, 106, 79, 0.25);
   border-radius: var(--radius-sm); cursor: pointer;
-  font-family: var(--font-sans); font-size: 13px; color: var(--accent);
-  transition: all var(--transition);
+  font-family: var(--font-sans); font-size: 13px; font-weight: 500;
+  color: var(--accent); transition: all var(--transition);
 }
-#upload-folder-btn:hover { background: var(--accent); color: #fff; }
+#upload-folder-btn:hover {
+  background: var(--accent-gradient); color: #fff;
+  border-color: transparent; box-shadow: 0 4px 12px var(--accent-glow);
+}
 #upload-folder-btn:disabled { opacity: 0.5; pointer-events: none; }
 
 /* File list (inside overlay) */
@@ -509,58 +867,98 @@ body {
 
 /* ── Input Area ── */
 #input-area {
-  display: flex;
-  gap: 10px;
-  padding: 16px 24px 20px 24px;
+  padding: 12px 20px 16px;
   border-top: 1px solid var(--border-subtle);
-  background: var(--bg-surface);
+  background: var(--bg-root);
+  flex-shrink: 0;
+  position: relative;
+  z-index: 2;
+}
+
+.input-composer {
+  max-width: var(--chat-column);
+  margin: 0 auto;
+  background: var(--bg-raised);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md), 0 0 0 1px rgba(255,255,255,0.8) inset;
+  overflow: hidden;
+  transition: border-color var(--transition), box-shadow var(--transition);
+}
+
+.input-composer:focus-within {
+  border-color: var(--accent-light);
+  box-shadow: var(--shadow-lg), 0 0 0 4px var(--accent-soft);
+}
+
+.input-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  padding: 10px 10px 6px 14px;
 }
 
 #user-input {
   flex: 1;
-  background: var(--bg-raised);
-  border: 1px solid var(--border-subtle);
+  min-width: 0;
+  background: transparent;
+  border: none;
   color: var(--text-primary);
   font-family: var(--font-sans);
   font-size: 14px;
-  padding: 12px 16px;
-  border-radius: var(--radius-md);
+  padding: 8px 0;
+  border-radius: 0;
   resize: none;
   rows: 1;
-  transition: border-color var(--transition), box-shadow var(--transition);
   outline: none;
-}
-
-#user-input:focus {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 3px var(--accent-soft);
+  line-height: 1.5;
+  max-height: 150px;
 }
 
 #user-input::placeholder { color: var(--text-muted); }
 
+.input-hint {
+  display: block;
+  padding: 0 14px 10px;
+  font-size: 11px;
+  color: var(--text-muted);
+  user-select: none;
+}
+
 #send-btn {
-  background: var(--bg-raised);
-  border: 1px solid var(--border-visible);
-  color: var(--accent);
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 72px;
+  height: 38px;
+  padding: 0 16px;
+  background: var(--accent-gradient);
+  border: none;
+  color: #fff;
   font-family: var(--font-sans);
   font-size: 13px;
-  font-weight: 500;
-  padding: 12px 20px;
-  border-radius: var(--radius-md);
+  font-weight: 600;
+  border-radius: 10px;
   cursor: pointer;
-  transition: all var(--transition);
+  transition: background var(--transition), box-shadow var(--transition), transform var(--transition), opacity var(--transition);
   white-space: nowrap;
+  box-shadow: 0 2px 10px var(--accent-glow);
 }
 
 #send-btn:hover {
-  background: var(--accent);
-  color: #fff;
-  border-color: var(--accent);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px var(--accent-glow);
+  filter: brightness(1.04);
 }
 
+#send-btn:active { transform: translateY(0); }
+
 #send-btn:disabled {
-  opacity: 0.4;
+  opacity: 0.45;
   cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
 }
 
 /* ── Loading dots ── */
@@ -586,25 +984,26 @@ body {
   40% { opacity: 0.7; }
 }
 
-/* ── Error toast ── */
+/* ── Toast ── */
 #toast {
   position: fixed;
-  top: 20px;
-  right: 20px;
+  top: 24px;
+  right: 24px;
   background: var(--bg-raised);
-  border: 1px solid var(--danger);
-  border-left: 3px solid var(--danger);
+  border: 1px solid var(--border-subtle);
+  border-left: 4px solid var(--accent-light);
   color: var(--text-primary);
-  padding: 12px 20px;
-  border-radius: var(--radius-sm);
-  font-family: var(--font-mono);
-  font-size: 12px;
-  max-width: 400px;
+  padding: 14px 20px;
+  border-radius: var(--radius-md);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  max-width: 380px;
   z-index: 100;
   opacity: 0;
-  transform: translateX(20px);
-  transition: all 250ms ease;
+  transform: translateX(24px);
+  transition: all 300ms cubic-bezier(0.34, 1.56, 0.64, 1);
   pointer-events: none;
+  box-shadow: var(--shadow-lg);
 }
 
 #toast.show {
@@ -622,24 +1021,220 @@ body {
 
 /* ── Welcome state ── */
 #welcome-msg {
-  color: var(--text-muted);
+  display: flex; align-items: center; justify-content: center;
+  flex: 1; padding: 32px 20px; min-height: min(520px, 60vh);
+}
+
+.welcome-card {
   text-align: center;
-  padding: 60px 40px;
-  font-size: 13px;
-  line-height: 2;
+  max-width: 520px;
+  padding: 44px 40px 36px;
+  background: var(--bg-raised);
+  border: 1px solid var(--border-subtle);
+  border-radius: 20px;
+  box-shadow: var(--shadow-lg);
+  animation: fadeIn 400ms ease, cardFloat 6s ease-in-out infinite;
+  position: relative;
+  overflow: hidden;
+}
+.welcome-card::before {
+  content: '';
+  position: absolute; inset: 0;
+  border-radius: 20px;
+  padding: 1px;
+  background: linear-gradient(135deg, rgba(64,145,108,0.35), transparent 40%, rgba(45,106,79,0.2));
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+@keyframes cardFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+
+.welcome-icon {
+  width: 72px; height: 72px; margin: 0 auto 22px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 32px;
+  background: linear-gradient(145deg, var(--accent-soft), rgba(64,145,108,0.15));
+  border-radius: 22px;
+  box-shadow: 0 12px 32px var(--accent-glow);
+  animation: iconPulse 3s ease-in-out infinite;
+}
+@keyframes iconPulse {
+  0%, 100% { box-shadow: 0 12px 32px var(--accent-glow); }
+  50% { box-shadow: 0 16px 40px rgba(45, 106, 79, 0.28); }
 }
 
 #welcome-msg .brand-name {
   font-family: var(--font-serif);
-  font-size: 18px;
+  font-size: 24px; font-weight: 600;
   color: var(--text-primary);
-  letter-spacing: 0.05em;
-  margin-bottom: 16px;
+  letter-spacing: 0.02em;
+  margin-bottom: 10px;
 }
 
-#welcome-msg .hint { color: var(--text-muted); font-size: 0.9em; }
+.welcome-desc {
+  color: var(--text-secondary);
+  font-size: 14px;
+  line-height: 1.7;
+  margin-bottom: 20px;
+}
 
-/* Session info (hidden) */
+.welcome-chips {
+  display: flex; flex-wrap: wrap; gap: 8px;
+  justify-content: center; margin-bottom: 20px;
+}
+
+.welcome-chips .chip {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 6px 14px;
+  background: var(--bg-root);
+  border: 1px solid var(--border-subtle);
+  border-radius: 999px;
+  font-size: 12px; color: var(--text-secondary);
+  transition: all var(--transition);
+}
+
+.welcome-chips .chip:hover {
+  border-color: var(--accent-light);
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+#welcome-msg .hint {
+  color: var(--text-muted); font-size: 12px;
+  padding-top: 16px;
+  border-top: 1px dashed var(--border-subtle);
+  margin-bottom: 0;
+}
+
+.quick-starts {
+  display: flex; flex-direction: column; gap: 8px;
+  margin-top: 20px; text-align: left;
+}
+.quick-starts-label {
+  font-size: 11px; font-weight: 600; text-transform: uppercase;
+  letter-spacing: 0.06em; color: var(--text-muted);
+  margin-bottom: 4px;
+}
+.quick-start-btn {
+  display: flex; align-items: center; gap: 10px;
+  width: 100%; padding: 11px 14px;
+  background: var(--bg-root); border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md); cursor: pointer;
+  font-family: var(--font-sans); font-size: 13px;
+  color: var(--text-secondary); text-align: left;
+  transition: all var(--transition);
+}
+.quick-start-btn:hover {
+  border-color: var(--accent-light);
+  background: var(--accent-soft);
+  color: var(--accent);
+  transform: translateX(4px);
+  box-shadow: var(--shadow-sm);
+}
+.quick-start-btn .qs-icon { font-size: 16px; flex-shrink: 0; }
+.quick-start-btn .qs-text { flex: 1; line-height: 1.4; }
+
+/* Top bar status */
+.conn-status {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 5px 12px;
+  background: var(--bg-root);
+  border: 1px solid var(--border-subtle);
+  border-radius: 999px;
+  font-size: 11px; color: var(--text-muted);
+}
+.conn-dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--text-muted);
+  flex-shrink: 0;
+}
+.conn-status.ready .conn-dot { background: var(--success); box-shadow: 0 0 8px rgba(45,106,79,0.5); }
+.conn-status.ready .conn-text { color: var(--accent); }
+.conn-status.loading .conn-dot { background: var(--warning); animation: statusPulse 1.2s ease-in-out infinite; }
+.conn-status.error .conn-dot { background: var(--danger); }
+.conn-status.error .conn-text { color: var(--danger); }
+
+/* Action buttons with icons */
+.action-btn {
+  display: flex; align-items: center; gap: 10px;
+  width: 100%; padding: 9px 12px; margin-bottom: 5px;
+  background: var(--bg-root); border: 1px solid transparent;
+  border-radius: var(--radius-sm); font-family: var(--font-sans);
+  font-size: 12px; color: var(--text-secondary); cursor: pointer; text-align: left;
+  transition: all var(--transition);
+}
+.action-icon {
+  width: 26px; height: 26px;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--bg-raised); border: 1px solid var(--border-subtle);
+  border-radius: 7px; font-size: 13px; flex-shrink: 0;
+  transition: all var(--transition);
+}
+.action-btn:hover .action-icon {
+  background: var(--accent-soft); border-color: rgba(45,106,79,0.2);
+}
+.action-btn.action-primary {
+  background: linear-gradient(to right, var(--accent-soft), transparent);
+  border-color: rgba(45, 106, 79, 0.15);
+  color: var(--accent); font-weight: 500;
+}
+.action-btn.action-primary .action-icon {
+  background: var(--accent-gradient); border-color: transparent;
+  color: #fff; box-shadow: 0 2px 8px var(--accent-glow);
+}
+.action-btn:hover {
+  background: var(--accent-soft); border-color: rgba(45, 106, 79, 0.15);
+  color: var(--accent); transform: translateX(3px);
+}
+.action-btn.danger { color: var(--danger); }
+.action-btn.danger:hover {
+  background: rgba(197, 48, 48, 0.06); border-color: rgba(197, 48, 48, 0.2);
+  color: var(--danger);
+}
+.action-btn.action-compact {
+  padding: 7px 10px; font-size: 11px;
+}
+.action-btn.action-compact .action-icon {
+  width: 22px; height: 22px; font-size: 11px;
+}
+.action-btn.action-text-only .action-icon { display: none; }
+.action-btn.action-text-only { padding-left: 12px; }
+
+/* Nav tooltips */
+.nav-btn[data-tip]::after {
+  content: attr(data-tip);
+  position: absolute; left: calc(100% + 10px); top: 50%;
+  transform: translateY(-50%) translateX(-4px);
+  padding: 5px 10px;
+  background: var(--text-primary); color: #fff;
+  font-size: 11px; font-weight: 500; white-space: nowrap;
+  border-radius: 6px; opacity: 0; pointer-events: none;
+  transition: all var(--transition); z-index: 20;
+}
+.nav-btn[data-tip]:hover::after {
+  opacity: 1; transform: translateY(-50%) translateX(0);
+}
+
+/* Panel file tree buttons */
+#panel-new-folder-btn,
+#panel-add-knowledge-btn {
+  width: 100%; padding: 7px 10px; margin-top: 8px;
+  background: var(--bg-raised); border: 1px dashed var(--border-visible);
+  border-radius: var(--radius-sm); cursor: pointer;
+  font-family: var(--font-sans); font-size: 11px; font-weight: 500;
+  color: var(--text-muted); transition: all var(--transition);
+}
+#panel-new-folder-btn:hover,
+#panel-add-knowledge-btn:hover {
+  border-color: var(--accent-light); color: var(--accent);
+  background: var(--accent-soft);
+}
+
+/* Nav tooltips */
 #session-info-hidden { display: none; }
 
 /* ═══════════════════════════════════════════════════════════
@@ -665,9 +1260,6 @@ body {
 .ft-item.dragging { opacity: 0.4; }
 .ft-item.drag-target { background: var(--accent-soft); outline: 1px dashed var(--accent); border-radius: var(--radius-sm); }
 
-#panel-new-folder-btn { width: 100%; padding: 6px; margin-top: 8px; background: transparent; border: 1px dashed var(--border-visible); border-radius: var(--radius-sm); cursor: pointer; font-family: var(--font-sans); font-size: 12px; color: var(--text-muted); transition: all var(--transition); }
-#panel-new-folder-btn:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
-
 /* Knowledge base section */
 .panel-knowledge-item { display: flex; align-items: center; gap: 4px; padding: 3px 6px; border-radius: var(--radius-sm); cursor: default; font-size: 12px; color: var(--text-secondary); transition: background var(--transition); }
 .panel-knowledge-item:hover { background: var(--bg-hover); color: var(--text-primary); }
@@ -677,8 +1269,19 @@ body {
 .panel-knowledge-item:hover .kb-delete { opacity: 0.6; }
 .panel-knowledge-item:hover .kb-delete:hover { opacity: 1; color: #b34a4a; }
 
-#panel-add-knowledge-btn { width: 100%; padding: 6px; margin-top: 8px; background: transparent; border: 1px dashed var(--border-visible); border-radius: var(--radius-sm); cursor: pointer; font-family: var(--font-sans); font-size: 12px; color: var(--text-muted); transition: all var(--transition); }
-#panel-add-knowledge-btn:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
+@media (max-width: 1100px) {
+  :root { --panel-width: 260px; --chat-column: 100%; }
+  #app { padding: 8px; gap: 8px; }
+}
+@media (max-width: 860px) {
+  #workspace:not(.panel-collapsed) { flex-direction: column; }
+  #workspace:not(.panel-collapsed) #right-panel {
+    width: 100%; min-width: 0; max-height: 38vh;
+  }
+  #workspace:not(.panel-collapsed) #chat-area { min-height: 52vh; }
+  .action-grid { grid-template-columns: 1fr; }
+}
+
 </style>
 </head>
 <body>
@@ -686,21 +1289,22 @@ body {
   <!-- Left Nav (56px) -->
   <nav id="left-nav">
     <div id="nav-brand">DMS</div>
-    <button id="nav-upload-btn" class="nav-btn" title="Upload files">
+    <button id="nav-upload-btn" class="nav-btn" data-tip="上传文件" title="Upload files">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
     </button>
-    <button id="nav-chat-btn" class="nav-btn active" title="Chat">
+    <button id="nav-chat-btn" class="nav-btn active" data-tip="对话" title="Chat">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
     </button>
     <div style="flex:1;"></div>
   </nav>
 
-  <!-- Upload Overlay -->
+  <!-- Upload Overlay (global) -->
   <div id="upload-overlay" style="display:none;">
     <div id="upload-overlay-content">
       <h2 data-i18n="upload_title">Upload Files</h2>
+      <p class="upload-overlay-desc">支持 .py / .csv / .txt / .log / .md 文件或整个文件夹</p>
       <div id="upload-drop-zone">
-        <div style="font-size:28px;color:var(--text-muted);margin-bottom:8px;">+</div>
+        <div class="upload-icon">↑</div>
         <span id="upload-label">Drag files here or click to browse</span>
         <input type="file" id="file-input" multiple accept=".py,.csv,.txt,.log,.md" disabled>
         <input type="file" id="folder-input" webkitdirectory directory>
@@ -711,65 +1315,196 @@ body {
     </div>
   </div>
 
+  <div id="workspace">
   <!-- Chat Area -->
   <main id="chat-area">
     <div id="top-bar">
-      <h1 id="top-title" data-i18n="app_title">DMS Evaluator</h1>
-      <div id="lang-switcher">
-        <button class="lang-btn active" data-lang="zh-CN">中文</button>
-        <button class="lang-btn" data-lang="en">EN</button>
+      <div class="top-bar-left">
+        <div class="top-bar-meta">
+          <span class="top-bar-breadcrumb" data-i18n="breadcrumb_chat">对话评估</span>
+          <h1 id="top-title" data-i18n="app_title">DMS Evaluator</h1>
+          <p class="top-subtitle" data-i18n="top_subtitle">智能评估 · 性能优化</p>
+        </div>
+      </div>
+      <div class="top-bar-actions">
+        <button type="button" class="panel-toggle-btn active" id="panel-toggle-btn" title="切换工作区面板" aria-label="Toggle panel">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="15" y1="3" x2="15" y2="21"/></svg>
+        </button>
+        <div class="conn-status loading" id="conn-status">
+          <span class="conn-dot"></span>
+          <span class="conn-text" id="conn-text">连接中...</span>
+        </div>
+        <div id="lang-switcher">
+          <button class="lang-btn active" data-lang="zh-CN">中文</button>
+          <button class="lang-btn" data-lang="en">EN</button>
+        </div>
       </div>
     </div>
+    <div class="chat-body">
     <div id="messages-container">
       <div id="welcome-msg">
-        <div class="brand-name">DMS Evaluator</div>
-        <p data-i18n="welcome_text">Driver Monitoring System performance evaluation and optimization agent</p>
-        <p class="hint" data-i18n="welcome_hint">Upload log CSV or source code files, then tell me what you need</p>
+        <div class="welcome-card">
+          <div class="welcome-icon">🛡️</div>
+          <div class="brand-name">DMS Evaluator</div>
+          <p class="welcome-desc" data-i18n="welcome_text">Driver Monitoring System performance evaluation and optimization agent</p>
+          <div class="welcome-chips">
+            <span class="chip">📊 日志分析</span>
+            <span class="chip">🔍 源码审查</span>
+            <span class="chip">📋 国标合规</span>
+          </div>
+          <div class="quick-starts">
+            <div class="quick-starts-label">快速开始</div>
+            <button class="quick-start-btn" onclick="quickStart('请分析我上传的 DMS 性能日志，给出 FPS、延迟和 CPU 占用评估')">
+              <span class="qs-icon">📈</span>
+              <span class="qs-text">分析性能日志指标</span>
+            </button>
+            <button class="quick-start-btn" onclick="quickStart('请扫描并分析我上传的 DMS 源码结构，找出潜在性能瓶颈')">
+              <span class="qs-icon">🔬</span>
+              <span class="qs-text">审查源码结构与瓶颈</span>
+            </button>
+            <button class="quick-start-btn" onclick="quickStart('请检索国标要求，评估当前 DMS 系统的合规性')">
+              <span class="qs-icon">📑</span>
+              <span class="qs-text">国标合规性评估</span>
+            </button>
+          </div>
+          <p class="hint" data-i18n="welcome_hint">Upload log CSV or source code files, then tell me what you need</p>
+        </div>
       </div>
     </div>
+    </div>
     <div id="input-area">
-      <textarea id="user-input" rows="1" data-i18n-placeholder="input_placeholder" placeholder="Ask a question about your DMS system..." onkeydown="handleKeyDown(event)"></textarea>
-      <button id="send-btn" onclick="sendMessage()"><span data-i18n="send">Send</span></button>
+      <div class="input-composer">
+        <div class="input-row">
+          <textarea id="user-input" rows="1" data-i18n-placeholder="input_placeholder" placeholder="Ask a question about your DMS system..." onkeydown="handleKeyDown(event)"></textarea>
+          <button id="send-btn" type="button" onclick="sendMessage()"><span data-i18n="send">发送</span></button>
+        </div>
+        <span class="input-hint">Enter 发送 · Shift+Enter 换行</span>
+      </div>
     </div>
   </main>
 
-  <!-- Right Panel (240px) -->
+  <!-- Right Panel -->
   <aside id="right-panel">
-    <div class="panel-section">
-      <h3 data-i18n="sessions">Sessions</h3>
-      <ul id="session-list"></ul>
-      <button id="session-new-btn" onclick="createNewSession()">+ New Session</button>
+    <div class="panel-scroll">
+    <div class="panel-header">
+      <h2 data-i18n="workspace">工作区</h2>
+      <p class="panel-header-desc" data-i18n="workspace_desc">管理会话、文件与评估输出</p>
     </div>
-    <div class="panel-section">
-      <h3 data-i18n="actions">Actions</h3>
-      <button class="action-btn" onclick="actionGenerateReport()" data-i18n="gen_report">Generate Report</button>
-      <button class="action-btn" onclick="actionExportChat()" data-i18n="export_chat">Export Chat</button>
-      <button class="action-btn" onclick="actionSavePDF()" data-i18n="save_pdf">Save as PDF</button>
-      <button class="action-btn" onclick="actionDownloadAll()" data-i18n="download_all">Download All Files</button>
-      <button class="action-btn" onclick="actionCompareMetrics()" data-i18n="compare_metrics">Compare Metrics</button>
-      <button class="action-btn" onclick="actionChangeSummary()" data-i18n="change_summary">Code Change Summary</button>
-      <button class="action-btn" onclick="actionShareLink()" data-i18n="share_link">Share Link</button>
-      <button class="action-btn danger" onclick="actionClearSession()" data-i18n="clear_session">Clear Session</button>
+
+    <div class="panel-body">
+      <!-- Sessions -->
+      <div class="panel-section">
+        <div class="panel-section-title">
+          <h3 data-i18n="sessions">Sessions</h3>
+          <span class="panel-section-badge" id="session-count-badge">0</span>
+        </div>
+        <ul id="session-list"></ul>
+        <button id="session-new-btn" onclick="createNewSession()">
+          <span>+</span><span data-i18n="new_session">New Session</span>
+        </button>
+      </div>
+
+      <!-- Primary CTA -->
+      <button class="panel-cta" onclick="actionGenerateReport()">
+        <span>📋</span><span data-i18n="gen_report">Generate Report</span>
+      </button>
+
+      <!-- Grouped actions -->
+      <div class="panel-section">
+        <div class="action-group">
+          <div class="action-group-label" data-i18n="group_analysis">分析</div>
+          <div class="action-stack">
+            <button class="action-btn action-compact" onclick="actionCompareMetrics()">
+              <span class="action-icon">📊</span>
+              <span class="action-label" data-i18n="compare_metrics">Compare Metrics</span>
+            </button>
+            <button class="action-btn action-compact" onclick="actionChangeSummary()">
+              <span class="action-icon">✏️</span>
+              <span class="action-label" data-i18n="change_summary">Code Change Summary</span>
+            </button>
+          </div>
+        </div>
+        <div class="panel-divider"></div>
+        <div class="action-group">
+          <div class="action-group-label" data-i18n="group_export">导出</div>
+          <div class="action-grid">
+            <button class="action-btn action-compact" onclick="actionExportChat()">
+              <span class="action-icon">💬</span>
+              <span class="action-label" data-i18n="export_chat">Export Chat</span>
+            </button>
+            <button class="action-btn action-compact" onclick="actionSavePDF()">
+              <span class="action-icon">🖨️</span>
+              <span class="action-label" data-i18n="save_pdf">Save as PDF</span>
+            </button>
+            <button class="action-btn action-compact" onclick="actionDownloadAll()">
+              <span class="action-icon">📦</span>
+              <span class="action-label" data-i18n="download_all">Download All Files</span>
+            </button>
+            <button class="action-btn action-compact" onclick="actionShareLink()">
+              <span class="action-icon">🔗</span>
+              <span class="action-label" data-i18n="share_link">Share Link</span>
+            </button>
+          </div>
+        </div>
+        <div class="panel-divider"></div>
+        <div class="action-group">
+          <div class="action-group-label" data-i18n="group_manage">管理</div>
+          <button class="action-btn action-compact danger action-text-only" onclick="actionClearSession()">
+            <span class="action-icon">🗑️</span>
+            <span class="action-label" data-i18n="clear_session">Clear Session</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Collapsible resource sections -->
+      <div class="panel-accordion">
+        <div class="accordion-item open" id="accordion-files">
+          <button type="button" class="accordion-header" data-accordion="files">
+            <span class="accordion-chevron">▶</span>
+            <span class="accordion-title" data-i18n="session_files">Session Files</span>
+            <span class="accordion-count" id="accordion-files-count">0</span>
+          </button>
+          <div class="accordion-body">
+            <ul id="panel-file-tree" class="file-tree"><li class="no-files" data-i18n="no_files">No files</li></ul>
+            <button type="button" class="panel-upload-btn" onclick="openUploadOverlay()">
+              ↑ <span data-i18n="upload_short">上传文件</span>
+            </button>
+            <button type="button" id="panel-new-folder-btn">+ <span data-i18n="new_folder">新建文件夹</span></button>
+          </div>
+        </div>
+
+        <div class="accordion-item" id="accordion-knowledge">
+          <button type="button" class="accordion-header" data-accordion="knowledge">
+            <span class="accordion-chevron">▶</span>
+            <span class="accordion-title" data-i18n="knowledge_base">Knowledge Base</span>
+            <span class="accordion-count" id="accordion-knowledge-count">0</span>
+          </button>
+          <div class="accordion-body">
+            <ul id="panel-knowledge-list" class="file-tree">
+              <li class="no-files" data-i18n="no_docs">No documents</li>
+            </ul>
+            <button type="button" id="panel-add-knowledge-btn">+ <span data-i18n="add_doc">添加文档</span></button>
+            <input type="file" id="knowledge-input" accept=".pdf,.txt,.md,.markdown" style="display:none" />
+          </div>
+        </div>
+
+        <div class="accordion-item" id="accordion-modified">
+          <button type="button" class="accordion-header" data-accordion="modified">
+            <span class="accordion-chevron">▶</span>
+            <span class="accordion-title" data-i18n="modified_files">Modified Files</span>
+            <span class="accordion-count" id="accordion-modified-count">0</span>
+          </button>
+          <div class="accordion-body">
+            <ul id="panel-modified-list"><li class="no-files" data-i18n="no_modifications">No modifications</li></ul>
+            <p class="panel-empty-hint" data-i18n="modified_hint">Agent 修改代码后会显示在此处</p>
+          </div>
+        </div>
+      </div>
     </div>
-    <div class="panel-section">
-      <h3 data-i18n="session_files">Session Files</h3>
-      <ul id="panel-file-tree" class="file-tree"><li class="no-files" data-i18n="no_files">No files</li></ul>
-      <button id="panel-new-folder-btn">+ New Folder</button>
-    </div>
-    <div class="panel-section">
-      <h3>Knowledge Base</h3>
-      <ul id="panel-knowledge-list" class="file-tree">
-        <li class="no-files">No documents</li>
-      </ul>
-      <button id="panel-add-knowledge-btn">+ Add Document</button>
-      <input type="file" id="knowledge-input" accept=".pdf,.txt,.md,.markdown" style="display:none" />
-    </div>
-    <div class="panel-section">
-      <h3 data-i18n="modified_files">Modified Files</h3>
-      <ul id="panel-modified-list"><li class="no-files" data-i18n="no_modifications">No modifications</li></ul>
     </div>
   </aside>
-</div>
+  </div><!-- #workspace -->
+</div><!-- #app -->
 
 <div id="toast"></div>
 <span id="sid-display" style="display:none;"></span>
@@ -783,26 +1518,38 @@ body {
 const I18N = {
   'zh-CN': {
     app_title:'DMS Evaluator', welcome_text:'驾驶员监测系统性能评估与优化 Agent',
+    breadcrumb_chat:'对话评估', top_subtitle:'智能评估 · 性能优化',
     welcome_hint:'上传日志 CSV 或源码文件，然后告诉我需要做什么',
-    input_placeholder:'输入你的问题...', send:'Send', actions:'操作',
-    sessions:'会话列表', new_session:'新建会话',
-    gen_report:'生成评估报告', export_chat:'导出对话记录', save_pdf:'保存为 PDF',
-    download_all:'下载全部文件', compare_metrics:'对比性能指标',
-    change_summary:'代码修改摘要', share_link:'分享链接', clear_session:'清空会话',
-    session_files:'会话文件', modified_files:'已修改文件',
-    no_files:'暂无文件', no_modifications:'暂无修改',
+    input_placeholder:'输入你的问题...', send:'发送',
+    workspace:'工作区', workspace_desc:'管理会话、文件与评估输出',
+    sessions:'会话', new_session:'新建会话',
+    gen_report:'生成评估报告', export_chat:'导出对话', save_pdf:'保存 PDF',
+    download_all:'下载全部', compare_metrics:'对比指标',
+    change_summary:'修改摘要', share_link:'分享链接', clear_session:'清空会话',
+    group_analysis:'分析', group_export:'导出', group_manage:'管理',
+    session_files:'会话文件', modified_files:'已修改', knowledge_base:'知识库',
+    no_files:'暂无文件', no_modifications:'暂无修改', no_docs:'暂无文档',
+    upload_short:'上传文件', new_folder:'新建文件夹', add_doc:'添加文档',
+    modified_hint:'Agent 修改代码后会显示在此处',
+    msg_rounds:'轮对话',
     upload_title:'上传文件', close:'关闭', thinking:'正在思考...', done:'回答完成',
   },
   'en': {
     app_title:'DMS Evaluator', welcome_text:'Driver Monitoring System performance evaluation and optimization agent',
+    breadcrumb_chat:'Chat & Evaluation', top_subtitle:'Smart assessment · Performance tuning',
     welcome_hint:'Upload log CSV or source code files, then tell me what you need',
-    input_placeholder:'Ask a question...', send:'Send', actions:'Actions',
+    input_placeholder:'Ask a question...', send:'Send',
+    workspace:'Workspace', workspace_desc:'Sessions, files & outputs',
     sessions:'Sessions', new_session:'New Session',
-    gen_report:'Generate Report', export_chat:'Export Chat', save_pdf:'Save as PDF',
-    download_all:'Download All Files', compare_metrics:'Compare Metrics',
-    change_summary:'Code Change Summary', share_link:'Share Link', clear_session:'Clear Session',
-    session_files:'Session Files', modified_files:'Modified Files',
-    no_files:'No files', no_modifications:'No modifications',
+    gen_report:'Generate Report', export_chat:'Export Chat', save_pdf:'Save PDF',
+    download_all:'Download All', compare_metrics:'Compare Metrics',
+    change_summary:'Change Summary', share_link:'Share Link', clear_session:'Clear Session',
+    group_analysis:'Analysis', group_export:'Export', group_manage:'Manage',
+    session_files:'Session Files', modified_files:'Modified', knowledge_base:'Knowledge Base',
+    no_files:'No files', no_modifications:'No changes', no_docs:'No documents',
+    upload_short:'Upload', new_folder:'New Folder', add_doc:'Add Document',
+    modified_hint:'Modified files appear here after Agent edits code',
+    msg_rounds:' turns',
     upload_title:'Upload Files', close:'Close', thinking:'Thinking...', done:'Response complete',
   }
 };
@@ -829,6 +1576,7 @@ function applyLanguage(lang) {
     const statusParent = statusText.closest('.status-indicator');
     if (statusParent && statusParent.classList.contains('thinking')) statusText.textContent = I18N[lang].thinking;
   }
+  renderSessionList();
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -887,6 +1635,8 @@ function saveToLocalStorage() {
   }
 
   saveSessions(data);
+  renderSessionList();
+  updatePanelStats();
 }
 
 function createNewSession() {
@@ -988,14 +1738,116 @@ function renderSessionList() {
     const li = document.createElement('li');
     li.className = 'session-item' + (s.id === localSessionId ? ' active' : '');
     const msgCount = (s.messages && s.messages.length) ? Math.floor(s.messages.length / 2) : 0;
+    const fileCount = s.fileTree ? flattenTree(s.fileTree).length : 0;
+    const metaText = currentLang === 'en'
+      ? msgCount + ' turns' + (fileCount ? ' · ' + fileCount + ' files' : '')
+      : msgCount + ' 轮对话' + (fileCount ? ' · ' + fileCount + ' 文件' : '');
     li.innerHTML = `
-      <span class="sess-name" title="${escapeHTML(s.name)}">${escapeHTML(s.name)}</span>
-      <span class="sess-count">${msgCount}</span>
+      <span class="sess-dot"></span>
+      <span class="sess-info">
+        <span class="sess-name" title="${escapeHTML(s.name)}">${escapeHTML(s.name)}</span>
+        <span class="sess-meta">${metaText}</span>
+      </span>
       <button class="sess-delete" title="Delete">&times;</button>`;
-    li.querySelector('.sess-name').onclick = () => switchSession(s.id);
+    li.querySelector('.sess-info').onclick = () => switchSession(s.id);
     li.querySelector('.sess-delete').onclick = (e) => { e.stopPropagation(); deleteSession(s.id); };
     list.appendChild(li);
   });
+  const badge = document.getElementById('session-count-badge');
+  if (badge) badge.textContent = data.sessions.length;
+  updatePanelStats();
+}
+
+function updatePanelStats() {
+  const fileCount = getUploadedFilenames().length;
+  const modCount = modifiedFiles.length;
+
+  const setNum = (id, n) => { const el = document.getElementById(id); if (el) el.textContent = n; };
+  setNum('accordion-files-count', fileCount);
+  setNum('accordion-knowledge-count', getKnowledgeFiles().length);
+  setNum('accordion-modified-count', modCount);
+
+  const modAccordion = document.getElementById('accordion-modified');
+  if (modAccordion) modAccordion.classList.toggle('open', modCount > 0);
+
+  const modHint = document.querySelector('#accordion-modified .panel-empty-hint');
+  if (modHint) modHint.style.display = modCount > 0 ? 'none' : '';
+
+  const nfb = document.getElementById('panel-new-folder-btn');
+  if (nfb) nfb.style.display = fileCount > 0 ? '' : 'none';
+}
+
+function openUploadOverlay() {
+  document.getElementById('upload-overlay').style.display = 'flex';
+}
+
+function initPanelAccordion() {
+  document.querySelectorAll('.accordion-header').forEach(btn => {
+    btn.addEventListener('click', () => {
+      btn.closest('.accordion-item').classList.toggle('open');
+    });
+  });
+}
+
+function initPanelToggle() {
+  const workspace = document.getElementById('workspace');
+  const btn = document.getElementById('panel-toggle-btn');
+  if (!workspace || !btn) return;
+
+  const saved = localStorage.getItem('dms-panel-collapsed');
+  if (saved === '1') {
+    workspace.classList.add('panel-collapsed');
+    btn.classList.remove('active');
+  }
+
+  btn.addEventListener('click', () => {
+    const collapsed = workspace.classList.toggle('panel-collapsed');
+    btn.classList.toggle('active', !collapsed);
+    localStorage.setItem('dms-panel-collapsed', collapsed ? '1' : '0');
+  });
+}
+function welcomeHTML() {
+  return `<div id="welcome-msg">
+    <div class="welcome-card">
+      <div class="welcome-icon">🛡️</div>
+      <div class="brand-name">DMS Evaluator</div>
+      <p class="welcome-desc" data-i18n="welcome_text">Driver Monitoring System performance evaluation and optimization agent</p>
+      <div class="welcome-chips">
+        <span class="chip">📊 日志分析</span>
+        <span class="chip">🔍 源码审查</span>
+        <span class="chip">📋 国标合规</span>
+      </div>
+      <div class="quick-starts">
+        <div class="quick-starts-label">快速开始</div>
+        <button class="quick-start-btn" onclick="quickStart('请分析我上传的 DMS 性能日志，给出 FPS、延迟和 CPU 占用评估')">
+          <span class="qs-icon">📈</span><span class="qs-text">分析性能日志指标</span>
+        </button>
+        <button class="quick-start-btn" onclick="quickStart('请扫描并分析我上传的 DMS 源码结构，找出潜在性能瓶颈')">
+          <span class="qs-icon">🔬</span><span class="qs-text">审查源码结构与瓶颈</span>
+        </button>
+        <button class="quick-start-btn" onclick="quickStart('请检索国标要求，评估当前 DMS 系统的合规性')">
+          <span class="qs-icon">📑</span><span class="qs-text">国标合规性评估</span>
+        </button>
+      </div>
+      <p class="hint" data-i18n="welcome_hint">Upload log CSV or source code files, then tell me what you need</p>
+    </div>
+  </div>`;
+}
+
+function setConnStatus(state, text) {
+  const el = document.getElementById('conn-status');
+  const textEl = document.getElementById('conn-text');
+  if (!el) return;
+  el.className = 'conn-status ' + state;
+  if (textEl && text) textEl.textContent = text;
+}
+
+function quickStart(text) {
+  removeWelcome();
+  const input = document.getElementById('user-input');
+  input.value = text;
+  autoResize(input);
+  sendMessage();
 }
 
 function resetUIForNewSession() {
@@ -1010,19 +1862,14 @@ function resetUIForNewSession() {
   isStreaming = false;
 
   // Reset DOM
-  document.getElementById('messages-container').innerHTML = `
-    <div id="welcome-msg">
-      <div class="brand-name">DMS Evaluator</div>
-      <p data-i18n="welcome_text">Driver Monitoring System performance evaluation and optimization agent</p>
-      <p class="hint" data-i18n="welcome_hint">Upload log CSV or source code files, then tell me what you need</p>
-    </div>`;
+  document.getElementById('messages-container').innerHTML = welcomeHTML();
   document.getElementById('panel-modified-list').innerHTML = '<li class="no-files" data-i18n="no_modifications">No modifications</li>';
   const pt = document.getElementById('panel-file-tree');
   if (pt) pt.innerHTML = '<li class="no-files" data-i18n="no_files">No files</li>';
   const nfb = document.getElementById('panel-new-folder-btn');
   if (nfb) nfb.style.display = 'none';
   const pkl = document.getElementById('panel-knowledge-list');
-  if (pkl) pkl.innerHTML = '<li class="no-files">No documents</li>';
+  if (pkl) pkl.innerHTML = '<li class="no-files" data-i18n="no_docs">No documents</li>';
   document.getElementById('file-list').innerHTML = '<li id="no-files" data-i18n="no_files">No files</li>';
   document.getElementById('file-count').textContent = '0';
   document.getElementById('sid-display').textContent = '--';
@@ -1171,8 +2018,9 @@ function renderKnowledgeList() {
 
   const files = getKnowledgeFiles();
   if (files.length === 0) {
-    listEl.innerHTML = '<li class="no-files">No documents</li>';
+    listEl.innerHTML = '<li class="no-files" data-i18n="no_docs">No documents</li>';
     if (addBtn) addBtn.style.display = '';
+    updatePanelStats();
     return;
   }
   if (addBtn) addBtn.style.display = '';
@@ -1197,6 +2045,7 @@ function renderKnowledgeList() {
     });
     listEl.appendChild(li);
   });
+  updatePanelStats();
 }
 
 async function refreshKnowledgeList() {
@@ -1239,6 +2088,7 @@ function renderPanelTree() {
   if (!tree || tree.length === 0) {
     treeEl.innerHTML = '<li class="no-files" data-i18n="no_files">No files</li>';
     if (newFolderBtn) newFolderBtn.style.display = 'none';
+    updatePanelStats();
     return;
   }
   if (newFolderBtn) newFolderBtn.style.display = '';
@@ -1320,6 +2170,7 @@ function renderPanelTree() {
 
     parent.appendChild(li);
   }
+  updatePanelStats();
 }
 
 function extractMessages() {
@@ -1327,13 +2178,17 @@ function extractMessages() {
   const container = document.getElementById('messages-container');
   if (!container) return messages;
   for (const child of container.children) {
-    if (child.classList.contains('msg-user')) {
+    if (child.classList.contains('msg-row-user')) {
+      const bubble = child.querySelector('.msg-user');
+      if (bubble) messages.push({ role: 'user', content: bubble.textContent });
+    } else if (child.classList.contains('msg-row-agent')) {
+      const agentContent = child.querySelector('.agent-content');
+      if (agentContent) messages.push({ role: 'agent', content: agentContent.innerHTML });
+    } else if (child.classList.contains('msg-user')) {
       messages.push({ role: 'user', content: child.textContent });
     } else if (child.classList.contains('msg-agent')) {
       const agentContent = child.querySelector('.agent-content');
-      if (agentContent) {
-        messages.push({ role: 'agent', content: agentContent.innerHTML });
-      }
+      if (agentContent) messages.push({ role: 'agent', content: agentContent.innerHTML });
     }
   }
   return messages;
@@ -1353,13 +2208,7 @@ function restoreMessagesToDOM(messages) {
     if (msg.role === 'user') {
       appendUserBubble(msg.content);
     } else {
-      const div = document.createElement('div');
-      div.className = 'msg-bubble msg-agent';
-      const content = document.createElement('div');
-      content.className = 'agent-content';
-      content.innerHTML = msg.content;
-      div.appendChild(content);
-      container.appendChild(div);
+      appendAgentBubbleFromHTML(msg.content);
     }
   }
   scrollToBottom();
@@ -1409,6 +2258,9 @@ async function init() {
 
     // Render session list
     renderSessionList();
+    initPanelAccordion();
+    initPanelToggle();
+    updatePanelStats();
 
     // Start server session
     await initServerSession();
@@ -1435,6 +2287,7 @@ async function initServerSession() {
     const userInput = document.getElementById('user-input');
 
     sidDisplay.textContent = 'Creating...';
+    setConnStatus('loading', currentLang === 'en' ? 'Connecting...' : '连接中...');
     uploadDropZone.style.opacity = '0.5';
     uploadDropZone.style.pointerEvents = 'none';
     uploadLabel.textContent = 'Agent 加载中...';
@@ -1482,6 +2335,7 @@ async function initServerSession() {
             setUploadEnabled(true);
             sendBtn.disabled = false;
             userInput.disabled = false;
+            setConnStatus('loading', currentLang === 'en' ? 'Agent ready...' : 'Agent 就绪...');
             if (status.modified_files) {
               status.modified_files.forEach(f => addModifiedFile(f.filename, f.download_url));
             }
@@ -1500,6 +2354,7 @@ async function initServerSession() {
     } catch (e) {
       sidDisplay.textContent = 'RETRY';
       uploadLabel.textContent = '初始化失败，点击重试';
+      setConnStatus('error', currentLang === 'en' ? 'Init failed' : '初始化失败');
       showToast('Init failed: ' + e.message);
       uploadDropZone.style.opacity = '';
       uploadDropZone.style.pointerEvents = '';
@@ -1519,11 +2374,15 @@ function connectWS() {
   const url = `${protocol}//${location.host}/ws/${sessionId}`;
   ws = new WebSocket(url);
 
-  ws.onopen = () => console.log('WS connected');
+  ws.onopen = () => {
+    console.log('WS connected');
+    setConnStatus('ready', currentLang === 'en' ? 'Ready' : '就绪');
+  };
 
   ws.onclose = (event) => {
     console.log('WS disconnected:', event.code, event.reason);
     if (!event.wasClean && sessionId) {
+      setConnStatus('loading', currentLang === 'en' ? 'Reconnecting...' : '重连中...');
       setTimeout(() => {
         if (sessionId && (!ws || ws.readyState === WebSocket.CLOSED)) {
           console.log('Auto-reconnecting WS...');
@@ -1697,14 +2556,49 @@ function handleKeyDown(event) {
 
 function appendUserBubble(text) {
   const container = document.getElementById('messages-container');
-  const div = document.createElement('div');
-  div.className = 'msg-bubble msg-user';
-  div.textContent = text;
-  container.appendChild(div);
+  const row = document.createElement('div');
+  row.className = 'msg-row msg-row-user';
+  const avatar = document.createElement('div');
+  avatar.className = 'msg-avatar user-avatar';
+  avatar.textContent = currentLang === 'en' ? 'You' : '你';
+  const bubble = document.createElement('div');
+  bubble.className = 'msg-bubble msg-user';
+  bubble.textContent = text;
+  row.appendChild(avatar);
+  row.appendChild(bubble);
+  container.appendChild(row);
+}
+
+function appendAgentBubbleFromHTML(html, extraInner) {
+  const container = document.getElementById('messages-container');
+  const row = document.createElement('div');
+  row.className = 'msg-row msg-row-agent';
+  const avatar = document.createElement('div');
+  avatar.className = 'msg-avatar agent-avatar';
+  avatar.textContent = 'AI';
+  const bubble = document.createElement('div');
+  bubble.className = 'msg-bubble msg-agent';
+  if (extraInner) {
+    bubble.innerHTML = extraInner;
+  } else {
+    const content = document.createElement('div');
+    content.className = 'agent-content';
+    content.innerHTML = html;
+    bubble.appendChild(content);
+  }
+  row.appendChild(avatar);
+  row.appendChild(bubble);
+  container.appendChild(row);
+  return bubble;
 }
 
 function createAgentBubble() {
   const container = document.getElementById('messages-container');
+  const row = document.createElement('div');
+  row.className = 'msg-row msg-row-agent';
+  const avatar = document.createElement('div');
+  avatar.className = 'msg-avatar agent-avatar';
+  avatar.textContent = 'AI';
   const div = document.createElement('div');
   div.className = 'msg-bubble msg-agent';
   const content = document.createElement('div');
@@ -1715,7 +2609,9 @@ function createAgentBubble() {
   status.className = 'status-indicator thinking';
   status.innerHTML = '<span class="status-dot"></span><span class="status-text">' + (I18N[currentLang].thinking || 'Thinking...') + '</span>';
   div.appendChild(status);
-  container.appendChild(div);
+  row.appendChild(avatar);
+  row.appendChild(div);
+  container.appendChild(row);
   return div;
 }
 
@@ -2057,6 +2953,7 @@ function addModifiedFile(filename, url) {
   li.textContent = filename;
   li.onclick = () => url ? window.open(url, '_blank') : null;
   list.appendChild(li);
+  updatePanelStats();
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -2175,17 +3072,11 @@ function actionChangeSummary() {
   const summary = 'Modified files (' + modifiedFiles.length + '):\n' +
     modifiedFiles.map((f, i) => (i + 1) + '. ' + f.filename).join('\n');
   showToast(summary);
-  // Also append a message to the chat
-  const container = document.getElementById('messages-container');
-  const div = document.createElement('div');
-  div.className = 'msg-bubble msg-agent';
-  div.style.cssText = 'max-width:85%;';
-  div.innerHTML = '<strong>Code Change Summary</strong><br><br>' +
+  appendAgentBubbleFromHTML('', '<strong>Code Change Summary</strong><br><br>' +
     modifiedFiles.map((f, i) => {
       const dlUrl = f.url || ('/api/session/' + sessionId + '/download/' + f.filename);
       return (i + 1) + '. <a href="' + dlUrl + '" target="_blank" style="color:var(--accent);">' + escapeHTML(f.filename) + '</a>';
-    }).join('<br>');
-  container.appendChild(div);
+    }).join('<br>'));
   scrollToBottom();
 }
 
