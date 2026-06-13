@@ -46,6 +46,9 @@ def _read_int(name: str, default: int) -> int:
         return default
 
 
+# 服务配置
+DMS_PORT: Final[int] = _read_int("DMS_PORT", 8000)
+
 # 大模型配置
 DMS_LLM_MODEL: Final[str] = os.getenv("DMS_LLM_MODEL", "DeepSeek-R1")
 DMS_TEMPERATURE: Final[float] = _read_float("DMS_TEMPERATURE", 0.2)

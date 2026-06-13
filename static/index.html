@@ -319,7 +319,8 @@ body {
 }
 .accordion-item.open .accordion-body { display: block; }
 .accordion-body .file-tree,
-.accordion-body #panel-modified-list { margin-top: 8px; }
+.accordion-body #panel-modified-list,
+.accordion-body #panel-reports-list { margin-top: 8px; }
 
 .panel-empty-hint {
   font-size: 11px; color: var(--text-muted); line-height: 1.5;
@@ -335,18 +336,22 @@ body {
 .panel-footer-actions .action-btn .action-label { display: none; }
 .panel-footer-actions .action-btn .action-icon { margin: 0; }
 
-#panel-modified-list { list-style: none; display: flex; flex-direction: column; gap: 3px; }
-#panel-modified-list li {
+#panel-modified-list,
+#panel-reports-list { list-style: none; display: flex; flex-direction: column; gap: 3px; }
+#panel-modified-list li,
+#panel-reports-list li {
   display: flex; align-items: center; gap: 6px;
   font-size: 11px; color: var(--text-secondary); padding: 7px 8px;
   font-family: var(--font-mono); cursor: pointer;
   border-radius: var(--radius-sm); transition: all var(--transition);
   background: var(--bg-raised); border: 1px solid var(--border-subtle);
 }
-#panel-modified-list li::before {
+#panel-modified-list li::before,
+#panel-reports-list li::before {
   content: '●'; font-size: 8px; color: var(--accent-light);
 }
-#panel-modified-list li:hover {
+#panel-modified-list li:hover,
+#panel-reports-list li:hover {
   background: var(--accent-soft); color: var(--accent);
   border-color: rgba(45, 106, 79, 0.2);
 }
@@ -704,6 +709,47 @@ body {
   max-height: 200px;
   overflow-y: auto;
 }
+
+/* ── Tool calls group: collapsible wrapper ── */
+
+.tool-calls-toggle {
+  display: flex; align-items: center; gap: 8px;
+  width: 100%; padding: 7px 10px;
+  background: var(--bg-root); border: 1px solid var(--border-subtle);
+  border-left: 3px solid var(--accent);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-mono); font-size: 11px; color: var(--text-secondary);
+  cursor: pointer; user-select: none;
+  transition: background var(--transition);
+}
+.tool-calls-toggle:hover { background: var(--accent-soft); }
+.tool-calls-toggle .toggle-chevron {
+  font-size: 8px; color: var(--text-muted);
+  transition: transform var(--transition);
+}
+.tool-calls-toggle.open .toggle-chevron { transform: rotate(90deg); }
+.tool-calls-toggle .toggle-label { flex: 1; }
+.tool-calls-toggle .toggle-badge {
+  font-size: 10px; color: var(--text-muted);
+  background: var(--bg-raised); padding: 1px 7px;
+  border-radius: 999px; border: 1px solid var(--border-subtle);
+}
+
+.tool-calls-wrapper {
+  display: none;
+  max-height: 320px;
+  overflow-y: auto;
+  border: 1px solid var(--border-subtle);
+  border-top: none;
+  border-radius: 0 0 var(--radius-sm) var(--radius-sm);
+  background: var(--bg-root);
+}
+.tool-calls-wrapper.open { display: block; }
+.tool-calls-wrapper .tool-call {
+  border: none; border-bottom: 1px solid var(--border-subtle);
+  border-radius: 0; margin: 0;
+}
+.tool-calls-wrapper .tool-call:last-child { border-bottom: none; }
 
 /* ── Status Indicator ── */
 .status-indicator {
@@ -1501,6 +1547,18 @@ body {
             <p class="panel-empty-hint" data-i18n="modified_hint">Agent 修改代码后会显示在此处</p>
           </div>
         </div>
+
+        <div class="accordion-item" id="accordion-reports">
+          <button type="button" class="accordion-header" data-accordion="reports">
+            <span class="accordion-chevron">▶</span>
+            <span class="accordion-title" data-i18n="reports">Reports</span>
+            <span class="accordion-count" id="accordion-reports-count">0</span>
+          </button>
+          <div class="accordion-body">
+            <ul id="panel-reports-list"><li class="no-files" data-i18n="no_reports">No reports</li></ul>
+            <p class="panel-empty-hint" data-i18n="reports_hint">Agent 生成评估报告后会显示在此处</p>
+          </div>
+        </div>
       </div>
     </div>
     </div>
@@ -1530,9 +1588,10 @@ const I18N = {
     change_summary:'修改摘要', share_link:'分享链接', clear_session:'清空会话',
     group_analysis:'分析', group_export:'导出', group_manage:'管理',
     session_files:'会话文件', modified_files:'已修改', knowledge_base:'知识库',
-    no_files:'暂无文件', no_modifications:'暂无修改', no_docs:'暂无文档',
+    no_files:'暂无文件', no_modifications:'暂无修改', no_docs:'暂无文档', no_reports:'暂无报告',
     upload_short:'上传文件', new_folder:'新建文件夹', add_doc:'添加文档',
-    modified_hint:'Agent 修改代码后会显示在此处',
+    modified_hint:'Agent 修改代码后会显示在此处', reports_hint:'Agent 生成评估报告后会显示在此处',
+    reports:'评估报告', tool_calls:'工具调用',
     msg_rounds:'轮对话',
     upload_title:'上传文件', close:'关闭', thinking:'正在思考...', done:'回答完成',
   },
@@ -1548,9 +1607,10 @@ const I18N = {
     change_summary:'Change Summary', share_link:'Share Link', clear_session:'Clear Session',
     group_analysis:'Analysis', group_export:'Export', group_manage:'Manage',
     session_files:'Session Files', modified_files:'Modified', knowledge_base:'Knowledge Base',
-    no_files:'No files', no_modifications:'No changes', no_docs:'No documents',
+    no_files:'No files', no_modifications:'No changes', no_docs:'No documents', no_reports:'No reports',
     upload_short:'Upload', new_folder:'New Folder', add_doc:'Add Document',
-    modified_hint:'Modified files appear here after Agent edits code',
+    modified_hint:'Modified files appear here after Agent edits code', reports_hint:'Evaluation reports appear here',
+    reports:'Reports', tool_calls:'Tool Calls',
     msg_rounds:' turns',
     upload_title:'Upload Files', close:'Close', thinking:'Thinking...', done:'Response complete',
   }
@@ -1593,6 +1653,7 @@ let streamBuffer = '';
 let isStreaming = false;
 let modifiedFiles = [];
 let restoredHistory = null;  // Messages restored from localStorage, sent on first chat
+let currentToolGroup = null; // { toggle, wrapper, count } for collapsible tool-calls group
 
 // ═══════════════════════════════════════════════════════════
 // Multi-session localStorage persistence
@@ -1655,6 +1716,7 @@ function createNewSession() {
     modifiedFiles: [],
     fileTree: [],
     knowledgeFiles: [],
+    reports: [],
     createdAt: new Date().toISOString(),
   };
   data.sessions.push(newSession);
@@ -1691,6 +1753,7 @@ function switchSession(id) {
     }
     renderPanelTree();
     renderKnowledgeList();
+    renderReportList();
   }
   renderSessionList();
   serverInitPromise = null; initServerSession();
@@ -1768,6 +1831,7 @@ function updatePanelStats() {
   setNum('accordion-files-count', fileCount);
   setNum('accordion-knowledge-count', getKnowledgeFiles().length);
   setNum('accordion-modified-count', modCount);
+  setNum('accordion-reports-count', getReports().length);
 
   const modAccordion = document.getElementById('accordion-modified');
   if (modAccordion) modAccordion.classList.toggle('open', modCount > 0);
@@ -1861,6 +1925,7 @@ function resetUIForNewSession() {
   streamBuffer = '';
   modifiedFiles = [];
   restoredHistory = null;
+  currentToolGroup = null;
   isStreaming = false;
 
   // Reset DOM
@@ -1872,6 +1937,8 @@ function resetUIForNewSession() {
   if (nfb) nfb.style.display = 'none';
   const pkl = document.getElementById('panel-knowledge-list');
   if (pkl) pkl.innerHTML = '<li class="no-files" data-i18n="no_docs">No documents</li>';
+  const prl = document.getElementById('panel-reports-list');
+  if (prl) prl.innerHTML = '<li class="no-files" data-i18n="no_reports">No reports</li>';
   document.getElementById('file-list').innerHTML = '<li id="no-files" data-i18n="no_files">No files</li>';
   document.getElementById('file-count').textContent = '0';
   document.getElementById('sid-display').textContent = '--';
@@ -2074,6 +2141,78 @@ async function uploadKnowledgeDocument(file) {
     renderKnowledgeList();
     showToast(`知识文档 "${result.filename}" 已添加`);
   } catch (e) { showToast('上传请求失败'); }
+}
+
+// ═══════════════════════════════════════════════════════════
+// Reports helpers
+// ═══════════════════════════════════════════════════════════
+
+function getReports() {
+  const data = loadSessions();
+  if (!data || !data.activeId) return [];
+  const active = data.sessions.find(s => s.id === data.activeId);
+  if (!active) return [];
+  if (!active.reports) active.reports = [];
+  return active.reports;
+}
+
+function saveReports(reports) {
+  const data = loadSessions();
+  if (!data || !data.activeId) return;
+  const active = data.sessions.find(s => s.id === data.activeId);
+  if (active) {
+    active.reports = reports;
+    saveSessions(data);
+  }
+}
+
+function addReport(filename, downloadUrl) {
+  const reports = getReports();
+  // Avoid duplicates
+  if (reports.some(r => r.filename === filename)) return;
+  reports.push({
+    filename,
+    download_url: downloadUrl,
+    timestamp: new Date().toISOString(),
+  });
+  saveReports(reports);
+  renderReportList();
+  // Auto-expand the reports accordion
+  const acc = document.getElementById('accordion-reports');
+  if (acc) acc.classList.add('open');
+}
+
+function renderReportList() {
+  const listEl = document.getElementById('panel-reports-list');
+  if (!listEl) return;
+
+  const reports = getReports();
+  if (reports.length === 0) {
+    listEl.innerHTML = '<li class="no-files" data-i18n="no_reports">No reports</li>';
+  } else {
+    listEl.innerHTML = '';
+    reports.forEach(r => {
+      const li = document.createElement('li');
+      li.textContent = r.filename;
+      li.title = `Generated: ${new Date(r.timestamp).toLocaleString()}`;
+      li.onclick = () => r.download_url ? window.open(r.download_url, '_blank') : null;
+      listEl.appendChild(li);
+    });
+  }
+  updatePanelStats();
+}
+
+async function refreshReportList() {
+  if (!sessionId) return;
+  try {
+    const resp = await fetch(`/api/session/${sessionId}/reports`);
+    if (!resp.ok) return;
+    const data = await resp.json();
+    if (data.reports && data.reports.length > 0) {
+      saveReports(data.reports);
+      renderReportList();
+    }
+  } catch (e) { /* ignore */ }
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -2344,8 +2483,13 @@ async function initServerSession() {
             if (status.modified_files) {
               status.modified_files.forEach(f => addModifiedFile(f.filename, f.download_url));
             }
+            if (status.reports && status.reports.length > 0) {
+              saveReports(status.reports);
+              renderReportList();
+            }
             connectWS();
             refreshKnowledgeList();
+            refreshReportList();
             return;
           }
           if (status.agent_error) throw new Error(status.agent_error);
@@ -2430,8 +2574,14 @@ function handleWSMessage(msg) {
 
     case 'tool_start':
       if (currentAgentBubble) {
+        // Create tool group on first call
+        if (!currentToolGroup) {
+          currentToolGroup = createToolGroup(currentAgentBubble);
+        }
         const toolEl = createToolBlock(msg.id, msg.tool_name, msg.args);
-        currentAgentBubble.appendChild(toolEl);
+        currentToolGroup.wrapper.appendChild(toolEl);
+        currentToolGroup.count++;
+        currentToolGroup.badge.textContent = currentToolGroup.count;
         toolBlocks[msg.id] = toolEl;
         scrollToBottom();
       }
@@ -2447,6 +2597,8 @@ function handleWSMessage(msg) {
         resultEl.textContent = msg.result;
         if (msg.is_error) {
           tel.classList.add('expanded');
+          // Auto-expand group on error so user sees it
+          if (currentToolGroup) expandToolGroup(currentToolGroup);
         } else {
           tel.classList.add('expanded');
           setTimeout(() => { tel.classList.remove('expanded'); }, 2000);
@@ -2471,9 +2623,15 @@ function handleWSMessage(msg) {
           status.querySelector('.status-text').textContent = I18N[currentLang].done || 'Response complete';
           setTimeout(() => { status.style.display = 'none'; }, 3000);
         }
+        // Auto-collapse tool group after 1s
+        const tg = currentToolGroup;
+        if (tg) {
+          setTimeout(() => { collapseToolGroup(tg); }, 1000);
+        }
       }
       setInputEnabled(true);
       currentAgentBubble = null;
+      currentToolGroup = null;
       streamBuffer = '';
       saveToLocalStorage();
       break;
@@ -2490,9 +2648,11 @@ function handleWSMessage(msg) {
         errDiv.textContent = '[Error] ' + msg.message;
         const content = currentAgentBubble.querySelector('.agent-content');
         if (content) content.appendChild(errDiv);
+        if (currentToolGroup) expandToolGroup(currentToolGroup);
       }
       setInputEnabled(true);
       currentAgentBubble = null;
+      currentToolGroup = null;
       break;
 
     case 'diff_card':
@@ -2513,7 +2673,12 @@ function handleWSMessage(msg) {
       break;
 
     case 'action_result':
-      showToast(msg.message || 'Action completed');
+      if (msg.action === 'report_generated' && msg.filename && msg.download_url) {
+        addReport(msg.filename, msg.download_url);
+        showToast(`Report generated: ${msg.filename}`);
+      } else {
+        showToast(msg.message || 'Action completed');
+      }
       break;
   }
 }
@@ -2646,6 +2811,56 @@ function createToolBlock(id, toolName, args) {
   `;
 
   return div;
+}
+
+// ── Collapsible tool-calls group ──
+
+function createToolGroup(bubble) {
+  // Insert after agent-content, before status-indicator
+  const content = bubble.querySelector('.agent-content');
+  const toggle = document.createElement('div');
+  toggle.className = 'tool-calls-toggle open';
+  toggle.innerHTML = `
+    <span class="toggle-chevron">&#9654;</span>
+    <span class="toggle-label">${I18N[currentLang].tool_calls || 'Tool Calls'}</span>
+    <span class="toggle-badge">0</span>
+  `;
+  const wrapper = document.createElement('div');
+  wrapper.className = 'tool-calls-wrapper open';
+
+  const status = bubble.querySelector('.status-indicator');
+  if (status) {
+    bubble.insertBefore(toggle, status);
+    bubble.insertBefore(wrapper, status);
+  } else {
+    bubble.appendChild(toggle);
+    bubble.appendChild(wrapper);
+  }
+
+  toggle.addEventListener('click', () => {
+    const open = toggle.classList.toggle('open');
+    wrapper.classList.toggle('open');
+    toggle.querySelector('.toggle-chevron').style.transform = open ? 'rotate(90deg)' : '';
+    toggle.querySelector('.toggle-label').textContent =
+      (I18N[currentLang].tool_calls || 'Tool Calls') + (open ? '' : ' (' + wrapper.children.length + ')');
+  });
+
+  return { toggle, wrapper, badge: toggle.querySelector('.toggle-badge'), count: 0 };
+}
+
+function expandToolGroup(group) {
+  group.toggle.classList.add('open');
+  group.wrapper.classList.add('open');
+  group.toggle.querySelector('.toggle-chevron').style.transform = 'rotate(90deg)';
+  group.toggle.querySelector('.toggle-label').textContent = I18N[currentLang].tool_calls || 'Tool Calls';
+}
+
+function collapseToolGroup(group) {
+  group.toggle.classList.remove('open');
+  group.wrapper.classList.remove('open');
+  group.toggle.querySelector('.toggle-chevron').style.transform = '';
+  group.toggle.querySelector('.toggle-label').textContent =
+    (I18N[currentLang].tool_calls || 'Tool Calls') + ' (' + group.count + ')';
 }
 
 // ── Minimal markdown renderer ──
@@ -2986,6 +3201,7 @@ async function actionClearSession() {
     data.sessions[idx].modifiedFiles = [];
     data.sessions[idx].fileTree = [];
     data.sessions[idx].knowledgeFiles = [];
+    data.sessions[idx].reports = [];
   }
   saveSessions(data);
 

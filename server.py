@@ -27,7 +27,7 @@ ROOT_DIR = Path(__file__).resolve().parent
 if str(ROOT_DIR) not in sys.path:
     sys.path.insert(0, str(ROOT_DIR))
 
-from src.config import LOGGER, UPLOAD_DIR
+from src.config import LOGGER, UPLOAD_DIR, DMS_PORT
 from src.session_kb import SessionKnowledgeBase
 
 # Lazy import — DMSAgent is heavy (~13s for ML dependencies)
@@ -38,6 +38,18 @@ DMSAgent = None
 # ---------------------------------------------------------------------------
 
 app = FastAPI(title="DMS Evaluator", docs_url=None, redoc_url=None)
+
+
+@app.on_event("startup")
+async def on_startup():
+    LOGGER.info("DMS Agent server starting on http://127.0.0.1:%d", DMS_PORT)
+
+
+@app.on_event("shutdown")
+async def on_shutdown():
+    LOGGER.info("DMS Agent server shutting down — closing all sessions")
+    for sid in list(session_manager._sessions.keys()):
+        session_manager.remove(sid)
 
 
 # ---------------------------------------------------------------------------
@@ -70,6 +82,7 @@ class Session:
     agent_error: str | None = None
     knowledge_dir: Path | None = None  # User knowledge documents storage
     knowledge_kb: object = None        # SessionKnowledgeBase instance
+    reports: list[dict] = field(default_factory=list)  # Generated evaluation reports
 
 
 class SessionManager:
@@ -234,6 +247,7 @@ async def session_status(session_id: str):
         "files": session.uploaded_files,
         "modified_files": session.modified_files,
         "knowledge_files": kb_files,
+        "reports": session.reports,
     }
 
 
@@ -253,6 +267,15 @@ async def list_files(session_id: str):
     if session is None:
         raise HTTPException(status_code=404, detail="Session not found")
     return {"files": session.uploaded_files}
+
+
+@app.get("/api/session/{session_id}/reports")
+async def list_reports(session_id: str):
+    """列出会话中生成的评估报告。"""
+    session = session_manager.get(session_id)
+    if session is None:
+        raise HTTPException(status_code=404, detail="Session not found")
+    return {"reports": session.reports}
 
 
 # ---------------------------------------------------------------------------
@@ -383,7 +406,7 @@ async def websocket_chat(ws: WebSocket, session_id: str):
 
     session = session_manager.get(session_id)
     if session is None:
-        await ws.send_json({"type": "error", "message": "Session not found. Please refresh the page."})
+        await _ws_send(ws,{"type": "error", "message": "Session not found. Please refresh the page."})
         await ws.close()
         return
 
@@ -394,16 +417,16 @@ async def websocket_chat(ws: WebSocket, session_id: str):
         waited += 0.5
 
     if session.agent_error:
-        await ws.send_json({"type": "error", "message": f"Agent init failed: {session.agent_error}"})
+        await _ws_send(ws,{"type": "error", "message": f"Agent init failed: {session.agent_error}"})
         await ws.close()
         return
 
     if not session.agent_ready:
-        await ws.send_json({"type": "error", "message": "Agent init timed out after 60s. Please refresh."})
+        await _ws_send(ws,{"type": "error", "message": "Agent init timed out after 60s. Please refresh."})
         await ws.close()
         return
 
-    await ws.send_json({"type": "status", "subtype": "agent_ready"})
+    await _ws_send(ws,{"type": "status", "subtype": "agent_ready"})
 
     agent = session.agent
     upload_dir = str(session.upload_dir)
@@ -433,7 +456,7 @@ async def websocket_chat(ws: WebSocket, session_id: str):
                     LOGGER.info("Session %s: restored %d messages from localStorage",
                                 session_id, len(restored))
 
-                await ws.send_json({"type": "status", "subtype": "started"})
+                await _ws_send(ws,{"type": "status", "subtype": "started"})
                 active_tool_ids: set[str] = set()
 
                 agent_full_response: list[str] = []
@@ -460,7 +483,7 @@ async def websocket_chat(ws: WebSocket, session_id: str):
                                 if re.search(r'<(?:function_calls|tool_calls|invoke)', content, re.IGNORECASE):
                                     LOGGER.warning("WS[%s] XML token detected in stream: %r",
                                                    session_id, content[:120])
-                                await ws.send_json({"type": "token", "content": content})
+                                await _ws_send(ws,{"type": "token", "content": content})
                                 agent_full_response.append(content)
 
                         elif kind == "on_tool_start":
@@ -469,7 +492,7 @@ async def websocket_chat(ws: WebSocket, session_id: str):
                             active_tool_ids.add(run_id)
                             tool_input = str(event.get("data", {}).get("input", ""))[:200]
                             LOGGER.info("WS[%s] tool_start #%d: %s", session_id, dbg_tool_count, event.get("name"))
-                            await ws.send_json({
+                            await _ws_send(ws,{
                                 "type": "tool_start",
                                 "id": run_id,
                                 "tool_name": event.get("name", "unknown"),
@@ -486,7 +509,7 @@ async def websocket_chat(ws: WebSocket, session_id: str):
                             else:
                                 output = str(output_raw)
                             is_error = "[ERR]" in output[:100] or "[FAIL]" in output[:100]
-                            await ws.send_json({
+                            await _ws_send(ws,{
                                 "type": "tool_end",
                                 "id": run_id,
                                 "tool_name": event.get("name", "unknown"),
@@ -501,7 +524,7 @@ async def websocket_chat(ws: WebSocket, session_id: str):
                                     durl = f"/api/session/{session_id}/download/{fname}"
                                     # Track in session
                                     session.modified_files.append({"filename": fname, "download_url": durl})
-                                    await ws.send_json({
+                                    await _ws_send(ws,{
                                         "type": "diff_card",
                                         "filename": fname,
                                         "diff_text": output,
@@ -520,7 +543,7 @@ async def websocket_chat(ws: WebSocket, session_id: str):
                                             fp = inp.get("file_path", "")
                                             if fp:
                                                 fname = Path(fp).name
-                                    await ws.send_json({
+                                    await _ws_send(ws,{
                                         "type": "diff_card",
                                         "filename": fname,
                                         "diff_text": output,
@@ -530,10 +553,22 @@ async def websocket_chat(ws: WebSocket, session_id: str):
                             if event.get("name") == "save_report" and output.startswith("[OK]"):
                                 report_path = output.replace("[OK] 报告已保存到: ", "").strip()
                                 report_name = Path(report_path).name
-                                await ws.send_json({
+                                # Copy report to session upload dir so download works
+                                dest = session.upload_dir / report_name
+                                if Path(report_path).resolve() != dest.resolve():
+                                    shutil.copy2(report_path, dest)
+                                # Track in session
+                                timestamp = datetime.now().isoformat()
+                                session.reports.append({
+                                    "filename": report_name,
+                                    "timestamp": timestamp,
+                                    "download_url": f"/api/session/{session_id}/download/{report_name}",
+                                })
+                                await _ws_send(ws,{
                                     "type": "action_result",
                                     "action": "report_generated",
                                     "filename": report_name,
+                                    "timestamp": timestamp,
                                     "download_url": f"/api/session/{session_id}/download/{report_name}",
                                 })
 
@@ -586,9 +621,9 @@ async def websocket_chat(ws: WebSocket, session_id: str):
                             LOGGER.info("WS[%s] XML cleaned: %d → %d chars",
                                         session_id, len(agent_text), len(cleaned))
                             agent_text = cleaned
-                            await ws.send_json({"type": "content_replace", "content": cleaned})
+                            await _ws_send(ws,{"type": "content_replace", "content": cleaned})
 
-                    await ws.send_json({"type": "done"})
+                    await _ws_send(ws,{"type": "done"})
                     LOGGER.info("WS[%s] stream done: %d stream chunks, %d tool calls, response=%d chars",
                                 session_id, dbg_stream_count, dbg_tool_count, len(agent_text))
 
@@ -598,7 +633,7 @@ async def websocket_chat(ws: WebSocket, session_id: str):
                 except Exception as exc:
                     LOGGER.error("Stream error in session %s: %s\n%s",
                                  session_id, exc, traceback.format_exc())
-                    await ws.send_json({"type": "error", "message": str(exc)})
+                    await _ws_send(ws,{"type": "error", "message": str(exc)})
 
             elif msg_type == "cancel":
                 break
@@ -633,4 +668,22 @@ if static_dir.exists():
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("server:app", host="0.0.0.0", port=8000, reload=True)
+    import signal
+
+    def _handle_exit(signum, frame):
+        LOGGER.info("Received signal %s, shutting down gracefully...", signum)
+        # Give uvicorn a moment to clean up
+        raise KeyboardInterrupt
+
+    signal.signal(signal.SIGINT, _handle_exit)
+    signal.signal(signal.SIGTERM, _handle_exit)
+    if hasattr(signal, 'SIGBREAK'):  # Windows Ctrl+Break
+        signal.signal(signal.SIGBREAK, _handle_exit)
+
+    LOGGER.info("Starting DMS Agent on http://127.0.0.1:%d", DMS_PORT)
+    try:
+        uvicorn.run("server:app", host="0.0.0.0", port=DMS_PORT, reload=False)
+    except KeyboardInterrupt:
+        LOGGER.info("Server stopped by user")
+    except Exception as exc:
+        LOGGER.critical("Server crashed: %s\n%s", exc, traceback.format_exc())
