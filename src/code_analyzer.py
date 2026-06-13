@@ -4,9 +4,6 @@ from __future__ import annotations
 
 import ast
 from pathlib import Path
-from typing import Any
-
-
 def scan_directory(root: str | Path) -> str:
     """扫描目录结构，返回文件树和大小。只关注 .py 文件。"""
     root = Path(root)
@@ -124,9 +121,9 @@ def read_file_content(path: str | Path, start: int = 1, end: int | None = None) 
     return "\n".join(result)
 
 
-def _extract_structure(tree: ast.AST, source: str) -> dict[str, Any]:
+def _extract_structure(tree: ast.AST, source: str) -> dict:
     """从 AST 中提取类、函数、导入、常量。"""
-    result: dict[str, Any] = {
+    result: dict = {
         "doc": ast.get_docstring(tree),
         "classes": [],
         "functions": [],
@@ -185,9 +182,3 @@ def _summarize_imports(imports: list[str]) -> str:
     return ", ".join(found[:6])
 
 
-def _is_dms_keyword(name: str) -> bool:
-    """判断是否为 DMS 相关关键词。"""
-    keywords = {"eye", "mouth", "face", "fatigue", "distraction", "gaze",
-                "yawn", "blink", "ear", "mar", "alert", "warn", "fps",
-                "latency", "threshold", "thres", "detect", "track"}
-    return any(k in name.lower() for k in keywords)

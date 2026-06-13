@@ -6,14 +6,14 @@ import re
 import sys
 from pathlib import Path
 
-from typing import Annotated, Any
+from typing import Annotated
 
 from langchain_core.messages import AIMessage, SystemMessage
+from langchain_openai import ChatOpenAI
 from langgraph.constants import END, START
 from langgraph.graph import StateGraph
 from langgraph.graph.message import add_messages
 from langgraph.prebuilt import ToolNode
-from langchain_openai import ChatOpenAI
 from typing_extensions import Required, TypedDict
 
 ROOT_DIR = Path(__file__).resolve().parents[1]
@@ -42,6 +42,7 @@ from src.tools import (
     search_web,
     set_session_kb,
 )
+from src.xml_defense import parse_xml_to_tool_calls, strip_xml
 
 # ═══════════════════════════════════════════════════════════
 # DMS 领域 System Prompt
@@ -132,83 +133,16 @@ Camera → Face Detection → Feature Extraction → State Determination → Ale
 """
 
 
-def _strip_xml(text: str) -> str:
-    """Strip XML-format tool call text that DeepSeek hallucinates when tools are unavailable.
-
-    Handles both <function_calls> and <tool_calls> variants, plus complete /
-    incomplete fragments.
-    """
-    # Pass 1: complete blocks with closing tags
-    text = re.sub(r'<(?:function_calls|tool_calls)>[\s\S]*?</(?:function_calls|tool_calls)>', '', text, flags=re.IGNORECASE)
-    text = re.sub(r'<invoke\b[^>]*>[\s\S]*?</invoke>', '', text, flags=re.IGNORECASE)
-    text = re.sub(r'<parameter\b[^>]*>[\s\S]*?</parameter>', '', text, flags=re.IGNORECASE)
-    # Pass 2: orphaned opening/closing tags (incomplete fragments)
-    text = re.sub(r'</?(?:function_calls|tool_calls|invoke|parameter)\b[^>]*>', '', text, flags=re.IGNORECASE)
-    return text.strip()
-
-
-def _parse_xml_to_tool_calls(text: str, tools_by_name: dict) -> tuple[str, list[dict] | None]:
-    """Hijack Anthropic-style XML tool calls in model output.
-
-    When DeepSeek outputs <function_calls><invoke name="X"><parameter...>
-    as text (instead of native tool_calls), this parses the XML and
-    returns proper tool_call dicts that ToolNode can execute.
-
-    Returns (cleaned_text, tool_calls_or_None).
-    """
-    if not text or not re.search(r'<(?:function_calls|tool_calls)>', text, re.IGNORECASE):
-        return text, None
-
-    pattern = r'<(?:function_calls|tool_calls)>(.*?)</(?:function_calls|tool_calls)>'
-    match = re.search(pattern, text, re.IGNORECASE | re.DOTALL)
-    if not match:
-        # Opening tag exists but no closing tag (streaming fragment)
-        return _strip_xml(text), None
-
-    xml_block = match.group(0)
-    block = match.group(1)
-
-    tool_calls = []
-    invoke_pattern = r'<invoke\s+name="(\w+)"[^>]*>(.*?)</invoke>'
-    for i, inv in enumerate(re.finditer(invoke_pattern, block, re.IGNORECASE | re.DOTALL)):
-        tool_name = inv.group(1)
-        params_block = inv.group(2)
-
-        if tool_name not in tools_by_name:
-            LOGGER.warning("XML hijack: unknown tool '%s', skipping", tool_name)
-            continue
-
-        params = {}
-        param_pattern = r'<parameter\s+name="(\w+)"[^>]*>(.*?)</parameter>'
-        for pm in re.finditer(param_pattern, params_block, re.IGNORECASE | re.DOTALL):
-            params[pm.group(1)] = pm.group(2).strip()
-
-        tool_calls.append({
-            "name": tool_name,
-            "args": params,
-            "id": f"xml_{i}",
-            "type": "tool_call",
-        })
-        LOGGER.info("XML hijack: parsed %s with %d params", tool_name, len(params))
-
-    if not tool_calls:
-        # No valid tools found, strip the XML noise
-        return _strip_xml(text), None
-
-    # Replace XML block with a brief marker so the text doesn't look broken
-    tool_names = ", ".join(tc["name"] for tc in tool_calls)
-    replacement = ""
-    cleaned = text.replace(xml_block, replacement)
-
-    return cleaned, tool_calls
-
-
 class DMSAgentState(TypedDict):
     """Custom agent state with tool call enforcement."""
     messages: Required[Annotated[list, add_messages]]
     tool_call_count: int
     tool_call_history: list[dict[str, str]]
     round_count: int  # Number of model→tools→model cycles
+
+
+# Tools allowed to be called multiple times (content/queries may differ)
+_REPEATABLE_TOOLS = frozenset({"read_code_file", "scan_codebase", "search_web", "search_standards"})
 
 
 class DMSAgent:
@@ -281,13 +215,13 @@ class DMSAgent:
             if re.search(r'<(?:function_calls|tool_calls)>', content, re.IGNORECASE):
                 if not getattr(response, "tool_calls", None):
                     # No native tool calls — parse XML into real tool calls
-                    cleaned, tool_calls = _parse_xml_to_tool_calls(
+                    cleaned, tool_calls = parse_xml_to_tool_calls(
                         content, self._tools_by_name)
                     if tool_calls:
                         response = AIMessage(content=cleaned, tool_calls=tool_calls)
                 else:
                     # Has native tool calls — just strip XML noise from text
-                    cleaned = _strip_xml(content)
+                    cleaned = strip_xml(content)
                     if cleaned != content:
                         response = AIMessage(
                             content=cleaned,
@@ -300,25 +234,21 @@ class DMSAgent:
             messages = state["messages"]
             last_message = messages[-1] if messages else None
 
-            # Limit: No duplicate tool+target pairs.
-            # EXCEPTION: read_code_file / scan_codebase / search_web / search_standards
-            # are allowed to be re-called — content may have changed or queries differ.
+            if not isinstance(last_message, AIMessage) or not last_message.tool_calls:
+                return END
+
+            # Detect duplicate tool+target calls (repeatable tools exempted)
             history = state.get("tool_call_history", [])
-            if isinstance(last_message, AIMessage) and last_message.tool_calls:
-                for tc in last_message.tool_calls:
-                    if tc["name"] in ("read_code_file", "scan_codebase", "search_web", "search_standards"):
-                        continue
-                    target = str(tc.get("args", {}))
-                    for h in history:
-                        if h["tool"] == tc["name"] and h["target"] == target:
-                            LOGGER.info("Agent repeated tool %s on same target, forcing response", tc["name"])
-                            return "force_respond"
+            for tc in last_message.tool_calls:
+                if tc["name"] in _REPEATABLE_TOOLS:
+                    continue
+                target = str(tc.get("args", {}))
+                for h in history:
+                    if h["tool"] == tc["name"] and h["target"] == target:
+                        LOGGER.info("Agent repeated tool %s on same target, forcing response", tc["name"])
+                        return "force_respond"
 
-            # Normal routing
-            if isinstance(last_message, AIMessage) and last_message.tool_calls:
-                return "tools"
-
-            return END
+            return "tools"
 
         def after_tools(state: DMSAgentState) -> dict:
             """Update tool call counters after tools execute."""
@@ -342,33 +272,26 @@ class DMSAgent:
                 "round_count": new_round,
             }
 
-        def force_respond(state: DMSAgentState) -> dict:
-            """Force the model to respond with text, no more tool calls.
+        _FORCE_RESPOND_PROMPT = SystemMessage(content=(
+            "[系统指令] 你已经完成了所有工具调用。现在基于已获取的结果，"
+            "整合分析，直接给用户一个总结性的回答。用自然语言回复。"
+        ))
 
-            1. Strip orphaned AIMessages (tool_calls never executed → API rejects them)
-            2. Try tool_choice="none" so the model can't make tool calls at API level
-            3. If that fails, use llm_no_tools
-            4. Post-process: strip any XML tool-call text hallucination from content
-            """
+        def force_respond(state: DMSAgentState) -> dict:
+            """Force the model to respond with text, no more tool calls."""
+            # Strip orphaned AIMessages with unexecuted tool_calls
             messages = list(state["messages"])
             while messages and isinstance(messages[-1], AIMessage) and getattr(messages[-1], "tool_calls", None):
                 messages.pop()
 
-            stop_message = SystemMessage(content=(
-                "[系统指令] 你已经完成了所有工具调用。现在基于已获取的结果，"
-                "整合分析，直接给用户一个总结性的回答。用自然语言回复。"
-            ))
-
-            # Try tool_choice="none" first — prevents tool calls at API level
+            # Prefer tool_choice="none", fall back to llm_no_tools
             try:
-                llm_restricted = self.llm.bind_tools(self.tools, tool_choice="none")
-                response = llm_restricted.invoke([stop_message] + messages)
+                restricted = self.llm.bind_tools(self.tools, tool_choice="none")
+                response = restricted.invoke([_FORCE_RESPOND_PROMPT] + messages)
             except Exception:
-                response = llm_no_tools.invoke([stop_message] + messages)
+                response = llm_no_tools.invoke([_FORCE_RESPOND_PROMPT] + messages)
 
-            # Strip any XML tool-call text that DeepSeek may have hallucinated
-            content = response.content or ""
-            content = _strip_xml(content)
+            content = strip_xml(response.content or "")
             return {"messages": [AIMessage(content=content)]}
 
         graph = StateGraph(DMSAgentState)

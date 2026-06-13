@@ -126,49 +126,36 @@ class StandardKnowledgeBase:
             return None
 
     def _build_embeddings(self) -> HuggingFaceEmbeddings:
-        """根据环境变量初始化本地 Embeddings，避免联网请求。"""
+        """根据本地缓存状态初始化 Embeddings，优先离线，允许首次联网下载。"""
 
-        model_kwargs = {}
-        model_name = self.embedding_model
         local_path = self._resolve_local_model_path()
-
         if local_path:
-            # 已有本地模型，强制离线使用本地快照
             os.environ["HF_HUB_OFFLINE"] = "1"
             os.environ["TRANSFORMERS_OFFLINE"] = "1"
-            model_kwargs["local_files_only"] = True
-            model_name = local_path
-        else:
-            # 本地模型不存在，允许联网下载一次
-            if os.getenv("HF_HUB_OFFLINE") == "1":
-                LOGGER.warning(
-                    "Local model not found; temporarily enabling online download."
-                )
-            os.environ.pop("HF_HUB_OFFLINE", None)
-            os.environ.pop("TRANSFORMERS_OFFLINE", None)
-        return HuggingFaceEmbeddings(
-            model_name=model_name,
-            model_kwargs=model_kwargs or None,
-        )
+            return HuggingFaceEmbeddings(
+                model_name=local_path,
+                model_kwargs={"local_files_only": True},
+            )
 
-    def _resolve_local_model_path(self) -> Optional[str]:
+        if os.getenv("HF_HUB_OFFLINE") == "1":
+            LOGGER.warning("Local model not found; enabling online download.")
+        os.environ.pop("HF_HUB_OFFLINE", None)
+        os.environ.pop("TRANSFORMERS_OFFLINE", None)
+        return HuggingFaceEmbeddings(model_name=self.embedding_model)
+
+    def _resolve_local_model_path(self) -> str | None:
         """尝试从本地 Hugging Face 缓存中解析模型快照路径。"""
 
-        cache_root = Path.home() / ".cache" / "huggingface" / "hub"
-        model_dir_name = "models--" + self.embedding_model.replace("/", "--")
-        snapshots_dir = cache_root / model_dir_name / "snapshots"
+        model_dir = "models--" + self.embedding_model.replace("/", "--")
+        snapshots_dir = Path.home() / ".cache" / "huggingface" / "hub" / model_dir / "snapshots"
         if not snapshots_dir.exists():
             return None
 
-        snapshots = sorted([p for p in snapshots_dir.iterdir() if p.is_dir()])
+        snapshots = sorted(p for p in snapshots_dir.iterdir() if p.is_dir())
         if not snapshots:
             return None
 
-        # 取最新的快照目录
-        latest = snapshots[-1]
-        if (latest / "config.json").exists():
-            return str(latest)
-        return str(latest)
+        return str(snapshots[-1])  # Latest snapshot
 
     def search_standard(self, query: str, k: int = 3) -> str:
         """根据查询语句返回最相关的国标条款文本（Top-K）。"""

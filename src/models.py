@@ -2,8 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime
-from typing import List
+from datetime import datetime, timezone
 
 from pydantic import BaseModel, Field
 
@@ -22,18 +21,19 @@ class EvaluationReport(BaseModel):
     """评估结果报告，包含合规评分与改进建议。"""
 
     compliance_score: float = Field(..., description="合规得分（0-100）")
-    issues: List[str] = Field(default_factory=list, description="发现的问题列表")
-    optimization_suggestions: List[str] = Field(
+    issues: list[str] = Field(default_factory=list, description="发现的问题列表")
+    optimization_suggestions: list[str] = Field(
         default_factory=list, description="代码优化建议列表"
     )
     summary: str = Field("", description="评估总结")
-    evaluated_at: datetime = Field(default_factory=datetime.utcnow, description="评估时间")
+    evaluated_at: datetime = Field(
+        default_factory=lambda: datetime.now(timezone.utc), description="评估时间"
+    )
 
 
 if __name__ == "__main__":
-    # 简单自测：初始化模型并打印
     log_data = DMSLogData(
-        timestamp=datetime.utcnow(),
+        timestamp=datetime.now(timezone.utc),
         fps=30.0,
         latency_ms=85.5,
         cpu_usage=23.4,

@@ -92,6 +92,17 @@ def read_code_file(file_path: str, start_line: int = 1, end_line: Optional[int] 
     return read_file_content(file_path, start_line, end_line)
 
 
+def _compute_stats(vals: list[float]) -> dict:
+    """Compute avg/max/min for a list of values."""
+    if not vals:
+        return {"avg": "N/A", "max": "N/A", "min": "N/A"}
+    return {
+        "avg": round(sum(vals) / len(vals), 2),
+        "max": round(max(vals), 2),
+        "min": round(min(vals), 2),
+    }
+
+
 @tool
 def parse_performance_logs(log_path: str) -> str:
     """解析 DMS 系统的性能日志 CSV 文件，返回 FPS、延迟、CPU、内存的统计指标。
@@ -125,21 +136,12 @@ def parse_performance_logs(log_path: str) -> str:
     cpu_vals = [x.cpu_usage for x in items if x.cpu_usage > 0]
     mem_vals = [x.memory_usage_mb for x in items if x.memory_usage_mb > 0]
 
-    def _stats(vals: list[float]) -> dict:
-        if not vals:
-            return {"avg": "N/A", "max": "N/A", "min": "N/A"}
-        return {
-            "avg": round(sum(vals) / len(vals), 2),
-            "max": round(max(vals), 2),
-            "min": round(min(vals), 2),
-        }
-
     result = {
         "样本数": len(items),
-        "FPS": _stats(fps_vals),
-        "延迟(ms)": _stats(lat_vals),
-        "CPU(%)": _stats(cpu_vals) if cpu_vals else "无数据",
-        "内存(MB)": _stats(mem_vals) if mem_vals else "无数据",
+        "FPS": _compute_stats(fps_vals),
+        "延迟(ms)": _compute_stats(lat_vals),
+        "CPU(%)": _compute_stats(cpu_vals) if cpu_vals else "无数据",
+        "内存(MB)": _compute_stats(mem_vals) if mem_vals else "无数据",
     }
 
     # DMS 专用判定
@@ -289,6 +291,25 @@ def modify_code(file_path: str, old_snippet: str, new_snippet: str) -> str:
     )
 
 
+def _compute_avg(items, field: str) -> float | None:
+    """Compute the average of a field from log items, excluding zero values."""
+    vals = [getattr(x, field) for x in items if getattr(x, field, 0) > 0]
+    return round(sum(vals) / len(vals), 2) if vals else None
+
+
+def _read_perf_csv(path_str: str) -> pd.DataFrame | None:
+    """Resolve and read a performance CSV file. Returns None on failure."""
+    path = Path(path_str)
+    if not path.is_absolute():
+        path = ROOT_DIR / path
+    if not path.exists():
+        return None
+    try:
+        return pd.read_csv(path)
+    except Exception:
+        return None
+
+
 @tool
 def compare_metrics(old_log: str, new_log: str) -> str:
     """对比优化前后的两份性能日志，分析各项指标的变化。
@@ -296,19 +317,8 @@ def compare_metrics(old_log: str, new_log: str) -> str:
       old_log - 优化前的 CSV 日志路径
       new_log - 优化后的 CSV 日志路径
     """
-    def _read_csv(p: str) -> pd.DataFrame | None:
-        path = Path(p)
-        if not path.is_absolute():
-            path = ROOT_DIR / path
-        if not path.exists():
-            return None
-        try:
-            return pd.read_csv(path)
-        except Exception:
-            return None
-
-    df_old = _read_csv(old_log)
-    df_new = _read_csv(new_log)
+    df_old = _read_perf_csv(old_log)
+    df_new = _read_perf_csv(new_log)
 
     if df_old is None:
         return f"旧日志文件不存在或无法读取: {old_log}"
@@ -316,11 +326,6 @@ def compare_metrics(old_log: str, new_log: str) -> str:
         return f"新日志文件不存在或无法读取: {new_log}"
 
     parser = _get_log_parser()
-
-    def _avg(items, field):
-        vals = [getattr(x, field) for x in items if getattr(x, field, 0) > 0]
-        return round(sum(vals) / len(vals), 2) if vals else None
-
     old_items = list(parser._rows_to_models(df_old))
     new_items = list(parser._rows_to_models(df_new))
 
@@ -330,8 +335,8 @@ def compare_metrics(old_log: str, new_log: str) -> str:
     lines = ["## 优化前后对比\n", f"| 指标 | 优化前 | 优化后 | 变化 | 判定 |", "|------|--------|--------|------|------|"]
 
     for m in metrics:
-        old_val = _avg(old_items, m)
-        new_val = _avg(new_items, m)
+        old_val = _compute_avg(old_items, m)
+        new_val = _compute_avg(new_items, m)
         if old_val is None or new_val is None:
             continue
         change = round(new_val - old_val, 2)

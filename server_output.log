@@ -1,0 +1,822 @@
+E:\code\project\DMS_Agent_Project\server.py:43: DeprecationWarning: 
+        on_event is deprecated, use lifespan event handlers instead.
+
+        Read more about it in the
+        [FastAPI docs for Lifespan Events](https://fastapi.tiangolo.com/advanced/events/).
+        
+  @app.on_event("startup")
+E:\code\project\DMS_Agent_Project\server.py:48: DeprecationWarning: 
+        on_event is deprecated, use lifespan event handlers instead.
+
+        Read more about it in the
+        [FastAPI docs for Lifespan Events](https://fastapi.tiangolo.com/advanced/events/).
+        
+  @app.on_event("shutdown")
+[2026-06-13 18:51:09,643] INFO dms: Starting DMS Agent on http://127.0.0.1:8002
+INFO:     Started server process [7696]
+INFO:     Waiting for application startup.
+[2026-06-13 18:51:09,709] INFO dms: DMS Agent server starting on http://127.0.0.1:8002
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:8002 (Press CTRL+C to quit)
+INFO:     127.0.0.1:62102 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54226 - "WebSocket /ws/75273345361e" [accepted]
+INFO:     connection open
+INFO:     connection closed
+INFO:     127.0.0.1:54237 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50645 - "GET / HTTP/1.1" 200 OK
+[2026-06-13 18:51:38,113] INFO dms: Session cbfa2e78ac5e created (agent initializing in background)
+[2026-06-13 18:51:38,121] INFO dms: Session cbfa2e78ac5e: restored 0/130 files from local session
+INFO:     127.0.0.1:50645 - "POST /api/session HTTP/1.1" 200 OK
+E:\anaconda3\Lib\site-packages\langgraph\cache\base\__init__.py:8: LangChainPendingDeprecationWarning: The default value of `allowed_objects` will change in a future version. Pass an explicit value (e.g., allowed_objects='messages' or allowed_objects='core') to suppress this warning.
+  from langgraph.checkpoint.serde.jsonplus import JsonPlusSerializer
+INFO:     127.0.0.1:50645 - "GET /api/session/cbfa2e78ac5e/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50645 - "GET /api/session/cbfa2e78ac5e/status HTTP/1.1" 200 OK
+[2026-06-13 18:51:39,645] INFO dms: Loading existing FAISS index from data\standards\faiss_index
+INFO:     127.0.0.1:50645 - "GET /api/session/cbfa2e78ac5e/status HTTP/1.1" 200 OK
+Loading weights:   0%|          | 0/199 [00:00<?, ?it/s]Loading weights: 100%|¨€¨€¨€¨€¨€¨€¨€¨€¨€¨€| 199/199 [00:00<00:00, 5919.75it/s]
+[1mBertModel LOAD REPORT[0m from: C:\Users\F1bre\.cache\huggingface\hub\models--sentence-transformers--paraphrase-multilingual-MiniLM-L12-v2\snapshots\e8f8c211226b894fcb81acc59f3b34ba3efd5f42
+Key                     | Status     |  | 
+------------------------+------------+--+-
+embeddings.position_ids | UNEXPECTED |  | 
+
+Notes:
+- UNEXPECTED:	can be ignored when loading from different task/architecture; not ok if you expect identical arch.
+INFO:     127.0.0.1:50645 - "GET /api/session/cbfa2e78ac5e/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50645 - "GET /api/session/cbfa2e78ac5e/status HTTP/1.1" 200 OK
+[2026-06-13 18:51:44,457] INFO dms: Session 6412e9d1247d created (agent initializing in background)
+[2026-06-13 18:51:45,140] INFO dms: Session 6412e9d1247d: restored 0/130 files from local session
+INFO:     127.0.0.1:50645 - "POST /api/session HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50645 - "GET /api/session/6412e9d1247d/status HTTP/1.1" 200 OK
+[2026-06-13 18:51:45,856] INFO dms: Session 49ef7974e912 created (agent initializing in background)
+INFO:     127.0.0.1:50645 - "POST /api/session HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50645 - "GET /api/session/49ef7974e912/status HTTP/1.1" 200 OK
+[2026-06-13 18:51:46,288] INFO dms: Session KB: rebuilt index from 2 files (66 chunks)
+[2026-06-13 18:51:46,343] INFO dms: DMS Agent initialized with 9 tools (custom StateGraph)
+[2026-06-13 18:51:46,344] INFO dms: Session cbfa2e78ac5e: agent ready (KB: 2 docs)
+[2026-06-13 18:51:46,361] INFO dms: Session KB: rebuilt index from 2 files (66 chunks)
+INFO:     127.0.0.1:50645 - "GET /api/session/49ef7974e912/status HTTP/1.1" 200 OK
+[2026-06-13 18:51:46,389] INFO dms: DMS Agent initialized with 9 tools (custom StateGraph)
+[2026-06-13 18:51:46,390] INFO dms: Session 6412e9d1247d: agent ready (KB: 2 docs)
+[2026-06-13 18:51:46,711] INFO dms: Session 0efe1e9db53b created (agent initializing in background)
+[2026-06-13 18:51:47,291] INFO dms: DMS Agent initialized with 9 tools (custom StateGraph)
+[2026-06-13 18:51:47,304] INFO dms: Session 49ef7974e912: agent ready (KB: 0 docs)
+[2026-06-13 18:51:47,379] INFO dms: Session 0efe1e9db53b: restored 0/130 files from local session
+INFO:     127.0.0.1:50645 - "POST /api/session HTTP/1.1" 200 OK
+[2026-06-13 18:51:47,382] INFO dms: Session e872b6176e5b created (agent initializing in background)
+INFO:     127.0.0.1:56850 - "POST /api/session HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56850 - "GET /api/session/e872b6176e5b/status HTTP/1.1" 200 OK
+[2026-06-13 18:51:47,410] INFO dms: DMS Agent initialized with 9 tools (custom StateGraph)
+[2026-06-13 18:51:47,410] INFO dms: Session e872b6176e5b: agent ready (KB: 0 docs)
+INFO:     127.0.0.1:56850 - "GET /api/session/e872b6176e5b/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56850 - "GET /api/session/e872b6176e5b/knowledge HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50645 - "GET /api/session/e872b6176e5b/reports HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57781 - "WebSocket /ws/e872b6176e5b" [accepted]
+INFO:     connection open
+INFO:     127.0.0.1:61947 - "GET /api/session/e872b6176e5b/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50645 - "GET /api/session/e872b6176e5b/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61947 - "GET /api/session/e872b6176e5b/knowledge HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56850 - "GET /api/session/e872b6176e5b/reports HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50645 - "GET /api/session/e872b6176e5b/knowledge HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49184 - "WebSocket /ws/e872b6176e5b" [accepted]
+INFO:     127.0.0.1:58376 - "GET /api/session/e872b6176e5b/status HTTP/1.1" 200 OK
+INFO:     connection open
+INFO:     127.0.0.1:60826 - "GET /api/session/e872b6176e5b/reports HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58376 - "GET /api/session/e872b6176e5b/knowledge HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50645 - "GET /api/session/e872b6176e5b/reports HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52960 - "WebSocket /ws/e872b6176e5b" [accepted]
+INFO:     connection open
+INFO:     127.0.0.1:62900 - "WebSocket /ws/e872b6176e5b" [accepted]
+INFO:     connection open
+[2026-06-13 18:51:48,427] INFO dms: Session KB: rebuilt index from 2 files (66 chunks)
+[2026-06-13 18:51:48,457] INFO dms: DMS Agent initialized with 9 tools (custom StateGraph)
+[2026-06-13 18:51:48,457] INFO dms: Session 0efe1e9db53b: agent ready (KB: 2 docs)
+[2026-06-13 18:51:56,247] INFO dms: Session e872b6176e5b: uploaded Ô´´úÂë/best2.py (7339 bytes)
+INFO:     127.0.0.1:50571 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:51:56,254] INFO dms: Session e872b6176e5b: uploaded Ô´´úÂë/extract_eye.py (2263 bytes)
+INFO:     127.0.0.1:50571 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:51:56,260] INFO dms: Session e872b6176e5b: uploaded Ô´´úÂë/NoPhone.mp3 (22077 bytes)
+INFO:     127.0.0.1:50571 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:51:56,267] INFO dms: Session e872b6176e5b: uploaded Ô´´úÂë/NoSmoking.mp3 (23229 bytes)
+INFO:     127.0.0.1:50571 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:51:56,333] INFO dms: Session e872b6176e5b: uploaded Ô´´úÂë/phone_best.onnx (12132940 bytes)
+INFO:     127.0.0.1:50571 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:51:56,342] INFO dms: Session e872b6176e5b: uploaded Ô´´úÂë/process_video.py (6799 bytes)
+INFO:     127.0.0.1:50571 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:51:56,349] INFO dms: Session e872b6176e5b: uploaded Ô´´úÂë/requirements.txt (146 bytes)
+INFO:     127.0.0.1:50571 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:51:56,368] INFO dms: Session e872b6176e5b: uploaded Ô´´úÂë/retinaface.pt (1857001 bytes)
+INFO:     127.0.0.1:50571 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:51:56,375] INFO dms: Session e872b6176e5b: uploaded Ô´´úÂë/save_image.py (690 bytes)
+INFO:     127.0.0.1:50571 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:51:56,383] INFO dms: Session e872b6176e5b: uploaded Ô´´úÂë/severefatigue.mp3 (29709 bytes)
+INFO:     127.0.0.1:50571 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:51:56,390] INFO dms: Session e872b6176e5b: uploaded Ô´´úÂë/shufflenet_v2.py (6453 bytes)
+INFO:     127.0.0.1:50571 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:51:56,396] INFO dms: Session e872b6176e5b: uploaded Ô´´úÂë/slim.py (13916 bytes)
+INFO:     127.0.0.1:50571 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:51:56,404] INFO dms: Session e872b6176e5b: uploaded Ô´´úÂë/state.py (6100 bytes)
+INFO:     127.0.0.1:50571 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:51:56,411] INFO dms: Session e872b6176e5b: uploaded Ô´´úÂë/__pycache__/extract_eye.cpython-310.pyc (1891 bytes)
+INFO:     127.0.0.1:50571 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:51:56,419] INFO dms: Session e872b6176e5b: uploaded Ô´´úÂë/__pycache__/extract_eye.cpython-311.pyc (4634 bytes)
+INFO:     127.0.0.1:50571 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:51:56,425] INFO dms: Session e872b6176e5b: uploaded Ô´´úÂë/__pycache__/extract_eye.cpython-39.pyc (1857 bytes)
+INFO:     127.0.0.1:50571 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:51:56,434] INFO dms: Session e872b6176e5b: uploaded Ô´´úÂë/__pycache__/shufflenet_v2.cpython-39.pyc (5204 bytes)
+INFO:     127.0.0.1:50571 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:51:56,440] INFO dms: Session e872b6176e5b: uploaded Ô´´úÂë/__pycache__/slim.cpython-39.pyc (10725 bytes)
+INFO:     127.0.0.1:50571 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:51:56,449] INFO dms: Session e872b6176e5b: uploaded Ô´´úÂë/__pycache__/state.cpython-310.pyc (3792 bytes)
+INFO:     127.0.0.1:50571 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:51:56,457] INFO dms: Session e872b6176e5b: uploaded Ô´´úÂë/__pycache__/state.cpython-311.pyc (8476 bytes)
+INFO:     127.0.0.1:50571 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:51:56,464] INFO dms: Session e872b6176e5b: uploaded Ô´´úÂë/__pycache__/state.cpython-39.pyc (3777 bytes)
+INFO:     127.0.0.1:50571 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:51:56,471] INFO dms: Session e872b6176e5b: uploaded Ô´´úÂë/utils/anchors.py (1649 bytes)
+INFO:     127.0.0.1:50571 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:51:56,481] INFO dms: Session e872b6176e5b: uploaded Ô´´úÂë/utils/callbacks.py (1876 bytes)
+INFO:     127.0.0.1:50571 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:51:56,489] INFO dms: Session e872b6176e5b: uploaded Ô´´úÂë/utils/config.py (1132 bytes)
+INFO:     127.0.0.1:50571 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:51:56,496] INFO dms: Session e872b6176e5b: uploaded Ô´´úÂë/utils/dataloader.py (7313 bytes)
+INFO:     127.0.0.1:50571 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:51:56,504] INFO dms: Session e872b6176e5b: uploaded Ô´´úÂë/utils/utils.py (916 bytes)
+INFO:     127.0.0.1:50571 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:51:56,511] INFO dms: Session e872b6176e5b: uploaded Ô´´úÂë/utils/utils_bbox.py (4082 bytes)
+INFO:     127.0.0.1:50571 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:51:56,519] INFO dms: Session e872b6176e5b: uploaded Ô´´úÂë/utils/utils_fit.py (2699 bytes)
+INFO:     127.0.0.1:50571 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:51:56,526] INFO dms: Session e872b6176e5b: uploaded Ô´´úÂë/utils/utils_map.py (7727 bytes)
+INFO:     127.0.0.1:50571 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:51:56,537] INFO dms: Session e872b6176e5b: uploaded Ô´´úÂë/utils/__init__.py (1 bytes)
+INFO:     127.0.0.1:50571 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:51:56,545] INFO dms: Session e872b6176e5b: uploaded Ô´´úÂë/utils/__pycache__/anchors.cpython-310.pyc (1756 bytes)
+INFO:     127.0.0.1:50571 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:51:56,555] INFO dms: Session e872b6176e5b: uploaded Ô´´úÂë/utils/__pycache__/anchors.cpython-311.pyc (3233 bytes)
+INFO:     127.0.0.1:50571 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:51:56,563] INFO dms: Session e872b6176e5b: uploaded Ô´´úÂë/utils/__pycache__/anchors.cpython-39.pyc (1752 bytes)
+INFO:     127.0.0.1:50571 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:51:56,572] INFO dms: Session e872b6176e5b: uploaded Ô´´úÂë/utils/__pycache__/config.cpython-310.pyc (611 bytes)
+INFO:     127.0.0.1:50571 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:51:56,579] INFO dms: Session e872b6176e5b: uploaded Ô´´úÂë/utils/__pycache__/config.cpython-311.pyc (729 bytes)
+INFO:     127.0.0.1:50571 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:51:56,586] INFO dms: Session e872b6176e5b: uploaded Ô´´úÂë/utils/__pycache__/config.cpython-39.pyc (583 bytes)
+INFO:     127.0.0.1:50571 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:51:56,593] INFO dms: Session e872b6176e5b: uploaded Ô´´úÂë/utils/__pycache__/detect_face.cpython-311.pyc (23302 bytes)
+INFO:     127.0.0.1:50571 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:51:56,603] INFO dms: Session e872b6176e5b: uploaded Ô´´úÂë/utils/__pycache__/detect_face.cpython-39.pyc (10055 bytes)
+INFO:     127.0.0.1:50571 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:51:56,613] INFO dms: Session e872b6176e5b: uploaded Ô´´úÂë/utils/__pycache__/utils.cpython-310.pyc (926 bytes)
+INFO:     127.0.0.1:50571 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:51:56,621] INFO dms: Session e872b6176e5b: uploaded Ô´´úÂë/utils/__pycache__/utils.cpython-311.pyc (1522 bytes)
+INFO:     127.0.0.1:50571 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:51:56,629] INFO dms: Session e872b6176e5b: uploaded Ô´´úÂë/utils/__pycache__/utils.cpython-39.pyc (896 bytes)
+INFO:     127.0.0.1:50571 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:51:56,646] INFO dms: Session e872b6176e5b: uploaded Ô´´úÂë/utils/__pycache__/utils_bbox.cpython-310.pyc (2725 bytes)
+INFO:     127.0.0.1:50571 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:51:56,655] INFO dms: Session e872b6176e5b: uploaded Ô´´úÂë/utils/__pycache__/utils_bbox.cpython-311.pyc (5576 bytes)
+INFO:     127.0.0.1:50571 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:51:56,664] INFO dms: Session e872b6176e5b: uploaded Ô´´úÂë/utils/__pycache__/utils_bbox.cpython-39.pyc (2697 bytes)
+INFO:     127.0.0.1:50571 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:51:56,671] INFO dms: Session e872b6176e5b: uploaded Ô´´úÂë/utils/__pycache__/__init__.cpython-310.pyc (150 bytes)
+INFO:     127.0.0.1:50571 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:51:56,679] INFO dms: Session e872b6176e5b: uploaded Ô´´úÂë/utils/__pycache__/__init__.cpython-311.pyc (154 bytes)
+INFO:     127.0.0.1:50571 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:51:56,688] INFO dms: Session e872b6176e5b: uploaded Ô´´úÂë/utils/__pycache__/__init__.cpython-39.pyc (122 bytes)
+INFO:     127.0.0.1:50571 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:51:56,695] INFO dms: Session e872b6176e5b: uploaded Ô´´úÂë/nets/mobilenetv2.py (4750 bytes)
+INFO:     127.0.0.1:50571 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:51:56,707] INFO dms: Session e872b6176e5b: uploaded Ô´´úÂë/nets/__pycache__/mobilenetv2.cpython-311.pyc (7816 bytes)
+INFO:     127.0.0.1:50571 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:51:56,715] INFO dms: Session e872b6176e5b: uploaded Ô´´úÂë/nets/__pycache__/mobilenetv2.cpython-39.pyc (3952 bytes)
+INFO:     127.0.0.1:50571 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:51:56,724] INFO dms: Session e872b6176e5b: uploaded Ô´´úÂë/models/layers.py (4533 bytes)
+INFO:     127.0.0.1:50571 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:51:56,732] INFO dms: Session e872b6176e5b: uploaded Ô´´úÂë/models/mobilenet025.py (1922 bytes)
+INFO:     127.0.0.1:50571 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:51:56,742] INFO dms: Session e872b6176e5b: uploaded Ô´´úÂë/models/mobilenetv2.py (4750 bytes)
+INFO:     127.0.0.1:50571 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:51:56,751] INFO dms: Session e872b6176e5b: uploaded Ô´´úÂë/models/mtcnn.py (18526 bytes)
+INFO:     127.0.0.1:50571 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:51:56,762] INFO dms: Session e872b6176e5b: uploaded Ô´´úÂë/models/retinaface.py (21932 bytes)
+INFO:     127.0.0.1:50571 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:51:56,769] INFO dms: Session e872b6176e5b: uploaded Ô´´úÂë/models/retinaface2.py (6377 bytes)
+INFO:     127.0.0.1:50571 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:51:56,779] INFO dms: Session e872b6176e5b: uploaded Ô´´úÂë/models/shufflenet_v2.py (6453 bytes)
+INFO:     127.0.0.1:50571 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:51:56,787] INFO dms: Session e872b6176e5b: uploaded Ô´´úÂë/models/slim.py (13916 bytes)
+INFO:     127.0.0.1:50571 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:51:56,796] INFO dms: Session e872b6176e5b: uploaded Ô´´úÂë/models/__pycache__/layers.cpython-310.pyc (2731 bytes)
+INFO:     127.0.0.1:50571 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:51:56,805] INFO dms: Session e872b6176e5b: uploaded Ô´´úÂë/models/__pycache__/layers.cpython-311.pyc (5619 bytes)
+INFO:     127.0.0.1:50571 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:51:56,816] INFO dms: Session e872b6176e5b: uploaded Ô´´úÂë/models/__pycache__/layers.cpython-39.pyc (2793 bytes)
+INFO:     127.0.0.1:50571 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:51:56,827] INFO dms: Session e872b6176e5b: uploaded Ô´´úÂë/models/__pycache__/mobilenet025.cpython-310.pyc (1710 bytes)
+INFO:     127.0.0.1:50571 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:51:56,833] INFO dms: Session e872b6176e5b: uploaded Ô´´úÂë/models/__pycache__/mobilenet025.cpython-311.pyc (3573 bytes)
+INFO:     127.0.0.1:50571 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:51:56,842] INFO dms: Session e872b6176e5b: uploaded Ô´´úÂë/models/__pycache__/mobilenet025.cpython-39.pyc (1692 bytes)
+INFO:     127.0.0.1:50571 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:51:56,852] INFO dms: Session e872b6176e5b: uploaded Ô´´úÂë/models/__pycache__/mtcnn.cpython-311.pyc (27666 bytes)
+INFO:     127.0.0.1:50571 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:51:56,861] INFO dms: Session e872b6176e5b: uploaded Ô´´úÂë/models/__pycache__/mtcnn.cpython-39.pyc (15294 bytes)
+INFO:     127.0.0.1:50571 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:51:56,870] INFO dms: Session e872b6176e5b: uploaded Ô´´úÂë/models/__pycache__/retinaface.cpython-310.pyc (7296 bytes)
+INFO:     127.0.0.1:50571 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:51:56,879] INFO dms: Session e872b6176e5b: uploaded Ô´´úÂë/models/__pycache__/retinaface.cpython-311.pyc (19331 bytes)
+INFO:     127.0.0.1:50571 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:51:56,890] INFO dms: Session e872b6176e5b: uploaded Ô´´úÂë/models/__pycache__/retinaface.cpython-39.pyc (7173 bytes)
+INFO:     127.0.0.1:50571 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:51:56,900] INFO dms: Session e872b6176e5b: uploaded Ô´´úÂë/models/__pycache__/retinaface2.cpython-310.pyc (4872 bytes)
+INFO:     127.0.0.1:50571 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:51:56,909] INFO dms: Session e872b6176e5b: uploaded Ô´´úÂë/models/__pycache__/retinaface2.cpython-311.pyc (9908 bytes)
+INFO:     127.0.0.1:50571 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:51:56,921] INFO dms: Session e872b6176e5b: uploaded Ô´´úÂë/models/__pycache__/retinaface2.cpython-39.pyc (5228 bytes)
+INFO:     127.0.0.1:50571 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:51:56,933] INFO dms: Session e872b6176e5b: uploaded Ô´´úÂë/models/__pycache__/shufflenet_v2.cpython-311.pyc (10589 bytes)
+INFO:     127.0.0.1:50571 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:51:56,942] INFO dms: Session e872b6176e5b: uploaded Ô´´úÂë/models/__pycache__/shufflenet_v2.cpython-39.pyc (5211 bytes)
+INFO:     127.0.0.1:50571 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:51:56,952] INFO dms: Session e872b6176e5b: uploaded Ô´´úÂë/models/__pycache__/slim.cpython-311.pyc (23228 bytes)
+INFO:     127.0.0.1:50571 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:51:56,964] INFO dms: Session e872b6176e5b: uploaded Ô´´úÂë/models/__pycache__/slim.cpython-39.pyc (10732 bytes)
+INFO:     127.0.0.1:50571 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:51:56,978] INFO dms: Session e872b6176e5b: uploaded Ô´´úÂë/models/utils/detect_face.py (12259 bytes)
+INFO:     127.0.0.1:50571 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:51:56,988] INFO dms: Session e872b6176e5b: uploaded Ô´´úÂë/models/utils/download.py (3720 bytes)
+INFO:     127.0.0.1:50571 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:51:57,000] INFO dms: Session e872b6176e5b: uploaded Ô´´úÂë/models/utils/tensorflow2pytorch.py (16090 bytes)
+INFO:     127.0.0.1:50571 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:51:57,014] INFO dms: Session e872b6176e5b: uploaded Ô´´úÂë/models/utils/training.py (5128 bytes)
+INFO:     127.0.0.1:50571 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:51:57,031] INFO dms: Session e872b6176e5b: uploaded Ô´´úÂë/models/utils/__pycache__/detect_face.cpython-311.pyc (23319 bytes)
+INFO:     127.0.0.1:50571 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:51:57,045] INFO dms: Session e872b6176e5b: uploaded Ô´´úÂë/models/utils/__pycache__/detect_face.cpython-39.pyc (10055 bytes)
+INFO:     127.0.0.1:50571 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:51:57,056] INFO dms: Session e872b6176e5b: uploaded Ô´´úÂë/dms_logs/dms_log_20260610_130641.csv (22762 bytes)
+INFO:     127.0.0.1:50571 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:51:57,067] INFO dms: Session e872b6176e5b: uploaded Ô´´úÂë/dms_logs/dms_log_20260610_130753.csv (33217 bytes)
+INFO:     127.0.0.1:50571 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:51:57,079] INFO dms: Session e872b6176e5b: uploaded Ô´´úÂë/data/.gitignore (25 bytes)
+INFO:     127.0.0.1:50571 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:51:57,091] INFO dms: Session e872b6176e5b: uploaded Ô´´úÂë/data/facenet-pytorch-banner.png (199776 bytes)
+INFO:     127.0.0.1:50571 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:51:57,104] INFO dms: Session e872b6176e5b: uploaded Ô´´úÂë/data/multiface.jpg (300852 bytes)
+INFO:     127.0.0.1:50571 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:51:57,124] INFO dms: Session e872b6176e5b: uploaded Ô´´úÂë/data/multiface_detected.png (1289385 bytes)
+INFO:     127.0.0.1:50571 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:51:57,140] INFO dms: Session e872b6176e5b: uploaded Ô´´úÂë/data/onet.pt (1559269 bytes)
+INFO:     127.0.0.1:50571 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:51:57,148] INFO dms: Session e872b6176e5b: uploaded Ô´´úÂë/data/pnet.pt (28570 bytes)
+INFO:     127.0.0.1:50571 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:51:57,160] INFO dms: Session e872b6176e5b: uploaded Ô´´úÂë/data/rnet.pt (403147 bytes)
+INFO:     127.0.0.1:50571 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:51:57,173] INFO dms: Session e872b6176e5b: uploaded Ô´´úÂë/data/test_images_aligned/shea_whigham/1.png (79670 bytes)
+INFO:     127.0.0.1:50571 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:51:57,183] INFO dms: Session e872b6176e5b: uploaded Ô´´úÂë/data/test_images_aligned/paul_rudd/1.png (77359 bytes)
+INFO:     127.0.0.1:50571 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:51:57,194] INFO dms: Session e872b6176e5b: uploaded Ô´´úÂë/data/test_images_aligned/kate_siegel/1.png (77050 bytes)
+INFO:     127.0.0.1:50571 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:51:57,207] INFO dms: Session e872b6176e5b: uploaded Ô´´úÂë/data/test_images_aligned/bradley_cooper/1.png (77356 bytes)
+INFO:     127.0.0.1:50571 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:51:57,219] INFO dms: Session e872b6176e5b: uploaded Ô´´úÂë/data/test_images_aligned/angelina_jolie/1.png (77050 bytes)
+INFO:     127.0.0.1:50571 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:51:57,248] INFO dms: Session e872b6176e5b: uploaded Ô´´úÂë/data/test_images/shea_whigham/1.jpg (2752771 bytes)
+INFO:     127.0.0.1:50571 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:51:57,260] INFO dms: Session e872b6176e5b: uploaded Ô´´úÂë/data/test_images/paul_rudd/1.jpg (943200 bytes)
+INFO:     127.0.0.1:50571 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:51:57,271] INFO dms: Session e872b6176e5b: uploaded Ô´´úÂë/data/test_images/kate_siegel/1.jpg (785667 bytes)
+INFO:     127.0.0.1:50571 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:51:57,305] INFO dms: Session e872b6176e5b: uploaded Ô´´úÂë/data/test_images/bradley_cooper/1.jpg (4572058 bytes)
+INFO:     127.0.0.1:50571 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:51:57,315] INFO dms: Session e872b6176e5b: uploaded Ô´´úÂë/data/test_images/angelina_jolie/1.jpg (778604 bytes)
+INFO:     127.0.0.1:50571 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:51:57,335] INFO dms: Session e872b6176e5b: uploaded Ô´´úÂë/build/test2/Analysis-00.toc (1423499 bytes)
+INFO:     127.0.0.1:50571 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:51:57,353] INFO dms: Session e872b6176e5b: uploaded Ô´´úÂë/build/test2/base_library.zip (1437256 bytes)
+INFO:     127.0.0.1:50571 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:51:57,364] INFO dms: Session e872b6176e5b: uploaded Ô´´úÂë/build/test2/EXE-00.toc (625249 bytes)
+INFO:     127.0.0.1:50571 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:51:57,378] INFO dms: Session e872b6176e5b: uploaded Ô´´úÂë/build/test2/PKG-00.toc (625138 bytes)
+INFO:     127.0.0.1:50571 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:51:57,627] INFO dms: Session e872b6176e5b: uploaded Ô´´úÂë/build/test2/PYZ-00.pyz (46829648 bytes)
+INFO:     127.0.0.1:50571 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:51:57,641] INFO dms: Session e872b6176e5b: uploaded Ô´´úÂë/build/test2/PYZ-00.toc (798251 bytes)
+INFO:     127.0.0.1:50571 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:51:57,962] INFO dms: Session e872b6176e5b: uploaded Ô´´úÂë/build/test2/test2.pkg (63761065 bytes)
+INFO:     127.0.0.1:50571 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:51:57,974] INFO dms: Session e872b6176e5b: uploaded Ô´´úÂë/build/test2/warn-test2.txt (108562 bytes)
+INFO:     127.0.0.1:50571 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:51:58,036] INFO dms: Session e872b6176e5b: uploaded Ô´´úÂë/build/test2/xref-test2.html (10066192 bytes)
+INFO:     127.0.0.1:50571 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:51:58,043] INFO dms: Session e872b6176e5b: uploaded Ô´´úÂë/build/test2/localpycs/pyimod01_archive.pyc (5320 bytes)
+INFO:     127.0.0.1:50571 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:51:58,059] INFO dms: Session e872b6176e5b: uploaded Ô´´úÂë/build/test2/localpycs/pyimod02_importers.pyc (34080 bytes)
+INFO:     127.0.0.1:50571 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:51:58,074] INFO dms: Session e872b6176e5b: uploaded Ô´´úÂë/build/test2/localpycs/pyimod03_ctypes.pyc (7051 bytes)
+INFO:     127.0.0.1:50571 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:51:58,088] INFO dms: Session e872b6176e5b: uploaded Ô´´úÂë/build/test2/localpycs/struct.pyc (360 bytes)
+INFO:     127.0.0.1:50571 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:51:58,137] INFO dms: Session e872b6176e5b: uploaded Ô´´úÂë/assets/cigarette_best.pt (6266488 bytes)
+INFO:     127.0.0.1:50571 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:51:58,158] INFO dms: Session e872b6176e5b: uploaded Ô´´úÂë/assets/facenet_wofuse.tflite (1719212 bytes)
+INFO:     127.0.0.1:50571 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:51:58,169] INFO dms: Session e872b6176e5b: uploaded Ô´´úÂë/assets/gaze.pth (702738 bytes)
+INFO:     127.0.0.1:50571 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:51:58,182] INFO dms: Session e872b6176e5b: uploaded Ô´´úÂë/assets/gaze.tflite (645812 bytes)
+INFO:     127.0.0.1:50571 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:51:58,202] INFO dms: Session e872b6176e5b: uploaded Ô´´úÂë/assets/human_face_detector.dat (729940 bytes)
+INFO:     127.0.0.1:50571 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:51:58,221] INFO dms: Session e872b6176e5b: uploaded Ô´´úÂë/assets/Mobile-dep.02.pth (1146994 bytes)
+INFO:     127.0.0.1:50571 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:51:58,235] INFO dms: Session e872b6176e5b: uploaded Ô´´úÂë/assets/mobile_wofuse.tflite (995920 bytes)
+INFO:     127.0.0.1:50571 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:51:58,253] INFO dms: Session e872b6176e5b: uploaded Ô´´úÂë/assets/new_mob.pth (1146994 bytes)
+INFO:     127.0.0.1:50571 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:51:58,292] INFO dms: Session e872b6176e5b: uploaded Ô´´úÂë/assets/phone_best.pt (6253176 bytes)
+INFO:     127.0.0.1:50571 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:51:58,313] INFO dms: Session e872b6176e5b: uploaded Ô´´úÂë/assets/Retinaface_mobilenet0.25.pth (1789135 bytes)
+INFO:     127.0.0.1:50571 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:51:58,984] INFO dms: Session e872b6176e5b: uploaded Ô´´úÂë/assets/shape_predictor_face_landmarks.dat (99693937 bytes)
+INFO:     127.0.0.1:50571 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:51:59,014] INFO dms: Session e872b6176e5b: uploaded Ô´´úÂë/assets/shuffle0.33_2.best.pth (789132 bytes)
+INFO:     127.0.0.1:50571 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:51:59,039] INFO dms: Session e872b6176e5b: uploaded Ô´´úÂë/assets/shuffle0.50.pth (1411722 bytes)
+INFO:     127.0.0.1:50571 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:51:59,127] INFO dms: Session e872b6176e5b: uploaded Ô´´úÂë/assets/shuffle1.00.best.pth (6524170 bytes)
+INFO:     127.0.0.1:50571 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:51:59,140] INFO dms: Session e872b6176e5b: uploaded Ô´´úÂë/assets/shufflebest.pth (785610 bytes)
+INFO:     127.0.0.1:50571 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:51:59,154] INFO dms: Session e872b6176e5b: uploaded Ô´´úÂë/assets/wshuffle0.50.pth (719511 bytes)
+INFO:     127.0.0.1:50571 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:52:22,370] INFO dms: WS[e872b6176e5b] tool_start #1: scan_codebase
+[2026-06-13 18:52:22,371] INFO dms: WS[e872b6176e5b] tool_start #2: parse_performance_logs
+[2026-06-13 18:52:22,373] INFO dms: WS[e872b6176e5b] tool_start #3: parse_performance_logs
+[2026-06-13 18:52:22,374] INFO dms: WS[e872b6176e5b] tool_start #4: search_standards
+[2026-06-13 18:52:22,376] INFO dms: WS[e872b6176e5b] tool_start #5: search_web
+[2026-06-13 18:52:33,276] INFO dms: Agent round 1 complete: 5 total tool calls so far
+[2026-06-13 18:52:38,482] INFO dms: WS[e872b6176e5b] tool_start #6: read_code_file
+[2026-06-13 18:52:38,484] INFO dms: WS[e872b6176e5b] tool_start #7: read_code_file
+[2026-06-13 18:52:38,485] INFO dms: WS[e872b6176e5b] tool_start #8: analyze_code_structure
+[2026-06-13 18:52:38,490] INFO dms: WS[e872b6176e5b] tool_start #9: search_standards
+[2026-06-13 18:52:38,490] INFO dms: WS[e872b6176e5b] tool_start #10: search_web
+[2026-06-13 18:52:38,491] INFO dms: WS[e872b6176e5b] tool_start #11: read_code_file
+[2026-06-13 18:52:55,726] INFO dms: Agent round 2 complete: 11 total tool calls so far
+[2026-06-13 18:53:03,231] INFO dms: WS[e872b6176e5b] tool_start #12: read_code_file
+[2026-06-13 18:53:03,231] INFO dms: WS[e872b6176e5b] tool_start #13: read_code_file
+[2026-06-13 18:53:03,232] INFO dms: WS[e872b6176e5b] tool_start #14: read_code_file
+[2026-06-13 18:53:03,237] INFO dms: WS[e872b6176e5b] tool_start #15: search_standards
+[2026-06-13 18:53:03,238] INFO dms: WS[e872b6176e5b] tool_start #16: read_code_file
+[2026-06-13 18:53:03,240] INFO dms: WS[e872b6176e5b] tool_start #17: search_web
+INFO:     connection closed
+[2026-06-13 18:53:09,014] INFO dms: Session 27d938859817 created (agent initializing in background)
+INFO:     127.0.0.1:61392 - "POST /api/session HTTP/1.1" 200 OK
+[2026-06-13 18:53:09,047] INFO dms: DMS Agent initialized with 9 tools (custom StateGraph)
+[2026-06-13 18:53:09,047] INFO dms: Session 27d938859817: agent ready (KB: 0 docs)
+INFO:     127.0.0.1:61392 - "GET /api/session/27d938859817/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49203 - "WebSocket /ws/27d938859817" [accepted]
+INFO:     connection open
+INFO:     127.0.0.1:61392 - "GET /api/session/27d938859817/knowledge HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59979 - "GET /api/session/27d938859817/reports HTTP/1.1" 200 OK
+[2026-06-13 18:53:09,582] INFO dms: Session 27d938859817: WebSocket disconnected
+INFO:     connection closed
+[2026-06-13 18:53:09,589] INFO dms: Session a2a2f5085b2c created (agent initializing in background)
+[2026-06-13 18:53:09,615] INFO dms: DMS Agent initialized with 9 tools (custom StateGraph)
+[2026-06-13 18:53:09,616] INFO dms: Session a2a2f5085b2c: agent ready (KB: 0 docs)
+[2026-06-13 18:53:09,625] INFO dms: Session a2a2f5085b2c: restored 0/130 files from local session
+INFO:     127.0.0.1:59979 - "POST /api/session HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59979 - "GET /api/session/a2a2f5085b2c/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59979 - "GET /api/session/a2a2f5085b2c/knowledge HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62940 - "WebSocket /ws/a2a2f5085b2c" [accepted]
+INFO:     127.0.0.1:61392 - "GET /api/session/a2a2f5085b2c/reports HTTP/1.1" 200 OK
+INFO:     connection open
+[2026-06-13 18:53:12,504] INFO dms: Session a2a2f5085b2c: WebSocket disconnected
+INFO:     connection closed
+[2026-06-13 18:53:12,513] INFO dms: Session 95f265102fd1 created (agent initializing in background)
+INFO:     127.0.0.1:61392 - "POST /api/session HTTP/1.1" 200 OK
+[2026-06-13 18:53:12,540] INFO dms: DMS Agent initialized with 9 tools (custom StateGraph)
+[2026-06-13 18:53:12,540] INFO dms: Session 95f265102fd1: agent ready (KB: 0 docs)
+INFO:     127.0.0.1:61392 - "GET /api/session/95f265102fd1/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54482 - "WebSocket /ws/95f265102fd1" [accepted]
+INFO:     127.0.0.1:61392 - "GET /api/session/95f265102fd1/knowledge HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59979 - "GET /api/session/95f265102fd1/reports HTTP/1.1" 200 OK
+INFO:     connection open
+[2026-06-13 18:53:13,623] INFO dms: Session 95f265102fd1: WebSocket disconnected
+INFO:     connection closed
+[2026-06-13 18:53:13,634] INFO dms: Session 28d05dd78e33 created (agent initializing in background)
+INFO:     127.0.0.1:59979 - "POST /api/session HTTP/1.1" 200 OK
+[2026-06-13 18:53:13,661] INFO dms: DMS Agent initialized with 9 tools (custom StateGraph)
+[2026-06-13 18:53:13,661] INFO dms: Session 28d05dd78e33: agent ready (KB: 0 docs)
+INFO:     127.0.0.1:59979 - "GET /api/session/28d05dd78e33/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55558 - "WebSocket /ws/28d05dd78e33" [accepted]
+INFO:     127.0.0.1:59979 - "GET /api/session/28d05dd78e33/knowledge HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61392 - "GET /api/session/28d05dd78e33/reports HTTP/1.1" 200 OK
+INFO:     connection open
+[2026-06-13 18:53:15,736] INFO dms: Session 28d05dd78e33: WebSocket disconnected
+INFO:     connection closed
+[2026-06-13 18:53:15,748] INFO dms: Session e2558698cd0d created (agent initializing in background)
+INFO:     127.0.0.1:61392 - "POST /api/session HTTP/1.1" 200 OK
+[2026-06-13 18:53:15,773] INFO dms: DMS Agent initialized with 9 tools (custom StateGraph)
+[2026-06-13 18:53:15,773] INFO dms: Session e2558698cd0d: agent ready (KB: 0 docs)
+INFO:     127.0.0.1:61392 - "GET /api/session/e2558698cd0d/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61392 - "GET /api/session/e2558698cd0d/knowledge HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53178 - "WebSocket /ws/e2558698cd0d" [accepted]
+INFO:     127.0.0.1:59979 - "GET /api/session/e2558698cd0d/reports HTTP/1.1" 200 OK
+INFO:     connection open
+[2026-06-13 18:53:16,673] INFO dms: Session e2558698cd0d: WebSocket disconnected
+INFO:     connection closed
+[2026-06-13 18:53:16,682] INFO dms: Session a93c702b9db8 created (agent initializing in background)
+INFO:     127.0.0.1:59979 - "POST /api/session HTTP/1.1" 200 OK
+[2026-06-13 18:53:16,712] INFO dms: DMS Agent initialized with 9 tools (custom StateGraph)
+[2026-06-13 18:53:16,712] INFO dms: Session a93c702b9db8: agent ready (KB: 0 docs)
+INFO:     127.0.0.1:59979 - "GET /api/session/a93c702b9db8/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52852 - "WebSocket /ws/a93c702b9db8" [accepted]
+INFO:     127.0.0.1:59979 - "GET /api/session/a93c702b9db8/knowledge HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61392 - "GET /api/session/a93c702b9db8/reports HTTP/1.1" 200 OK
+INFO:     connection open
+[2026-06-13 18:53:18,335] INFO dms: Agent round 3 complete: 17 total tool calls so far
+[2026-06-13 18:53:19,933] INFO dms: Session a93c702b9db8: WebSocket disconnected
+INFO:     connection closed
+[2026-06-13 18:53:19,942] INFO dms: Session 12310bd70574 created (agent initializing in background)
+INFO:     127.0.0.1:61392 - "POST /api/session HTTP/1.1" 200 OK
+[2026-06-13 18:53:19,973] INFO dms: DMS Agent initialized with 9 tools (custom StateGraph)
+[2026-06-13 18:53:19,973] INFO dms: Session 12310bd70574: agent ready (KB: 0 docs)
+INFO:     127.0.0.1:61392 - "GET /api/session/12310bd70574/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61392 - "GET /api/session/12310bd70574/knowledge HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59979 - "GET /api/session/12310bd70574/reports HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62156 - "WebSocket /ws/12310bd70574" [accepted]
+INFO:     connection open
+[2026-06-13 18:53:21,038] INFO dms: Session 12310bd70574: WebSocket disconnected
+INFO:     connection closed
+[2026-06-13 18:53:21,060] INFO dms: Session e162ab64c19a created (agent initializing in background)
+INFO:     127.0.0.1:59979 - "POST /api/session HTTP/1.1" 200 OK
+[2026-06-13 18:53:21,091] INFO dms: DMS Agent initialized with 9 tools (custom StateGraph)
+[2026-06-13 18:53:21,092] INFO dms: Session e162ab64c19a: agent ready (KB: 0 docs)
+INFO:     127.0.0.1:59979 - "GET /api/session/e162ab64c19a/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59979 - "GET /api/session/e162ab64c19a/knowledge HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61392 - "GET /api/session/e162ab64c19a/reports HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58084 - "WebSocket /ws/e162ab64c19a" [accepted]
+INFO:     connection open
+[2026-06-13 18:53:27,795] INFO dms: WS[e872b6176e5b] tool_start #18: search_web
+[2026-06-13 18:53:27,795] INFO dms: WS[e872b6176e5b] tool_start #19: read_code_file
+[2026-06-13 18:53:27,797] INFO dms: WS[e872b6176e5b] tool_start #20: search_standards
+[2026-06-13 18:53:29,704] INFO dms: Session e162ab64c19a: uploaded Ô´´úÂë/best2.py (7339 bytes)
+INFO:     127.0.0.1:60267 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:53:29,711] INFO dms: Session e162ab64c19a: uploaded Ô´´úÂë/extract_eye.py (2263 bytes)
+INFO:     127.0.0.1:60267 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:53:29,716] INFO dms: Session e162ab64c19a: uploaded Ô´´úÂë/NoPhone.mp3 (22077 bytes)
+INFO:     127.0.0.1:60267 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:53:29,723] INFO dms: Session e162ab64c19a: uploaded Ô´´úÂë/NoSmoking.mp3 (23229 bytes)
+INFO:     127.0.0.1:60267 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:53:29,787] INFO dms: Session e162ab64c19a: uploaded Ô´´úÂë/phone_best.onnx (12132940 bytes)
+INFO:     127.0.0.1:60267 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:53:29,803] INFO dms: Session e162ab64c19a: uploaded Ô´´úÂë/process_video.py (6799 bytes)
+INFO:     127.0.0.1:60267 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:53:29,808] INFO dms: Session e162ab64c19a: uploaded Ô´´úÂë/requirements.txt (146 bytes)
+INFO:     127.0.0.1:60267 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:53:29,826] INFO dms: Session e162ab64c19a: uploaded Ô´´úÂë/retinaface.pt (1857001 bytes)
+INFO:     127.0.0.1:60267 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:53:29,833] INFO dms: Session e162ab64c19a: uploaded Ô´´úÂë/save_image.py (690 bytes)
+INFO:     127.0.0.1:60267 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:53:29,839] INFO dms: Session e162ab64c19a: uploaded Ô´´úÂë/severefatigue.mp3 (29709 bytes)
+INFO:     127.0.0.1:60267 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:53:29,845] INFO dms: Session e162ab64c19a: uploaded Ô´´úÂë/shufflenet_v2.py (6453 bytes)
+INFO:     127.0.0.1:60267 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:53:29,850] INFO dms: Session e162ab64c19a: uploaded Ô´´úÂë/slim.py (13916 bytes)
+INFO:     127.0.0.1:60267 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:53:29,859] INFO dms: Session e162ab64c19a: uploaded Ô´´úÂë/state.py (6100 bytes)
+INFO:     127.0.0.1:60267 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:53:29,867] INFO dms: Session e162ab64c19a: uploaded Ô´´úÂë/__pycache__/extract_eye.cpython-310.pyc (1891 bytes)
+INFO:     127.0.0.1:60267 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:53:29,875] INFO dms: Session e162ab64c19a: uploaded Ô´´úÂë/__pycache__/extract_eye.cpython-311.pyc (4634 bytes)
+INFO:     127.0.0.1:60267 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:53:29,881] INFO dms: Session e162ab64c19a: uploaded Ô´´úÂë/__pycache__/extract_eye.cpython-39.pyc (1857 bytes)
+INFO:     127.0.0.1:60267 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:53:29,887] INFO dms: Session e162ab64c19a: uploaded Ô´´úÂë/__pycache__/shufflenet_v2.cpython-39.pyc (5204 bytes)
+INFO:     127.0.0.1:60267 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:53:29,894] INFO dms: Session e162ab64c19a: uploaded Ô´´úÂë/__pycache__/slim.cpython-39.pyc (10725 bytes)
+INFO:     127.0.0.1:60267 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:53:29,900] INFO dms: Session e162ab64c19a: uploaded Ô´´úÂë/__pycache__/state.cpython-310.pyc (3792 bytes)
+INFO:     127.0.0.1:60267 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:53:29,906] INFO dms: Session e162ab64c19a: uploaded Ô´´úÂë/__pycache__/state.cpython-311.pyc (8476 bytes)
+INFO:     127.0.0.1:60267 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:53:29,913] INFO dms: Session e162ab64c19a: uploaded Ô´´úÂë/__pycache__/state.cpython-39.pyc (3777 bytes)
+INFO:     127.0.0.1:60267 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:53:29,919] INFO dms: Session e162ab64c19a: uploaded Ô´´úÂë/utils/anchors.py (1649 bytes)
+INFO:     127.0.0.1:60267 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:53:29,927] INFO dms: Session e162ab64c19a: uploaded Ô´´úÂë/utils/callbacks.py (1876 bytes)
+INFO:     127.0.0.1:60267 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:53:29,934] INFO dms: Session e162ab64c19a: uploaded Ô´´úÂë/utils/config.py (1132 bytes)
+INFO:     127.0.0.1:60267 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:53:29,943] INFO dms: Session e162ab64c19a: uploaded Ô´´úÂë/utils/dataloader.py (7313 bytes)
+INFO:     127.0.0.1:60267 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:53:29,949] INFO dms: Session e162ab64c19a: uploaded Ô´´úÂë/utils/utils.py (916 bytes)
+INFO:     127.0.0.1:60267 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:53:29,957] INFO dms: Session e162ab64c19a: uploaded Ô´´úÂë/utils/utils_bbox.py (4082 bytes)
+INFO:     127.0.0.1:60267 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:53:29,964] INFO dms: Session e162ab64c19a: uploaded Ô´´úÂë/utils/utils_fit.py (2699 bytes)
+INFO:     127.0.0.1:60267 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:53:29,976] INFO dms: Session e162ab64c19a: uploaded Ô´´úÂë/utils/utils_map.py (7727 bytes)
+INFO:     127.0.0.1:60267 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:53:29,984] INFO dms: Session e162ab64c19a: uploaded Ô´´úÂë/utils/__init__.py (1 bytes)
+INFO:     127.0.0.1:60267 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:53:29,996] INFO dms: Session e162ab64c19a: uploaded Ô´´úÂë/utils/__pycache__/anchors.cpython-310.pyc (1756 bytes)
+INFO:     127.0.0.1:60267 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:53:30,005] INFO dms: Session e162ab64c19a: uploaded Ô´´úÂë/utils/__pycache__/anchors.cpython-311.pyc (3233 bytes)
+INFO:     127.0.0.1:60267 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:53:30,019] INFO dms: Session e162ab64c19a: uploaded Ô´´úÂë/utils/__pycache__/anchors.cpython-39.pyc (1752 bytes)
+INFO:     127.0.0.1:60267 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:53:30,032] INFO dms: Session e162ab64c19a: uploaded Ô´´úÂë/utils/__pycache__/config.cpython-310.pyc (611 bytes)
+INFO:     127.0.0.1:60267 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:53:30,040] INFO dms: Session e162ab64c19a: uploaded Ô´´úÂë/utils/__pycache__/config.cpython-311.pyc (729 bytes)
+INFO:     127.0.0.1:60267 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:53:30,053] INFO dms: Session e162ab64c19a: uploaded Ô´´úÂë/utils/__pycache__/config.cpython-39.pyc (583 bytes)
+INFO:     127.0.0.1:60267 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:53:30,070] INFO dms: Session e162ab64c19a: uploaded Ô´´úÂë/utils/__pycache__/detect_face.cpython-311.pyc (23302 bytes)
+INFO:     127.0.0.1:60267 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:53:30,083] INFO dms: Session e162ab64c19a: uploaded Ô´´úÂë/utils/__pycache__/detect_face.cpython-39.pyc (10055 bytes)
+INFO:     127.0.0.1:60267 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:53:30,100] INFO dms: Session e162ab64c19a: uploaded Ô´´úÂë/utils/__pycache__/utils.cpython-310.pyc (926 bytes)
+INFO:     127.0.0.1:60267 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:53:30,111] INFO dms: Session e162ab64c19a: uploaded Ô´´úÂë/utils/__pycache__/utils.cpython-311.pyc (1522 bytes)
+INFO:     127.0.0.1:60267 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:53:30,122] INFO dms: Session e162ab64c19a: uploaded Ô´´úÂë/utils/__pycache__/utils.cpython-39.pyc (896 bytes)
+INFO:     127.0.0.1:60267 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:53:30,131] INFO dms: Session e162ab64c19a: uploaded Ô´´úÂë/utils/__pycache__/utils_bbox.cpython-310.pyc (2725 bytes)
+INFO:     127.0.0.1:60267 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:53:30,149] INFO dms: Session e162ab64c19a: uploaded Ô´´úÂë/utils/__pycache__/utils_bbox.cpython-311.pyc (5576 bytes)
+INFO:     127.0.0.1:60267 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:53:30,161] INFO dms: Session e162ab64c19a: uploaded Ô´´úÂë/utils/__pycache__/utils_bbox.cpython-39.pyc (2697 bytes)
+INFO:     127.0.0.1:60267 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:53:30,171] INFO dms: Session e162ab64c19a: uploaded Ô´´úÂë/utils/__pycache__/__init__.cpython-310.pyc (150 bytes)
+INFO:     127.0.0.1:60267 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:53:30,187] INFO dms: Session e162ab64c19a: uploaded Ô´´úÂë/utils/__pycache__/__init__.cpython-311.pyc (154 bytes)
+INFO:     127.0.0.1:60267 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:53:30,195] INFO dms: Session e162ab64c19a: uploaded Ô´´úÂë/utils/__pycache__/__init__.cpython-39.pyc (122 bytes)
+INFO:     127.0.0.1:60267 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:53:30,204] INFO dms: Session e162ab64c19a: uploaded Ô´´úÂë/nets/mobilenetv2.py (4750 bytes)
+INFO:     127.0.0.1:60267 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:53:30,216] INFO dms: Session e162ab64c19a: uploaded Ô´´úÂë/nets/__pycache__/mobilenetv2.cpython-311.pyc (7816 bytes)
+INFO:     127.0.0.1:60267 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:53:30,224] INFO dms: Session e162ab64c19a: uploaded Ô´´úÂë/nets/__pycache__/mobilenetv2.cpython-39.pyc (3952 bytes)
+INFO:     127.0.0.1:60267 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:53:30,233] INFO dms: Session e162ab64c19a: uploaded Ô´´úÂë/models/layers.py (4533 bytes)
+INFO:     127.0.0.1:60267 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:53:30,242] INFO dms: Session e162ab64c19a: uploaded Ô´´úÂë/models/mobilenet025.py (1922 bytes)
+INFO:     127.0.0.1:60267 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:53:30,251] INFO dms: Session e162ab64c19a: uploaded Ô´´úÂë/models/mobilenetv2.py (4750 bytes)
+INFO:     127.0.0.1:60267 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:53:30,257] INFO dms: Session e162ab64c19a: uploaded Ô´´úÂë/models/mtcnn.py (18526 bytes)
+INFO:     127.0.0.1:60267 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:53:30,265] INFO dms: Session e162ab64c19a: uploaded Ô´´úÂë/models/retinaface.py (21932 bytes)
+INFO:     127.0.0.1:60267 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:53:30,278] INFO dms: Session e162ab64c19a: uploaded Ô´´úÂë/models/retinaface2.py (6377 bytes)
+INFO:     127.0.0.1:60267 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:53:30,286] INFO dms: Session e162ab64c19a: uploaded Ô´´úÂë/models/shufflenet_v2.py (6453 bytes)
+INFO:     127.0.0.1:60267 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:53:30,297] INFO dms: Session e162ab64c19a: uploaded Ô´´úÂë/models/slim.py (13916 bytes)
+INFO:     127.0.0.1:60267 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:53:30,305] INFO dms: Session e162ab64c19a: uploaded Ô´´úÂë/models/__pycache__/layers.cpython-310.pyc (2731 bytes)
+INFO:     127.0.0.1:60267 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:53:30,316] INFO dms: Session e162ab64c19a: uploaded Ô´´úÂë/models/__pycache__/layers.cpython-311.pyc (5619 bytes)
+INFO:     127.0.0.1:60267 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:53:30,327] INFO dms: Session e162ab64c19a: uploaded Ô´´úÂë/models/__pycache__/layers.cpython-39.pyc (2793 bytes)
+INFO:     127.0.0.1:60267 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:53:30,335] INFO dms: Session e162ab64c19a: uploaded Ô´´úÂë/models/__pycache__/mobilenet025.cpython-310.pyc (1710 bytes)
+INFO:     127.0.0.1:60267 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:53:30,347] INFO dms: Session e162ab64c19a: uploaded Ô´´úÂë/models/__pycache__/mobilenet025.cpython-311.pyc (3573 bytes)
+INFO:     127.0.0.1:60267 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:53:30,357] INFO dms: Session e162ab64c19a: uploaded Ô´´úÂë/models/__pycache__/mobilenet025.cpython-39.pyc (1692 bytes)
+INFO:     127.0.0.1:60267 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:53:30,366] INFO dms: Session e162ab64c19a: uploaded Ô´´úÂë/models/__pycache__/mtcnn.cpython-311.pyc (27666 bytes)
+INFO:     127.0.0.1:60267 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:53:30,374] INFO dms: Session e162ab64c19a: uploaded Ô´´úÂë/models/__pycache__/mtcnn.cpython-39.pyc (15294 bytes)
+INFO:     127.0.0.1:60267 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:53:30,383] INFO dms: Session e162ab64c19a: uploaded Ô´´úÂë/models/__pycache__/retinaface.cpython-310.pyc (7296 bytes)
+INFO:     127.0.0.1:60267 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:53:30,392] INFO dms: Session e162ab64c19a: uploaded Ô´´úÂë/models/__pycache__/retinaface.cpython-311.pyc (19331 bytes)
+INFO:     127.0.0.1:60267 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:53:30,401] INFO dms: Session e162ab64c19a: uploaded Ô´´úÂë/models/__pycache__/retinaface.cpython-39.pyc (7173 bytes)
+INFO:     127.0.0.1:60267 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:53:30,410] INFO dms: Session e162ab64c19a: uploaded Ô´´úÂë/models/__pycache__/retinaface2.cpython-310.pyc (4872 bytes)
+INFO:     127.0.0.1:60267 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:53:30,417] INFO dms: Session e162ab64c19a: uploaded Ô´´úÂë/models/__pycache__/retinaface2.cpython-311.pyc (9908 bytes)
+INFO:     127.0.0.1:60267 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:53:30,427] INFO dms: Session e162ab64c19a: uploaded Ô´´úÂë/models/__pycache__/retinaface2.cpython-39.pyc (5228 bytes)
+INFO:     127.0.0.1:60267 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:53:30,434] INFO dms: Session e162ab64c19a: uploaded Ô´´úÂë/models/__pycache__/shufflenet_v2.cpython-311.pyc (10589 bytes)
+INFO:     127.0.0.1:60267 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:53:30,441] INFO dms: Session e162ab64c19a: uploaded Ô´´úÂë/models/__pycache__/shufflenet_v2.cpython-39.pyc (5211 bytes)
+INFO:     127.0.0.1:60267 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:53:30,447] INFO dms: Session e162ab64c19a: uploaded Ô´´úÂë/models/__pycache__/slim.cpython-311.pyc (23228 bytes)
+INFO:     127.0.0.1:60267 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:53:30,454] INFO dms: Session e162ab64c19a: uploaded Ô´´úÂë/models/__pycache__/slim.cpython-39.pyc (10732 bytes)
+INFO:     127.0.0.1:60267 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:53:30,460] INFO dms: Session e162ab64c19a: uploaded Ô´´úÂë/models/utils/detect_face.py (12259 bytes)
+INFO:     127.0.0.1:60267 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:53:30,474] INFO dms: Session e162ab64c19a: uploaded Ô´´úÂë/models/utils/download.py (3720 bytes)
+INFO:     127.0.0.1:60267 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:53:30,482] INFO dms: Session e162ab64c19a: uploaded Ô´´úÂë/models/utils/tensorflow2pytorch.py (16090 bytes)
+INFO:     127.0.0.1:60267 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:53:30,491] INFO dms: Session e162ab64c19a: uploaded Ô´´úÂë/models/utils/training.py (5128 bytes)
+INFO:     127.0.0.1:60267 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:53:30,503] INFO dms: Session e162ab64c19a: uploaded Ô´´úÂë/models/utils/__pycache__/detect_face.cpython-311.pyc (23319 bytes)
+INFO:     127.0.0.1:60267 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:53:30,510] INFO dms: Session e162ab64c19a: uploaded Ô´´úÂë/models/utils/__pycache__/detect_face.cpython-39.pyc (10055 bytes)
+INFO:     127.0.0.1:60267 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:53:30,519] INFO dms: Session e162ab64c19a: uploaded Ô´´úÂë/dms_logs/dms_log_20260610_130641.csv (22762 bytes)
+INFO:     127.0.0.1:60267 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:53:30,525] INFO dms: Session e162ab64c19a: uploaded Ô´´úÂë/dms_logs/dms_log_20260610_130753.csv (33217 bytes)
+INFO:     127.0.0.1:60267 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:53:30,533] INFO dms: Session e162ab64c19a: uploaded Ô´´úÂë/data/.gitignore (25 bytes)
+INFO:     127.0.0.1:60267 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:53:30,543] INFO dms: Session e162ab64c19a: uploaded Ô´´úÂë/data/facenet-pytorch-banner.png (199776 bytes)
+INFO:     127.0.0.1:60267 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:53:30,551] INFO dms: Session e162ab64c19a: uploaded Ô´´úÂë/data/multiface.jpg (300852 bytes)
+INFO:     127.0.0.1:60267 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:53:30,569] INFO dms: Session e162ab64c19a: uploaded Ô´´úÂë/data/multiface_detected.png (1289385 bytes)
+INFO:     127.0.0.1:60267 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:53:30,588] INFO dms: Session e162ab64c19a: uploaded Ô´´úÂë/data/onet.pt (1559269 bytes)
+INFO:     127.0.0.1:60267 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:53:30,596] INFO dms: Session e162ab64c19a: uploaded Ô´´úÂë/data/pnet.pt (28570 bytes)
+INFO:     127.0.0.1:60267 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:53:30,605] INFO dms: Session e162ab64c19a: uploaded Ô´´úÂë/data/rnet.pt (403147 bytes)
+INFO:     127.0.0.1:60267 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:53:30,613] INFO dms: Session e162ab64c19a: uploaded Ô´´úÂë/data/test_images_aligned/shea_whigham/1.png (79670 bytes)
+INFO:     127.0.0.1:60267 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:53:30,619] INFO dms: Session e162ab64c19a: uploaded Ô´´úÂë/data/test_images_aligned/paul_rudd/1.png (77359 bytes)
+INFO:     127.0.0.1:60267 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:53:30,628] INFO dms: Session e162ab64c19a: uploaded Ô´´úÂë/data/test_images_aligned/kate_siegel/1.png (77050 bytes)
+INFO:     127.0.0.1:60267 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:53:30,636] INFO dms: Session e162ab64c19a: uploaded Ô´´úÂë/data/test_images_aligned/bradley_cooper/1.png (77356 bytes)
+INFO:     127.0.0.1:60267 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:53:30,644] INFO dms: Session e162ab64c19a: uploaded Ô´´úÂë/data/test_images_aligned/angelina_jolie/1.png (77050 bytes)
+INFO:     127.0.0.1:60267 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:53:30,677] INFO dms: Session e162ab64c19a: uploaded Ô´´úÂë/data/test_images/shea_whigham/1.jpg (2752771 bytes)
+INFO:     127.0.0.1:60267 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:53:30,693] INFO dms: Session e162ab64c19a: uploaded Ô´´úÂë/data/test_images/paul_rudd/1.jpg (943200 bytes)
+INFO:     127.0.0.1:60267 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:53:30,703] INFO dms: Session e162ab64c19a: uploaded Ô´´úÂë/data/test_images/kate_siegel/1.jpg (785667 bytes)
+INFO:     127.0.0.1:60267 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:53:30,735] INFO dms: Session e162ab64c19a: uploaded Ô´´úÂë/data/test_images/bradley_cooper/1.jpg (4572058 bytes)
+INFO:     127.0.0.1:60267 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:53:30,752] INFO dms: Session e162ab64c19a: uploaded Ô´´úÂë/data/test_images/angelina_jolie/1.jpg (778604 bytes)
+INFO:     127.0.0.1:60267 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:53:30,772] INFO dms: Session e162ab64c19a: uploaded Ô´´úÂë/build/test2/Analysis-00.toc (1423499 bytes)
+INFO:     127.0.0.1:60267 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:53:30,792] INFO dms: Session e162ab64c19a: uploaded Ô´´úÂë/build/test2/base_library.zip (1437256 bytes)
+INFO:     127.0.0.1:60267 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:53:30,803] INFO dms: Session e162ab64c19a: uploaded Ô´´úÂë/build/test2/EXE-00.toc (625249 bytes)
+INFO:     127.0.0.1:60267 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:53:30,812] INFO dms: Session e162ab64c19a: uploaded Ô´´úÂë/build/test2/PKG-00.toc (625138 bytes)
+INFO:     127.0.0.1:60267 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:53:31,061] INFO dms: Session e162ab64c19a: uploaded Ô´´úÂë/build/test2/PYZ-00.pyz (46829648 bytes)
+INFO:     127.0.0.1:60267 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:53:31,075] INFO dms: Session e162ab64c19a: uploaded Ô´´úÂë/build/test2/PYZ-00.toc (798251 bytes)
+INFO:     127.0.0.1:60267 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:53:31,485] INFO dms: Session e162ab64c19a: uploaded Ô´´úÂë/build/test2/test2.pkg (63761065 bytes)
+INFO:     127.0.0.1:60267 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:53:31,497] INFO dms: Session e162ab64c19a: uploaded Ô´´úÂë/build/test2/warn-test2.txt (108562 bytes)
+INFO:     127.0.0.1:60267 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:53:31,557] INFO dms: Session e162ab64c19a: uploaded Ô´´úÂë/build/test2/xref-test2.html (10066192 bytes)
+INFO:     127.0.0.1:60267 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:53:31,567] INFO dms: Session e162ab64c19a: uploaded Ô´´úÂë/build/test2/localpycs/pyimod01_archive.pyc (5320 bytes)
+INFO:     127.0.0.1:60267 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:53:31,575] INFO dms: Session e162ab64c19a: uploaded Ô´´úÂë/build/test2/localpycs/pyimod02_importers.pyc (34080 bytes)
+INFO:     127.0.0.1:60267 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:53:31,587] INFO dms: Session e162ab64c19a: uploaded Ô´´úÂë/build/test2/localpycs/pyimod03_ctypes.pyc (7051 bytes)
+INFO:     127.0.0.1:60267 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:53:31,594] INFO dms: Session e162ab64c19a: uploaded Ô´´úÂë/build/test2/localpycs/struct.pyc (360 bytes)
+INFO:     127.0.0.1:60267 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:53:31,654] INFO dms: Session e162ab64c19a: uploaded Ô´´úÂë/assets/cigarette_best.pt (6266488 bytes)
+INFO:     127.0.0.1:60267 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:53:31,682] INFO dms: Session e162ab64c19a: uploaded Ô´´úÂë/assets/facenet_wofuse.tflite (1719212 bytes)
+INFO:     127.0.0.1:60267 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:53:31,693] INFO dms: Session e162ab64c19a: uploaded Ô´´úÂë/assets/gaze.pth (702738 bytes)
+INFO:     127.0.0.1:60267 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:53:31,708] INFO dms: Session e162ab64c19a: uploaded Ô´´úÂë/assets/gaze.tflite (645812 bytes)
+INFO:     127.0.0.1:60267 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:53:31,719] INFO dms: Session e162ab64c19a: uploaded Ô´´úÂë/assets/human_face_detector.dat (729940 bytes)
+INFO:     127.0.0.1:60267 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:53:31,744] INFO dms: Session e162ab64c19a: uploaded Ô´´úÂë/assets/Mobile-dep.02.pth (1146994 bytes)
+INFO:     127.0.0.1:60267 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:53:31,755] INFO dms: Session e162ab64c19a: uploaded Ô´´úÂë/assets/mobile_wofuse.tflite (995920 bytes)
+INFO:     127.0.0.1:60267 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:53:31,790] INFO dms: Session e162ab64c19a: uploaded Ô´´úÂë/assets/new_mob.pth (1146994 bytes)
+INFO:     127.0.0.1:60267 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:53:31,891] INFO dms: Session e162ab64c19a: uploaded Ô´´úÂë/assets/phone_best.pt (6253176 bytes)
+INFO:     127.0.0.1:60267 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:53:31,918] INFO dms: Session e162ab64c19a: uploaded Ô´´úÂë/assets/Retinaface_mobilenet0.25.pth (1789135 bytes)
+INFO:     127.0.0.1:60267 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:53:32,672] INFO dms: Session e162ab64c19a: uploaded Ô´´úÂë/assets/shape_predictor_face_landmarks.dat (99693937 bytes)
+INFO:     127.0.0.1:60267 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:53:32,688] INFO dms: Session e162ab64c19a: uploaded Ô´´úÂë/assets/shuffle0.33_2.best.pth (789132 bytes)
+INFO:     127.0.0.1:60267 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:53:32,706] INFO dms: Session e162ab64c19a: uploaded Ô´´úÂë/assets/shuffle0.50.pth (1411722 bytes)
+INFO:     127.0.0.1:60267 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:53:32,747] INFO dms: Session e162ab64c19a: uploaded Ô´´úÂë/assets/shuffle1.00.best.pth (6524170 bytes)
+INFO:     127.0.0.1:60267 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:53:32,758] INFO dms: Session e162ab64c19a: uploaded Ô´´úÂë/assets/shufflebest.pth (785610 bytes)
+INFO:     127.0.0.1:60267 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:53:32,775] INFO dms: Session e162ab64c19a: uploaded Ô´´úÂë/assets/wshuffle0.50.pth (719511 bytes)
+INFO:     127.0.0.1:60267 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 18:53:42,895] INFO dms: Agent round 4 complete: 20 total tool calls so far
+[2026-06-13 18:53:46,748] INFO dms: Session KB: added 'ÏµÍ³Éè¼ÆÎÄµµ.pdf' (45 chunks, index now has 1 docs)
+[2026-06-13 18:53:46,749] INFO dms: Session e162ab64c19a: knowledge doc 'ÏµÍ³Éè¼ÆÎÄµµ.pdf' added (1456979 bytes)
+INFO:     127.0.0.1:53881 - "POST /api/session/e162ab64c19a/knowledge HTTP/1.1" 200 OK
+[2026-06-13 18:53:46,755] INFO dms: WS[e872b6176e5b] tool_start #21: search_web
+[2026-06-13 18:53:46,756] INFO dms: WS[e872b6176e5b] tool_start #22: read_code_file
+[2026-06-13 18:53:54,570] INFO dms: WS[e162ab64c19a] tool_start #1: search_standards
+[2026-06-13 18:53:54,572] INFO dms: WS[e162ab64c19a] tool_start #2: parse_performance_logs
+[2026-06-13 18:53:54,578] INFO dms: WS[e162ab64c19a] tool_start #3: analyze_code_structure
+[2026-06-13 18:53:54,579] INFO dms: WS[e162ab64c19a] tool_start #4: parse_performance_logs
+[2026-06-13 18:53:54,580] INFO dms: WS[e162ab64c19a] tool_start #5: search_web
+[2026-06-13 18:53:58,691] INFO dms: Agent round 5 complete: 22 total tool calls so far
+[2026-06-13 18:54:03,852] INFO dms: WS[e872b6176e5b] tool_start #23: read_code_file
+[2026-06-13 18:54:03,858] INFO dms: Agent round 6 complete: 23 total tool calls so far
+[2026-06-13 18:54:05,005] INFO dms: Agent round 1 complete: 5 total tool calls so far
+[2026-06-13 18:54:13,013] INFO dms: WS[e162ab64c19a] tool_start #6: read_code_file
+[2026-06-13 18:54:13,014] INFO dms: WS[e162ab64c19a] tool_start #7: read_code_file
+[2026-06-13 18:54:13,016] INFO dms: WS[e162ab64c19a] tool_start #8: read_code_file
+[2026-06-13 18:54:13,017] INFO dms: WS[e162ab64c19a] tool_start #9: read_code_file
+[2026-06-13 18:54:13,020] INFO dms: WS[e162ab64c19a] tool_start #10: search_standards
+[2026-06-13 18:54:13,023] INFO dms: WS[e162ab64c19a] tool_start #11: search_web
+[2026-06-13 18:54:30,863] INFO dms: Agent round 2 complete: 11 total tool calls so far
+[2026-06-13 18:54:37,414] INFO dms: WS[e162ab64c19a] tool_start #12: search_web
+[2026-06-13 18:54:37,415] INFO dms: WS[e162ab64c19a] tool_start #13: search_standards
+[2026-06-13 18:54:37,416] INFO dms: WS[e162ab64c19a] tool_start #14: read_code_file
+[2026-06-13 18:54:37,417] INFO dms: WS[e162ab64c19a] tool_start #15: read_code_file
+[2026-06-13 18:54:52,504] INFO dms: Agent round 3 complete: 15 total tool calls so far
+[2026-06-13 18:54:58,802] INFO dms: WS[e872b6176e5b] tool_start #24: save_report
+[2026-06-13 18:54:58,815] INFO dms: Agent round 7 complete: 24 total tool calls so far
+[2026-06-13 18:55:06,890] INFO dms: WS[e872b6176e5b] response tail (last 200 chars): '`State(fps=30.0)` | 5·ÖÖÓ |\n| P0 | `fat_rate_l2`: 0.35 ¡ú 0.80 | 1·ÖÖÓ |\n| P0 | `yawn_len`: 1.0 ¡ú 3.0 | 1·ÖÖÓ |\n| P0 | ºÏ²¢Á½¸öÈë¿Ú¹¦ÄÜ | 2-3Ìì |\n| P1 | Ìí¼Ó×Ô¼ì¡¢ÊÓ¾õ¸æ¾¯¡¢¹ÊÕÏÌáÊ¾ | 5-7Ìì |\n\n---\n\nÊÇ·ñÐèÒªÎÒÕë¶ÔÄ³¸ö¾ßÌåÎÊÌâÕ¹¿ªÏêÏ¸·ÖÎö£¬»ò¿ªÊ¼ÐÞ¸´ P0 µÄÎÊÌâ£¿'
+[2026-06-13 18:55:06,891] INFO dms: WS[e872b6176e5b] stream done: 7546 stream chunks, 24 tool calls, response=1214 chars
+[2026-06-13 18:55:06,891] ERROR dms: WebSocket error in session e872b6176e5b: WebSocket is not connected. Need to call "accept" first.
+[2026-06-13 18:55:13,600] INFO dms: WS[e162ab64c19a] tool_start #16: read_code_file
+[2026-06-13 18:55:13,600] INFO dms: WS[e162ab64c19a] tool_start #17: search_web
+[2026-06-13 18:55:13,601] INFO dms: WS[e162ab64c19a] tool_start #18: search_standards
+[2026-06-13 18:55:30,885] INFO dms: Agent round 4 complete: 18 total tool calls so far
+[2026-06-13 18:56:19,792] INFO dms: WS[e162ab64c19a] tool_start #19: save_report
+[2026-06-13 18:56:19,802] INFO dms: Agent round 5 complete: 19 total tool calls so far
+[2026-06-13 18:56:26,796] INFO dms: WS[e162ab64c19a] response tail (last 200 chars): '¼ì/¹ÊÕÏÌáÊ¾/½µ¼¶²ßÂÔ** ¡ª GB/T 4.1.1 ~ 4.1.3.3 È«²¿²»Âú×ã\n5. **ÄÚ´æ 1.5GB** ¡ª ¶Ô"800ÔªµÍ³É±¾·½°¸"²»¿É½ÓÊÜ\n\n---\n\n### \U0001f4c8 ºÏ¹æÆÀ¼¶£ºÔ¼ 15%\n\nÐÞ¸´ P0 ¼¶ÎÊÌâºóÔ¤¼Æ¿É´ï **60%**£¬ÍêÈ«ÐÞ¸´ºó¿É´ï **85%**¡£\n\n---\n\nÐèÒªÎÒ¶ÔÄ³¸ö¾ßÌåÈ±ÏÝ¸ø³öÏêÏ¸µÄÐÞ¸´´úÂëÂð£¿±ÈÈçÓÅÏÈÐÞ¸´×îÖÂÃüµÄ `State(fps=5.0)` ÎÊÌâ£¿'
+[2026-06-13 18:56:26,796] INFO dms: WS[e162ab64c19a] stream done: 8002 stream chunks, 19 tool calls, response=995 chars
+INFO:     127.0.0.1:59741 - "GET /api/session/e162ab64c19a/download/dms_report_20260613_185619.md HTTP/1.1" 200 OK
+[2026-06-13 18:58:39,335] INFO dms: WS[e162ab64c19a] tool_start #1: read_code_file
+[2026-06-13 18:58:39,336] INFO dms: WS[e162ab64c19a] tool_start #2: read_code_file
+[2026-06-13 18:58:39,337] INFO dms: WS[e162ab64c19a] tool_start #3: read_code_file
+[2026-06-13 18:58:39,345] INFO dms: Agent round 1 complete: 3 total tool calls so far
+[2026-06-13 18:58:57,890] INFO dms: WS[e162ab64c19a] tool_start #4: modify_code
+[2026-06-13 18:58:57,899] INFO dms: Agent round 2 complete: 4 total tool calls so far
+[2026-06-13 18:59:04,428] INFO dms: WS[e162ab64c19a] tool_start #5: modify_code
+[2026-06-13 18:59:04,435] INFO dms: Agent round 3 complete: 5 total tool calls so far
+[2026-06-13 18:59:25,656] INFO dms: WS[e162ab64c19a] tool_start #6: modify_code
+[2026-06-13 18:59:25,669] INFO dms: Agent round 4 complete: 6 total tool calls so far
+[2026-06-13 18:59:31,085] INFO dms: WS[e162ab64c19a] tool_start #7: modify_code
+[2026-06-13 18:59:31,101] INFO dms: Agent round 5 complete: 7 total tool calls so far
+[2026-06-13 18:59:41,498] INFO dms: WS[e162ab64c19a] tool_start #8: modify_code
+[2026-06-13 18:59:41,515] INFO dms: Agent round 6 complete: 8 total tool calls so far
+[2026-06-13 18:59:45,059] INFO dms: WS[e162ab64c19a] tool_start #9: modify_code
+[2026-06-13 18:59:45,074] INFO dms: Agent round 7 complete: 9 total tool calls so far
+[2026-06-13 19:00:02,568] INFO dms: WS[e162ab64c19a] tool_start #10: modify_code
+[2026-06-13 19:00:02,581] INFO dms: Agent round 8 complete: 10 total tool calls so far
+[2026-06-13 19:00:10,839] INFO dms: WS[e162ab64c19a] tool_start #11: modify_code
+[2026-06-13 19:00:10,855] INFO dms: Agent round 9 complete: 11 total tool calls so far
+[2026-06-13 19:00:14,094] INFO dms: WS[e162ab64c19a] tool_start #12: modify_code
+[2026-06-13 19:00:14,111] INFO dms: Agent round 10 complete: 12 total tool calls so far
+[2026-06-13 19:00:27,705] INFO dms: WS[e162ab64c19a] tool_start #13: modify_code
+[2026-06-13 19:00:27,717] INFO dms: Agent round 11 complete: 13 total tool calls so far
+[2026-06-13 19:00:34,715] INFO dms: WS[e162ab64c19a] tool_start #14: modify_code
+[2026-06-13 19:00:34,733] INFO dms: Agent round 12 complete: 14 total tool calls so far
+[2026-06-13 19:00:37,702] INFO dms: WS[e162ab64c19a] tool_start #15: read_code_file
+[2026-06-13 19:00:37,704] INFO dms: WS[e162ab64c19a] tool_start #16: read_code_file
+[2026-06-13 19:00:37,724] INFO dms: Agent round 13 complete: 16 total tool calls so far
+[2026-06-13 19:00:48,730] INFO dms: WS[e162ab64c19a] response tail (last 200 chars): '* ¡ª `state.py` ÖÐ `distract_judge()` ÒÑ¾ÍÐ÷£¬µ« `best2.py` Î´µ÷ÓÃ¡£ÈçÐèÍêÕû·ÖÐÄ¼ì²âÐè¶îÍâ¼¯³É gaze Ä£ÐÍ£¨`assets/gaze.pth`£©\n\n2. **YOLO Ä£ÐÍ ONNX »¯** ¡ª ÓÃ»§ÒÑÓÐ `phone_best.onnx`£¬Èç¹û¸ÄÓÃ `onnxruntime` ÍÆÀí¿É½øÒ»²½½µµÍÄÚ´æ£¨Ô¤¼ÆÔÙ½µ 200-300MB£©£¬ÐèÒªÊ±¿É¼ÌÐøÓÅ»¯'
+[2026-06-13 19:00:48,730] INFO dms: WS[e162ab64c19a] stream done: 11931 stream chunks, 16 tool calls, response=2598 chars
+[2026-06-13 19:39:46,328] INFO dms: WS[e162ab64c19a] tool_start #1: compare_metrics
+[2026-06-13 19:39:47,141] INFO dms: Agent round 1 complete: 1 total tool calls so far
+[2026-06-13 19:39:50,254] INFO dms: WS[e162ab64c19a] response tail (last 200 chars): '%) | »ù±¾³ÖÆ½ |\n| **CPU ¡ý** | 11.72% | 12.66% | +0.94% (+8.0%) | \u26a0\ufe0f ¶ñ»¯ |\n| **ÄÚ´æ ¡ý** | 1514.25 MB | 1536.77 MB | +22.52 MB (+1.5%) | »ù±¾³ÖÆ½ |\n\n> Á½·ÝÈÕÖ¾²É¼¯Ê±¼äÏà¸ôÔ¼ 112 Ãë£¬FPS ºÍÑÓ³Ù¼¸ºõÒ»ÖÂ¡£CPU Ð¡·ù¶ñ»¯£¨+8%£©ÖµµÃ¹Ø×¢£¬µ«ÈÔÔÚ°²È«Çø¼ä£¨<20%£©¡£'
+[2026-06-13 19:39:50,255] INFO dms: WS[e162ab64c19a] stream done: 533 stream chunks, 1 tool calls, response=405 chars
+[2026-06-13 19:44:53,940] INFO dms: Session e162ab64c19a: uploaded dms_log_¸Ä½øºó.csv (28239 bytes)
+INFO:     127.0.0.1:57717 - "POST /api/upload HTTP/1.1" 200 OK
+[2026-06-13 19:45:22,554] INFO dms: WS[e162ab64c19a] tool_start #1: compare_metrics
+[2026-06-13 19:45:23,151] INFO dms: Agent round 1 complete: 1 total tool calls so far
+[2026-06-13 19:45:26,246] INFO dms: WS[e162ab64c19a] response tail (last 200 chars): '.1%) | \u2705 ¸ÄÉÆ |\n| **ÑÓ³Ù ¡ý** | 33.02 ms | 30.17 ms | \u22122.85 ms (\u22128.6%) | \u2705 ¸ÄÉÆ |\n| **CPU ¡ý** | 11.72% | 12.35% | +0.63% (+5.4%) | \u26a0\ufe0f ¶ñ»¯ |\n| **ÄÚ´æ ¡ý** | 1514.25 MB | 1530.11 MB | +15.86 MB (+1.0%) | \u27a1\ufe0f »ù±¾³ÖÆ½ |'
+[2026-06-13 19:45:26,247] INFO dms: WS[e162ab64c19a] stream done: 669 stream chunks, 1 tool calls, response=339 chars
+[2026-06-13 19:46:11,631] INFO dms: WS[e162ab64c19a] tool_start #1: compare_metrics
+[2026-06-13 19:46:12,257] INFO dms: Agent round 1 complete: 1 total tool calls so far
+[2026-06-13 19:46:14,688] INFO dms: WS[e162ab64c19a] response tail (last 200 chars): '.1%) | \u2705 ¸ÄÉÆ |\n| **ÑÓ³Ù ¡ý** | 33.02 ms | 30.17 ms | \u22122.85 ms (\u22128.6%) | \u2705 ¸ÄÉÆ |\n| **CPU ¡ý** | 11.72% | 12.35% | +0.63% (+5.4%) | \u26a0\ufe0f ¶ñ»¯ |\n| **ÄÚ´æ ¡ý** | 1514.25 MB | 1530.11 MB | +15.86 MB (+1.0%) | \u27a1\ufe0f »ù±¾³ÖÆ½ |'
+[2026-06-13 19:46:14,688] INFO dms: WS[e162ab64c19a] stream done: 671 stream chunks, 1 tool calls, response=339 chars
+[2026-06-13 19:47:11,520] INFO dms: WS[e162ab64c19a] tool_start #1: read_code_file
+[2026-06-13 19:47:11,521] INFO dms: WS[e162ab64c19a] tool_start #2: read_code_file
+[2026-06-13 19:47:11,531] INFO dms: Agent round 1 complete: 2 total tool calls so far
+[2026-06-13 19:47:38,831] INFO dms: WS[e162ab64c19a] response tail (last 200 chars): 'ÒýÈëÊÓ¾õ¸æ¾¯£¨¹ú±êÇ¿ÖÆÒªÇó£©µÄÕý³£´ú¼Û |\n| ÊÇ·ñÐèÒªÓÅ»¯ | ²»ÐèÒª½ô¼±´¦Àí£¬µ±Ç° 12.35% Ô¶µÍÓÚ 85% ¾¯½äÏß |\n\n> ¼òµ¥Ëµ£º**ÓÃ 0.63% CPU »»À´ÁË¹ú±êÇ¿ÖÆÒªÇóµÄÊÓ¾õ¸æ¾¯Í¨µÀ**£¬Õâ±Ê½»Ò×·Ç³£»®Ëã¡£Èç¹ûºóÐøÐèÒªÑ¹»Ø 11%£¬¿ÉÒÔ½« `cv2.imshow` µÄ´°¿Ú³ß´çËõÐ¡£¨Èç `cv2.resize` µ½ 640¡Á360 ÔÙÏÔÊ¾£©£¬µ«²»½¨Òé¡ª¡ª¼ÝÊ»Ô±ÐèÒª¿´Çå¸æ¾¯ÎÄ×Ö¡£'
+[2026-06-13 19:47:38,832] INFO dms: WS[e162ab64c19a] stream done: 2927 stream chunks, 2 tool calls, response=1261 chars
+[2026-06-13 19:49:50,396] INFO dms: Session e872b6176e5b: WebSocket disconnected
+INFO:     connection closed
+[2026-06-13 19:49:50,397] INFO dms: Session e872b6176e5b: WebSocket disconnected
+[2026-06-13 19:49:50,397] INFO dms: Session e162ab64c19a: WebSocket disconnected
+[2026-06-13 19:49:50,398] INFO dms: Session e872b6176e5b: WebSocket disconnected
+INFO:     connection closed
+INFO:     connection closed
+INFO:     connection closed

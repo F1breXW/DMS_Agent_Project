@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Iterable, List, Optional
+from typing import Optional
 
 import pandas as pd
 
@@ -16,7 +16,7 @@ from src.models import DMSLogData
 class LogParseResult:
     """日志解析结果：包含对象列表与统计值。"""
 
-    items: List[DMSLogData]
+    items: list[DMSLogData]
     avg_fps: Optional[float]
     avg_latency_ms: Optional[float]
 
@@ -30,7 +30,7 @@ class LogParser:
     def parse_all(self) -> LogParseResult:
         """读取目录下所有 CSV，返回解析后的结果与平均值。"""
 
-        items: List[DMSLogData] = []
+        items: list[DMSLogData] = []
         csv_files = sorted(self.log_dir.glob("*.csv"))
 
         if not csv_files:
@@ -68,10 +68,10 @@ class LogParser:
         avg_latency_ms = sum(x.latency_ms for x in items) / len(items)
         return LogParseResult(items=items, avg_fps=avg_fps, avg_latency_ms=avg_latency_ms)
 
-    def _rows_to_models(self, df: pd.DataFrame) -> Iterable[DMSLogData]:
+    def _rows_to_models(self, df: pd.DataFrame) -> list[DMSLogData]:
         """将 DataFrame 的每一行转换为 DMSLogData。"""
 
-        models: List[DMSLogData] = []
+        models: list[DMSLogData] = []
         for _, row in df.iterrows():
             try:
                 timestamp = pd.to_datetime(row["timestamp"], errors="raise")
@@ -88,39 +88,9 @@ class LogParser:
         return models
 
 
-class CodeParser:
-    """读取 data/source_code 目录下的 .py 文件内容。"""
-
-    def __init__(self, source_dir: Path | str = "data/source_code") -> None:
-        self.source_dir = Path(source_dir)
-
-    def read_all(self) -> dict[str, str]:
-        """读取所有 .py 文件，并以文本形式返回。"""
-
-        results: dict[str, str] = {}
-        py_files = sorted(self.source_dir.rglob("*.py"))
-
-        if not py_files:
-            LOGGER.error("No .py files found in %s", self.source_dir)
-            return results
-
-        for path in py_files:
-            try:
-                results[str(path)] = path.read_text(encoding="utf-8")
-            except Exception as exc:  # noqa: BLE001
-                LOGGER.error("Failed to read %s: %s", path, exc)
-        return results
-
-
 if __name__ == "__main__":
-    # 读取真实日志文件
     log_parser = LogParser()
     log_result = log_parser.parse_all()
     print("Parsed logs:", len(log_result.items))
     print("Avg FPS:", log_result.avg_fps)
     print("Avg latency (ms):", log_result.avg_latency_ms)
-
-    # 读取真实源码文件
-    code_parser = CodeParser()
-    code_result = code_parser.read_all()
-    print("Parsed code files:", list(code_result.keys()))

@@ -29,6 +29,9 @@ class SessionKnowledgeBase:
     the index survives server restarts.
     """
 
+    _CHUNK_SIZE = 500
+    _CHUNK_OVERLAP = 50
+
     def __init__(
         self,
         knowledge_dir: Path | str,
@@ -39,9 +42,11 @@ class SessionKnowledgeBase:
         self.global_kb = global_kb
 
         self._index: FAISS | None = None
-        self._files: list[str] = []  # filenames in the index
+        self._files: list[str] = []
+        self._splitter = RecursiveCharacterTextSplitter(
+            chunk_size=self._CHUNK_SIZE, chunk_overlap=self._CHUNK_OVERLAP
+        )
 
-        # Rebuild index from any documents already on disk
         self._rebuild_from_disk()
 
     # ------------------------------------------------------------------
@@ -93,10 +98,7 @@ class SessionKnowledgeBase:
             return "文档为空，无法索引。"
 
         # --- 2. Chunk ---
-        splitter = RecursiveCharacterTextSplitter(
-            chunk_size=500, chunk_overlap=50
-        )
-        chunks = splitter.split_documents(docs)
+        chunks = self._splitter.split_documents(docs)
         if not chunks:
             return "文档切分后无有效内容。"
 
@@ -147,37 +149,45 @@ class SessionKnowledgeBase:
         return None
 
     def search(self, query: str, k: int = 3) -> str:
-        """Search both global GB/T standards AND session documents.
+        """Search both global GB/T standards and session documents.
 
         Returns merged results with source labels.
         """
         parts: list[str] = []
 
-        # --- Search global standards ---
-        global_results = ""
-        if self.global_kb and hasattr(self.global_kb, 'search_standard'):
-            global_results = self.global_kb.search_standard(query, k=k)
+        global_result = self._search_global(query, k)
+        if global_result:
+            parts.append(global_result)
 
-        if global_results:
-            parts.append("【国标 GB/T】\n" + global_results)
+        session_result = self._search_session(query, k)
+        if session_result:
+            parts.append(session_result)
 
-        # --- Search session documents ---
-        if self._index is not None:
-            try:
-                session_results = self._index.similarity_search(query, k=k)
-                if session_results:
-                    lines = []
-                    for idx, doc in enumerate(session_results, start=1):
-                        src = doc.metadata.get("source_file", "未知")
-                        lines.append(f"【用户文档 · {src} · 条款 {idx}】\n{doc.page_content}")
-                    parts.append("\n\n".join(lines))
-            except Exception as exc:
-                LOGGER.error("Session KB search failed: %s", exc)
+        return "\n\n---\n\n".join(parts) if parts else "未在国标库和用户知识库中找到相关内容。"
 
-        if not parts:
-            return "未在国标库和用户知识库中找到相关内容。"
+    def _search_global(self, query: str, k: int) -> str:
+        """Search global GB/T standards KB."""
+        if not self.global_kb or not hasattr(self.global_kb, 'search_standard'):
+            return ""
+        result = self.global_kb.search_standard(query, k=k)
+        return f"【国标 GB/T】\n{result}" if result else ""
 
-        return "\n\n---\n\n".join(parts)
+    def _search_session(self, query: str, k: int) -> str:
+        """Search session user documents KB."""
+        if self._index is None:
+            return ""
+        try:
+            results = self._index.similarity_search(query, k=k)
+        except Exception as exc:
+            LOGGER.error("Session KB search failed: %s", exc)
+            return ""
+        if not results:
+            return ""
+        lines = []
+        for idx, doc in enumerate(results, start=1):
+            src = doc.metadata.get("source_file", "未知")
+            lines.append(f"【用户文档 · {src} · 条款 {idx}】\n{doc.page_content}")
+        return "\n\n".join(lines)
 
     # ------------------------------------------------------------------
     # Internal
@@ -197,9 +207,6 @@ class SessionKnowledgeBase:
             return
 
         all_chunks = []
-        splitter = RecursiveCharacterTextSplitter(
-            chunk_size=500, chunk_overlap=50
-        )
 
         for doc_path in doc_paths:
             try:
@@ -217,7 +224,7 @@ class SessionKnowledgeBase:
             if not docs:
                 continue
 
-            chunks = splitter.split_documents(docs)
+            chunks = self._splitter.split_documents(docs)
             for c in chunks:
                 c.metadata["source_file"] = doc_path.name
             all_chunks.extend(chunks)

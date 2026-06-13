@@ -65,6 +65,49 @@ async def _ws_send(ws: WebSocket, data: dict) -> bool:
         return False
 
 
+_XML_TAGS = re.compile(
+    r'</?\s*(?:function_calls|tool_calls|invoke|parameter)\b[^>]*>',
+    re.IGNORECASE,
+)
+
+
+def _clean_xml_response(text: str) -> str | None:
+    """Strip DeepSeek XML hallucination from response text.
+
+    Returns cleaned text if XML was found and removed, or None if no XML detected.
+    """
+    if not any(tag in text.lower() for tag in [
+        "<function_calls", "<function_call>",
+        "</function_calls", "</function_call>",
+        "<tool_calls", "</tool_calls",
+        "<invoke", "</invoke>",
+        "<parameter", "</parameter>",
+    ]):
+        return None
+
+    cleaned = text
+    # Handle missing opening tag: truncate from first XML tag
+    if not re.search(r'<\s*(?:function_calls|tool_calls)\b[^>]*>', cleaned, re.IGNORECASE):
+        first_tag = _XML_TAGS.search(cleaned)
+        if first_tag:
+            cleaned = cleaned[:first_tag.start()].rstrip()
+
+    # Remove complete <function_calls> or <tool_calls> blocks
+    cleaned = re.sub(
+        r'<\s*(?:function_calls|tool_calls)\b[^>]*>[\s\S]*?(?:</\s*(?:function_calls|tool_calls)\s*>|$)',
+        '', cleaned, flags=re.IGNORECASE)
+
+    # Remove orphaned tags
+    cleaned = _XML_TAGS.sub('', cleaned)
+
+    # Remove streaming fragments (opening tag that spans to end of line)
+    cleaned = re.sub(
+        r'^<\s*(?:function_calls|tool_calls|invoke|parameter)\b[^\n]*$',
+        '', cleaned, flags=re.IGNORECASE | re.MULTILINE)
+
+    return cleaned.strip() if cleaned.strip() != text.strip() else None
+
+
 # ---------------------------------------------------------------------------
 # Session management
 # ---------------------------------------------------------------------------
@@ -406,7 +449,7 @@ async def websocket_chat(ws: WebSocket, session_id: str):
 
     session = session_manager.get(session_id)
     if session is None:
-        await _ws_send(ws,{"type": "error", "message": "Session not found. Please refresh the page."})
+        await _ws_send(ws, {"type": "error", "message": "Session not found. Please refresh the page."})
         await ws.close()
         return
 
@@ -417,16 +460,16 @@ async def websocket_chat(ws: WebSocket, session_id: str):
         waited += 0.5
 
     if session.agent_error:
-        await _ws_send(ws,{"type": "error", "message": f"Agent init failed: {session.agent_error}"})
+        await _ws_send(ws, {"type": "error", "message": f"Agent init failed: {session.agent_error}"})
         await ws.close()
         return
 
     if not session.agent_ready:
-        await _ws_send(ws,{"type": "error", "message": "Agent init timed out after 60s. Please refresh."})
+        await _ws_send(ws, {"type": "error", "message": "Agent init timed out after 60s. Please refresh."})
         await ws.close()
         return
 
-    await _ws_send(ws,{"type": "status", "subtype": "agent_ready"})
+    await _ws_send(ws, {"type": "status", "subtype": "agent_ready"})
 
     agent = session.agent
     upload_dir = str(session.upload_dir)
@@ -456,7 +499,7 @@ async def websocket_chat(ws: WebSocket, session_id: str):
                     LOGGER.info("Session %s: restored %d messages from localStorage",
                                 session_id, len(restored))
 
-                await _ws_send(ws,{"type": "status", "subtype": "started"})
+                await _ws_send(ws, {"type": "status", "subtype": "started"})
                 active_tool_ids: set[str] = set()
 
                 agent_full_response: list[str] = []
@@ -483,7 +526,7 @@ async def websocket_chat(ws: WebSocket, session_id: str):
                                 if re.search(r'<(?:function_calls|tool_calls|invoke)', content, re.IGNORECASE):
                                     LOGGER.warning("WS[%s] XML token detected in stream: %r",
                                                    session_id, content[:120])
-                                await _ws_send(ws,{"type": "token", "content": content})
+                                await _ws_send(ws, {"type": "token", "content": content})
                                 agent_full_response.append(content)
 
                         elif kind == "on_tool_start":
@@ -574,56 +617,18 @@ async def websocket_chat(ws: WebSocket, session_id: str):
 
                     agent_text = "".join(agent_full_response)
 
-                    # Diagnostic: log response tail in case XML is hiding elsewhere
                     LOGGER.info("WS[%s] response tail (last 200 chars): %r",
                                 session_id, agent_text[-200:] if len(agent_text) > 200 else agent_text)
 
-                    # Post-process: strip any XML tool-call text that leaked through streaming.
-                    # Check for both opening and closing tags (DeepSeek may omit opening tags)
-                    has_xml = any(tag in agent_text.lower() for tag in [
-                        "<function_calls", "<function_call>",
-                        "</function_calls", "</function_call>",
-                        "<tool_calls", "</tool_calls",
-                        "<invoke", "</invoke>",
-                        "<parameter", "</parameter>",
-                    ])
-                    # Also log a middle snippet to find opening tags
-                    if has_xml:
-                        mid = len(agent_text) // 2
-                        LOGGER.info("WS[%s] response mid (around pos %d): %r",
-                                    session_id, mid, agent_text[mid:mid+200])
-                    if has_xml:
-                        LOGGER.info("WS[%s] XML detected in response (%d chars), cleaning...",
-                                    session_id, len(agent_text))
-                        # Pass 0: if opening <function_calls> is missing but closing tags exist,
-                        # truncate from the first XML tag to end of text
-                        cleaned = agent_text
-                        if not re.search(r'<\s*(?:function_calls|tool_calls)\b[^>]*>', cleaned, re.IGNORECASE):
-                            first_tag = re.search(
-                                r'</?\s*(?:function_calls|tool_calls|invoke|parameter)\b',
-                                cleaned, re.IGNORECASE)
-                            if first_tag:
-                                cleaned = cleaned[:first_tag.start()].rstrip()
-                        # Pass 1: remove <function_calls ...> or <tool_calls ...> through closing tag or EOS
-                        cleaned = re.sub(
-                            r'<\s*(?:function_calls|tool_calls)\b[^>]*>[\s\S]*?(?:</\s*(?:function_calls|tool_calls)\s*>|$)',
-                            '', cleaned, flags=re.IGNORECASE)
-                        # Pass 2: remove any remaining orphaned open/close tags
-                        cleaned = re.sub(
-                            r'</?\s*(?:function_calls|tool_calls|invoke|parameter)\b[^>]*>',
-                            '', cleaned, flags=re.IGNORECASE)
-                        # Pass 3: catch opening tags that span to end of line (streaming fragment)
-                        cleaned = re.sub(
-                            r'^<\s*(?:function_calls|tool_calls|invoke|parameter)\b[^\n]*$',
-                            '', cleaned, flags=re.IGNORECASE | re.MULTILINE)
-                        cleaned = cleaned.strip()
-                        if cleaned != agent_text:
-                            LOGGER.info("WS[%s] XML cleaned: %d → %d chars",
-                                        session_id, len(agent_text), len(cleaned))
-                            agent_text = cleaned
-                            await _ws_send(ws,{"type": "content_replace", "content": cleaned})
+                    # Strip any XML tool-call text that leaked through streaming
+                    cleaned = _clean_xml_response(agent_text)
+                    if cleaned is not None:
+                        LOGGER.info("WS[%s] XML cleaned: %d → %d chars",
+                                    session_id, len(agent_text), len(cleaned))
+                        agent_text = cleaned
+                        await _ws_send(ws, {"type": "content_replace", "content": cleaned})
 
-                    await _ws_send(ws,{"type": "done"})
+                    await _ws_send(ws, {"type": "done"})
                     LOGGER.info("WS[%s] stream done: %d stream chunks, %d tool calls, response=%d chars",
                                 session_id, dbg_stream_count, dbg_tool_count, len(agent_text))
 
@@ -633,7 +638,7 @@ async def websocket_chat(ws: WebSocket, session_id: str):
                 except Exception as exc:
                     LOGGER.error("Stream error in session %s: %s\n%s",
                                  session_id, exc, traceback.format_exc())
-                    await _ws_send(ws,{"type": "error", "message": str(exc)})
+                    await _ws_send(ws, {"type": "error", "message": str(exc)})
 
             elif msg_type == "cancel":
                 break
