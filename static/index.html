@@ -91,6 +91,7 @@ body {
   display: flex; flex-direction: column; align-items: center;
   padding: 14px 0; gap: 6px;
   box-shadow: var(--shadow-sm);
+  position: relative; z-index: 10;
 }
 #nav-brand {
   width: 36px; height: 36px;
@@ -196,7 +197,7 @@ body {
   transition: width var(--transition), min-width var(--transition), opacity var(--transition);
 }
 .panel-scroll {
-  flex: 1; overflow-y: auto; overflow-x: hidden;
+  flex: 1; overflow-y: auto; overflow-x: auto;
   display: flex; flex-direction: column;
 }
 .panel-header {
@@ -1254,7 +1255,8 @@ body {
 .ft-item .ft-drag-handle { cursor: grab; color: var(--text-muted); opacity: 0; flex-shrink: 0; }
 .ft-item:hover .ft-drag-handle { opacity: 0.5; }
 
-.ft-children { list-style: none; padding-left: 18px; margin: 0; }
+.ft-children { list-style: none; padding-left: 10px; margin: 0; width: 100%; }
+.ft-folder { flex-wrap: wrap; }
 .ft-folder.collapsed > .ft-children { display: none; }
 
 .ft-item.dragging { opacity: 0.4; }
