@@ -1946,7 +1946,6 @@ function addToTreeWithPath(tree, path) {
 function removeFromTree(tree, name) {
   for (let i = 0; i < tree.length; i++) {
     if (tree[i].name === name) {
-      if (tree[i].type === 'folder' && tree[i].children && tree[i].children.length > 0) return false;
       tree.splice(i, 1);
       return true;
     }
@@ -2157,17 +2156,21 @@ function renderPanelTree() {
 
     li.querySelector('.ft-delete').addEventListener('click', (e) => {
       e.stopPropagation();
-      const label = node.type === 'folder' ? '文件夹' : '文件';
-      const msg = node.type === 'folder'
-        ? `删除空文件夹 "${node.name}"？`
-        : `删除文件 "${node.name}"？`;
-      if (!confirm(msg)) return;
-      if (removeFromTree(treeRef, node.name)) {
-        saveFileTree(treeRef);
-        renderPanelTree();
+      let msg;
+      if (node.type === 'folder') {
+        const childCount = (node.children || []).length;
+        if (childCount > 0) {
+          msg = `确定删除文件夹 "${node.name}" 及其内部的 ${childCount} 个文件/文件夹吗？`;
+        } else {
+          msg = `删除空文件夹 "${node.name}"？`;
+        }
       } else {
-        showToast('文件夹非空，请先移走内部文件');
+        msg = `删除文件 "${node.name}"？`;
       }
+      if (!confirm(msg)) return;
+      removeFromTree(treeRef, node.name);
+      saveFileTree(treeRef);
+      renderPanelTree();
     });
 
     parent.appendChild(li);
@@ -2827,8 +2830,15 @@ async function handleFiles(fileList, isFolder = false) {
     }
   }
 
-  if (total > 1) {
-    showToast('Folder upload done: ' + uploaded + ' uploaded' + (skipped > 0 ? ', ' + skipped + ' skipped' : ''));
+  if (uploaded > 0) {
+    const msg = total > 1
+      ? `上传完成：${uploaded} 个文件` + (skipped > 0 ? `，${skipped} 个已跳过` : '')
+      : `已上传 "${fileList[0].name}"`;
+    showToast(msg);
+  } else if (skipped > 0) {
+    showToast(`所有 ${skipped} 个文件已存在，已跳过`);
+  } else {
+    showToast('没有文件被上传');
   }
 }
 

@@ -41,6 +41,19 @@ app = FastAPI(title="DMS Evaluator", docs_url=None, redoc_url=None)
 
 
 # ---------------------------------------------------------------------------
+# Helpers
+# ---------------------------------------------------------------------------
+
+async def _ws_send(ws: WebSocket, data: dict) -> bool:
+    """Send JSON over WebSocket, return False if disconnected."""
+    try:
+        await ws.send_json(data)
+        return True
+    except Exception:
+        return False
+
+
+# ---------------------------------------------------------------------------
 # Session management
 # ---------------------------------------------------------------------------
 
@@ -594,6 +607,12 @@ async def websocket_chat(ws: WebSocket, session_id: str):
         LOGGER.info("Session %s: WebSocket disconnected", session_id)
     except Exception as exc:
         LOGGER.error("WebSocket error in session %s: %s", session_id, exc)
+    finally:
+        # Always close the WebSocket to prevent TCP CLOSE_WAIT leaks
+        try:
+            await ws.close()
+        except Exception:
+            pass
 
 
 # ---------------------------------------------------------------------------
